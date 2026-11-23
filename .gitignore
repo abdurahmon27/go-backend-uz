@@ -1,0 +1,4 @@
+# build outputs from the lesson commands
+**/hello/hello
+**/hello/hello-small
+*.exe
