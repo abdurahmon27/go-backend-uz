@@ -1,0 +1,3 @@
+Bu kurs oʻzbek tilida. Kodni oʻzbek tilida tushuntiramiz va oʻzbekcha misollar bilan yozamiz.
+Har bir dars oʻzbek dasturchisi uchun: kod, terminal va manbalar bilan.
+Terminal kodni tez oʻqish va tez tekshirish uchun kerak.
