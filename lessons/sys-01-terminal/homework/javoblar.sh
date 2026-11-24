@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 05 · Uy vazifasi javoblari. Ishga tushirish (005-terminal papkasidan): bash homework/javoblar.sh
+# SYS-01 · Uy vazifasi javoblari. Ishga tushirish (sys-01-terminal papkasidan): bash homework/javoblar.sh
 set -u
 
 echo "== Oson: nechta .go fayl?"
