@@ -1,6 +1,6 @@
 # 05 · Terminal: pipe, `grep` va bitta qatorda yechiladigan ishlar
 
-Oldingi dars: [04 · `len("oʻzbek")` = 7?](../004-strings-utf8/) · Keyingi dars: SYS-0.02 · Jarayon va muhit: `ps`, `kill`, `$PATH`, env
+Oldingi dars: [04 · `len("oʻzbek")` = 7?](../004-strings-utf8/) · Keyingi dars: [SYS-0.02 · Jarayon va muhit: `ps`, `kill`, `$PATH`, env](../sys-02-process-env/)
 
 | Fayl | Nima |
 |---|---|
@@ -9,7 +9,7 @@ Oldingi dars: [04 · `len("oʻzbek")` = 7?](../004-strings-utf8/) · Keyingi dar
 | `homework/javoblar.sh` | uy vazifasi javoblari |
 
 ## Videodagi buyruqlar
-Hammasi shu papkadan (`lessons/005-terminal`) ishga tushiriladi.
+Hammasi shu papkadan (`lessons/sys-01-terminal`) ishga tushiriladi.
 ```bash
 tr -cs A-Za-z '\n' < matn.txt | tr A-Z a-z | sort | uniq -c | sort -rn | head -5   # o, zbek?
 yes | head -3                                   # pipe'dagi dasturlar bir vaqtda ishlaydi

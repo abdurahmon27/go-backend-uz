@@ -1,6 +1,6 @@
 # 06 · Funksiyalar: ikki qiymat qaytarish, closure va variadic
 
-Oldingi dars: [05 · Go'da `while` yoʻq: bitta `for`](../005-for-switch/) · Keyingi dars: 07 · Taxmin qilmang, oʻlchang: birinchi test va benchmark
+Oldingi dars: [05 · Go'da `while` yoʻq: bitta `for`](../005-for-switch/) · Keyingi dars: [07 · Taxmin qilmang, oʻlchang: birinchi test va benchmark](../007-test-bench/)
 
 | Papka | Nima |
 |---|---|
