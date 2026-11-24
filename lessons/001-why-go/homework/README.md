@@ -10,24 +10,30 @@ Avval o'zingiz urinib ko'ring. 🙂
 [`medium.sh`](medium.sh). `GOOS`/`GOARCH` maqsad tizimni bildiradi, compiler esa shu Linux'ning o'zida ishlaydi:
 
 ```
-2.3M hello-linux-amd64
-2.4M hello-windows-amd64.exe
-2.4M hello-darwin-arm64
+2409998 hello-linux-amd64
+2473472 hello-windows-amd64.exe
+2492482 hello-darwin-arm64
 ```
 
 Hajmlar deyarli bir xil, chunki har birining ichida o'sha platforma uchun runtime bor.
 
-## 🟠 Qiyin: `-ldflags="-s -w"`
+## 🟠 Qiyin: `-ldflags=-s`
 ```
-go build                     2,410,014 bayt
-go build -ldflags="-s -w"    1,601,698 bayt   (−33.5%)
+go build                     2,409,998 bayt
+go build -ldflags=-w         1,733,756 bayt   (faqat DWARF olib tashlandi)
+go build -ldflags=-s         1,601,698 bayt   (−33.5%)
+go build -ldflags="-s -w"    1,601,698 bayt   (xuddi shu)
 ```
-- `-s`: **symbol table** olib tashlanadi (`go tool nm` endi hech narsa ko'rsatmaydi).
+- `-s`: **symbol table** olib tashlanadi (`go tool nm` endi "no symbols" deydi). Go 1.22'dan beri `-s` o'zi `-w`ni
+  ham yoqadi ([cmd/link/doc.go](https://github.com/golang/go/blob/go1.26.8/src/cmd/link/doc.go#L123)), shuning
+  uchun `-s` va `-s -w` bir xil. Farqni ko'rish uchun `-s -w=0` bilan solishtiring.
 - `-w`: **DWARF** debug ma'lumoti olib tashlanadi (debugger, ya'ni `dlv`, endi qatorlarni bilmaydi).
 
-**Guru tuzog'i:** `panic` bo'lsa, stack trace baribir funksiya nomlari va qator raqamlarini ko'rsatadi. Nega?
-Runtime'ning o'zi `pclntab` jadvalidan foydalanadi (stack trace va GC uchun), va linker uni olib tashlamaydi.
-Ya'ni `-s -w` debug *qulayligini* oladi, runtime'ga kerak narsani emas.
+**Nega `.gopclntab` qoldi?** `size -A` bilan qarang: `-s` dan keyin ham `.gopclntab` 677 386 bayt. Bu jadvalni
+runtime'ning o'zi ishlatadi: GC va stack o'sishi stack xaritalarini shu yerdan o'qiydi
+([runtime/stkframe.go](https://github.com/golang/go/blob/go1.26.8/src/runtime/stkframe.go), `getStackMap`),
+panic stack trace'dagi funksiya nomlari va qator raqamlari ham shundan. Ya'ni `-s` debug *qulayligini* oladi,
+runtime'ga kerak narsani emas.
 
 ## 🔴 Guru: `main.main` ichida 20 ta instruction
 To'liq chiqish: [`../asm/main.main.s`](../asm/main.main.s) (`go1.26.8 linux/amd64`).
@@ -35,7 +41,7 @@ To'liq chiqish: [`../asm/main.main.s`](../asm/main.main.s) (`go1.26.8 linux/amd6
 | # | Instruction | Nima qiladi |
 |---|---|---|
 | 1 | `CMPQ SP, 0x10(R14)` | `R14` = joriy goroutine (`g`), `0x10(R14)` = `g.stackguard0`. Stack chegarasiga yaqinlashdikmi? |
-| 2 | `JBE 0x49e18c` | Ha bo'lsa, oxiridagi `morestack`ga sakra (19-qator) |
+| 2 | `JBE 0x49e18c` (manzil har build'da boshqacha bo'lishi mumkin) | Ha bo'lsa, oxiridagi `morestack`ga sakra (19-qator) |
 | 3–4 | `PUSHQ BP` · `MOVQ SP, BP` | Frame pointer: profiler va debugger stack'ni shu orqali yuradi |
 | 5 | `SUBQ $0x38, SP` | Funksiya uchun 56 bayt stack joy |
 | 6–9 | `LEAQ … DX` · `MOVQ DX, …(SP)` | `"Salom, dunyo!"` uchun `any` qiymat: type pointer + data pointer |

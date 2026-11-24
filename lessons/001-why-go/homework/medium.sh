@@ -6,4 +6,4 @@ for t in linux/amd64 windows/amd64 darwin/arm64; do
   os=${t%/*}; arch=${t#*/}; ext=; [ "$os" = windows ] && ext=.exe
   GOOS=$os GOARCH=$arch go build -o "/tmp/hello-$os-$arch$ext" ./hello
 done
-ls -lh /tmp/hello-* | awk '{print $5, $9}'
+ls -l /tmp/hello-* | awk '{print $5, $9}'
