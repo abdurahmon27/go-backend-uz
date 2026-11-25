@@ -1,0 +1,42 @@
+# Guru javobi: parol secret orqali, container muhitida yoʻq.
+#   docker compose -f homework/guru.yaml --env-file .env up -d
+name: guru
+
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER:?.env faylida DB_USER yoʻq}
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_parol
+      POSTGRES_DB: ${DB_NAME:?.env faylida DB_NAME yoʻq}
+    secrets: [db_parol]
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "${DB_USER}", "-d", "${DB_NAME}"]
+      start_period: 30s
+      start_interval: 1s
+      interval: 10s
+
+  app:
+    build:
+      context: ..
+      dockerfile: homework/Dockerfile
+      args:
+        VAZIFA: guru
+    environment:
+      DATABASE_URL: postgres://${DB_USER}@db:5432/${DB_NAME}?sslmode=disable
+      DB_PASSWORD_FILE: /run/secrets/db_parol
+    secrets: [db_parol]
+    ports:
+      - "127.0.0.1:8078:8077"
+    depends_on:
+      db:
+        condition: service_healthy
+
+secrets:
+  db_parol:
+    environment: DB_PASSWORD   # qiymat .env dan olinadi, lekin container'ga fayl boʻlib tushadi
+
+volumes:
+  pgdata:

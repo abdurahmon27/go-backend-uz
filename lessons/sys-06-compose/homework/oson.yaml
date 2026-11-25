@@ -1,0 +1,31 @@
+# Oson javobi: port APP_PORT dan (.env yoki shell), u boʻlmasa 8077.
+#   .env ga APP_PORT=9000 yozing, keyin: docker compose -f homework/oson.yaml --env-file .env up -d
+name: oson
+
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER:?.env faylida DB_USER yoʻq}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?.env faylida DB_PASSWORD yoʻq}
+      POSTGRES_DB: ${DB_NAME:?.env faylida DB_NAME yoʻq}
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "${DB_USER}", "-d", "${DB_NAME}"]
+      start_period: 30s
+      start_interval: 1s
+      interval: 10s
+
+  app:
+    build: ..
+    environment:
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable
+    ports:
+      - "127.0.0.1:${APP_PORT:-8077}:8077"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

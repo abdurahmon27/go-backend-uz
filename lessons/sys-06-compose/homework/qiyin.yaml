@@ -1,0 +1,29 @@
+# Qiyin javobi: healthcheck ham, restart ham yoʻq, server bazani oʻzi kutadi (homework/qiyin/main.go).
+#   docker compose -f homework/qiyin.yaml --env-file .env up -d
+name: qiyin
+
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER:?.env faylida DB_USER yoʻq}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?.env faylida DB_PASSWORD yoʻq}
+      POSTGRES_DB: ${DB_NAME:?.env faylida DB_NAME yoʻq}
+    volumes:
+      - pgdata:/var/lib/postgresql
+
+  app:
+    build:
+      context: ..
+      dockerfile: homework/Dockerfile
+      args:
+        VAZIFA: qiyin
+    environment:
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable
+    ports:
+      - "127.0.0.1:8078:8077"
+    depends_on:
+      - db
+
+volumes:
+  pgdata:
