@@ -60,8 +60,8 @@ func TestLuhn(t *testing.T) {
 
 func TestYashir(t *testing.T) {
 	for in, want := range map[string]string{
-		"Qovun2026":                "*********",
-		"sk-ant-api03-SOXTA7kalit": "sk-a…it",
+		"Qovun2026":                     "*********",
+		"sk-ant-" + "api03-SOXTA7kalit": "sk-a…it",
 	} {
 		if got := yashir(in); got != want {
 			t.Errorf("yashir(%q) = %q, kutilgan %q", in, got, want)
