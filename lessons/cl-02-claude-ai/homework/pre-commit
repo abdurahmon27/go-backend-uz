@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# CL-1.02 uy vazifasi, «Guru»: sir bor commit'ni toʻxtatadigan git hook.
+# Commit'ga ketayotgan (staged) fayllarning index'dagi holatini skaner bilan tekshiradi.
+#
+# Oʻrnatish (go-backend-uz repo ildizida):
+#   cp lessons/cl-02-claude-ai/homework/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+# Bir martaga chetlab oʻtish (faqat yolgʻon signal boʻlsa!): git commit --no-verify
+set -euo pipefail
+root=$(git rev-parse --show-toplevel)
+tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+
+git diff --cached --name-only --diff-filter=ACMR -z | while IFS= read -r -d '' f; do
+	mkdir -p "$tmp/$(dirname "$f")"
+	git show ":$f" > "$tmp/$f"
+done
+
+if ! (cd "$root" && go run ./lessons/cl-02-claude-ai -qatiy "$tmp" | sed "s|$tmp/||"); then
+	echo "commit toʻxtatildi: yuqoridagi sirlarni olib tashlang (yoki -yashir bilan almashtiring)" >&2
+	exit 1
+fi
