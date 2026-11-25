@@ -1,0 +1,8 @@
+$ uv run tajriba.py seeds 100
+seed    chiziq test  daraja 9 test   train: 100
+1               2.0            2.4
+2               2.8            3.3
+3               2.2            2.2
+4               4.9            4.4
+5               3.3            3.4
+daraja 9 testda yomonroq: 4 / 5
