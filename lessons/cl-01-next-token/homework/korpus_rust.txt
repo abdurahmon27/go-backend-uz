@@ -1,0 +1,7 @@
+go tilini google yaratgan .
+go tilini google ochiq kodli qilgan .
+gmail xizmatini google yaratgan .
+python tilini guido yaratgan .
+c tilini dennis yaratgan .
+linux yadrosini linus yaratgan .
+rust tilini graydon yaratgan .
