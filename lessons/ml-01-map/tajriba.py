@@ -14,6 +14,8 @@ OLDIN commit qilingan (git log bilan tekshiring).
 
     uv run tajriba.py          # seed 1: jadval va eng katta xato
     uv run tajriba.py seeds    # 1..5 seed: tasodifmi yoki qonuniyatmi?
+    uv run tajriba.py seeds 100  # xuddi shu, lekin 100 ta train talaba (bashorat2.md)
+    uv run tajriba.py ming     # 1000 seed: bashoratlar nega xato chiqdi (natijadan keyin qoʻshilgan)
 """
 import sys
 
@@ -31,9 +33,9 @@ def talabalar(rng, n):
     return soat, ball
 
 
-def tajriba(seed):
+def tajriba(seed, n_train=N_TRAIN):
     rng = np.random.default_rng(seed)
-    xs, ys = talabalar(rng, N_TRAIN)
+    xs, ys = talabalar(rng, n_train)
     xt, yt = talabalar(rng, N_TEST)
     natija = {}
     for nom, daraja in MODELLAR:
@@ -59,16 +61,41 @@ def bitta():
     print(f"train soatlari: {xs.min():.1f} … {xs.max():.1f}")
 
 
-def seeds():
-    print(f"{'seed':<6}{'chiziq test':>13}{'daraja 9 test':>15}")
+def seeds(n_train=N_TRAIN):
+    print(f"{'seed':<6}{'chiziq test':>13}{'daraja 9 test':>15}   train: {n_train}")
     yomon = 0
     for s in range(1, 6):
-        natija, _, _ = tajriba(s)
+        natija, _, _ = tajriba(s, n_train)
         c, d = natija["chiziq"]["test"], natija["daraja 9"]["test"]
         yomon += d > c
         print(f"{s:<6}{c:>13.1f}{d:>15.1f}")
     print(f"daraja 9 testda yomonroq: {yomon} / 5")
 
 
+def ming():
+    """Bashoratlar nega xato chiqdi? Bitta seed emas, 1000 ta seed (natijadan keyin qoʻshilgan tahlil)."""
+    R = [tajriba(s) for s in range(1, 1001)]
+    tr = np.array([n["chiziq"]["train"] for n, _, _ in R])
+    te = np.array([n["chiziq"]["test"] for n, _, _ in R])
+    d9 = np.array([n["daraja 9"]["test"] for n, _, _ in R])
+    ichida = 0
+    for n, (xs, _), (xt, yt) in R:
+        p = n["daraja 9"]["p"]
+        i = int(np.argmax(np.abs(p(xt) - yt)))
+        ichida += xs.min() <= xt[i] <= xs.max()
+    print("1000 seed:")
+    print(f"chiziq train xato, oʻrtacha: {tr.mean():.1f}")
+    print(f"daraja 9 test xato, mediana: {np.median(d9):.0f}")
+    print(f"daraja 9 test 10…100 oraligʻida: {np.sum((d9 >= 10) & (d9 <= 100))} / 1000")
+    print(f"eng katta xato train oraligʻi ichida: {ichida} / 1000")
+    print(f"daraja 9 testda yomonroq: {np.sum(d9 > te)} / 1000")
+
+
 if __name__ == "__main__":
-    {"seeds": seeds}.get(sys.argv[1] if len(sys.argv) > 1 else "", bitta)()
+    rejim = sys.argv[1] if len(sys.argv) > 1 else ""
+    if rejim == "seeds":
+        seeds(int(sys.argv[2]) if len(sys.argv) > 2 else N_TRAIN)
+    elif rejim == "ming":
+        ming()
+    else:
+        bitta()
