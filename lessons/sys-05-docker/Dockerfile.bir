@@ -1,0 +1,6 @@
+# Bitta bosqich: Go kompilyatori ham image ichida qoladi
+FROM golang:1.26.8
+WORKDIR /src
+COPY . .
+RUN go build -o /server ./server
+CMD ["/server"]

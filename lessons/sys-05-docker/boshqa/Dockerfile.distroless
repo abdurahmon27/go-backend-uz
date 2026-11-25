@@ -1,0 +1,11 @@
+# Oʻlchov uchun: distroless/static — CA sertifikatlar, tzdata, /etc/passwd bor, shell yoʻq
+FROM golang:1.26.8 AS build
+WORKDIR /src
+COPY go.mod ./
+COPY server ./server
+RUN CGO_ENABLED=0 go build -o /server ./server
+
+FROM gcr.io/distroless/static-debian13
+COPY --from=build /server /server
+ENV DATA=/data
+CMD ["/server"]

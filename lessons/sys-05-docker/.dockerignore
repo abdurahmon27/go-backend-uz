@@ -1,0 +1,5 @@
+# image'ga keraksiz narsalar build context'ga ham yuborilmaydi
+data
+srv
+*.md
+homework

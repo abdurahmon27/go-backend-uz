@@ -1,0 +1,11 @@
+# Oʻlchov uchun: xuddi shu binary, lekin alpine ustida (shell va paket menejeri bor)
+FROM golang:1.26.8 AS build
+WORKDIR /src
+COPY go.mod ./
+COPY server ./server
+RUN CGO_ENABLED=0 go build -o /server ./server
+
+FROM alpine:3.24
+COPY --from=build /server /server
+ENV DATA=/data
+CMD ["/server"]
