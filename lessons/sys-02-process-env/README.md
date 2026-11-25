@@ -1,6 +1,6 @@
 # SYS-0.02 · Jarayon va muhit: `ps`, `kill`, signallar, `$PATH` va env
 
-Oldingi dars: [SYS-0.01 · Terminal: pipe, `grep`](../sys-01-terminal/) · Keyingi dars: SYS-0.03 · git: commit — snapshot, branch — bitta hash
+Oldingi dars: [SYS-0.01 · Terminal: pipe, `grep`](../sys-01-terminal/) · Keyingi dars: [GIT-1.01 · git: commit — snapshot, branch — bitta hash](../git-01-commit-snapshot/)
 
 | Fayl | Nima |
 |---|---|
