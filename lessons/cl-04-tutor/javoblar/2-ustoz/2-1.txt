@@ -1,0 +1,7 @@
+`tekshir` to'g'ri yozilgan: `%w` bilan o'rash zanjirni saqlaydi. `ErrTopilmadi` uchun `errors.Is` ham o'rinli, chunki u bitta aniq qiymat.
+
+Xato `holat` ichidagi `errors.Is(err, &MaydonXato{})` qatorida. `errors.Is` zanjirdagi har bir xatoni targetga `==` bilan solishtiradi. Pointerlarda bu manzillarni solishtirish degani. `tekshir` yaratgan `&MaydonXato{...}` bilan `holat` ichida yaratgan `&MaydonXato{}` har xil obyektlar, shuning uchun hech qachon teng bo'lmaydi.
+
+Bu yerda sen qiymatni emas, **turni** qidiryapsan. Qaysi maydon xato ekanini javobga yozish uchun esa zanjirdan `MaydonXato`ning o'zini olib, `Maydon` maydonini o'qishing kerak.
+
+Savol: `errors` paketida zanjirni aylanib, mos turdagi xatoni senga o'zgaruvchi sifatida beradigan funksiya qaysi? Hujjatni qidirib ko'r, u qanday argumentlar kutishini ham o'qi.

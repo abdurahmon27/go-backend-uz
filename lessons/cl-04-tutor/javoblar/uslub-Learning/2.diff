@@ -1,0 +1,35 @@
+--- a/bozor/main.go
++++ b/bozor/main.go
+@@ -30,16 +30,29 @@
+ 	if errors.Is(err, ErrTopilmadi) {
+ 		return 404
+ 	}
+-	// mening urinishim: oʻtgan safar errors.Is yordam bergan edi
+-	if errors.Is(err, &MaydonXato{}) {
++	// errors.Is pointer tengligini tekshiradi; tur boʻyicha moslash uchun errors.As kerak
++	var mx *MaydonXato
++	if errors.As(err, &mx) {
+ 		return 400
+ 	}
+ 	return 500
+ }
+ 
++// matn: javob tanasi uchun matn; maydon xatosida qaysi maydon notoʻgʻriligini koʻrsatadi
++func matn(err error) string {
++	var mx *MaydonXato
++	if errors.As(err, &mx) {
++		return fmt.Sprintf("notoʻgʻri maydon %q: %s", mx.Maydon, mx.Sabab)
++	}
++	if err != nil {
++		return err.Error()
++	}
++	return "ok"
++}
++
+ func main() {
+ 	for _, narx := range []int{12000, -5} {
+ 		err := tekshir(narx)
+-		fmt.Printf("POST /buyurtma narx=%d → %d %v\n", narx, holat(err), err)
++		fmt.Printf("POST /buyurtma narx=%d → %d %s\n", narx, holat(err), matn(err))
+ 	}
+ }

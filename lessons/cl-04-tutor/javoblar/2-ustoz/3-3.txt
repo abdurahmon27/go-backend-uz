@@ -1,0 +1,5 @@
+Ha, to'g'ri tushundingiz. `errors.AsType` Go 1.26 da qo'shilgan, sizda esa 1.26.8, shuning uchun ishlaydi. Natija ham mantiqli: manzil o'rniga tur parametrini berdingiz, topilgan xatoni `mx` va `ok` sifatida qaytardi, shu sababli `nil` pointer panicidan ham qutuldingiz. `mx.Maydon` ni javobga qo'shganingiz ham aynan siz xohlagan narsa. `holat` endi ikki qiymat qaytarsa, `main` dagi chaqiruvni ham moslab qo'ygan bo'lsangiz kerak.
+
+Tushunganingizni tekshirish uchun savol:
+
+`tekshir` ichida xatoni `&MaydonXato{...}` o'rniga pointersiz, ya'ni `MaydonXato{...}` qiymat sifatida o'rab qaytarsak (bunga `Error()` metodini qiymat qabul qiluvchiga o'zgartirish kerak bo'ladi), sizning `errors.AsType[*MaydonXato](err)` chaqiruvingiz nima qaytaradi? Nega?

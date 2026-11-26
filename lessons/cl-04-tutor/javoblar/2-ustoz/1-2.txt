@@ -1,0 +1,7 @@
+To'g'ri tomonlari: `errors.As` aynan kerakli funksiya, `var mx *MaydonXato` deb turni e'lon qilishing ham to'g'ri. Shuning uchun `narx=12000` holati ishladi va panic faqat xatoli yo'lda chiqdi.
+
+Xato `errors.As(err, mx)` qatorida, ikkinchi argumentda. `mx` hozir `nil` ko'rsatkich, `As` esa unga hech narsa yoza olmaydi. Panic xabari ham shuni aytyapti: `target must be a non-nil pointer`.
+
+`As` topilgan xatoni sening o'zgaruvchingga **yozishi** kerak. Buning uchun unga o'zgaruvchining qiymatini emas, boshqa narsani berish lozim.
+
+Savol: `mx` o'zgaruvchisining ichidagi qiymat emas, o'zgaruvchining o'zi qaerda turishini `As`ga bildirish uchun Go'da qaysi operatordan foydalanasan?

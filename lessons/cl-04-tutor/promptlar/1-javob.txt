@@ -1,0 +1,52 @@
+Bu Go kodni tuzatib ber. Narx manfiy bo'lsa 400 qaytishi kerak, lekin 500 qaytyapti. Go 1.26.8.
+
+bozor/main.go:
+package main
+
+import (
+	"errors"
+	"fmt"
+)
+
+var ErrTopilmadi = errors.New("buyurtma topilmadi")
+
+// MaydonXato: buyurtmaning bitta maydoni notoʻgʻri
+type MaydonXato struct {
+	Maydon string
+	Sabab  string
+}
+
+func (e *MaydonXato) Error() string { return e.Maydon + ": " + e.Sabab }
+
+func tekshir(narx int) error {
+	if narx <= 0 {
+		return fmt.Errorf("tekshir: %w", &MaydonXato{Maydon: "narx", Sabab: "musbat boʻlishi kerak"})
+	}
+	return nil
+}
+
+// holat: handler shu kodni HTTP javobga yozadi
+func holat(err error) int {
+	if err == nil {
+		return 200
+	}
+	if errors.Is(err, ErrTopilmadi) {
+		return 404
+	}
+	// mening urinishim: oʻtgan safar errors.Is yordam bergan edi
+	if errors.Is(err, &MaydonXato{}) {
+		return 400
+	}
+	return 500
+}
+
+func main() {
+	for _, narx := range []int{12000, -5} {
+		err := tekshir(narx)
+		fmt.Printf("POST /buyurtma narx=%d → %d %v\n", narx, holat(err), err)
+	}
+}
+
+go run ./bozor:
+POST /buyurtma narx=12000 → 200 <nil>
+POST /buyurtma narx=-5 → 500 tekshir: narx: musbat boʻlishi kerak

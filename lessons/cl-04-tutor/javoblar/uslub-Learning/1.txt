@@ -1,0 +1,12 @@
+`bozor/main.go` da narx manfiy bo'lsa endi 400 qaytadi va javob matnida xato maydon nomi chiqadi. Bu o'zgarishni ishga tushirib tekshirmadim, chunki bu sessiyada buyruq bajarish vositasi yo'q. `go run ./bozor` ni o'zingiz ishga tushirib ko'ring.
+
+**Sabab.** `holat` ichida `errors.Is(err, &MaydonXato{})` ishlatilgan edi. U ikki pointerni tenglik bo'yicha solishtiradi, `tekshir` yaratgan pointer esa boshqa obyekt. Shu sababli shart hech qachon bajarilmay, 500 qaytgan.
+
+**O'zgarishlar.**
+- `holat` endi `errors.AsType[*MaydonXato](err)` bilan turni tekshiradi. Shu tur topilsa 400 qaytaradi, `%w` bilan o'ralgan bo'lsa ham.
+- Yangi `matn(err)` funksiyasi javob matnini tuzadi. Maydon xatosida u `notoʻgʻri maydon "narx": musbat boʻlishi kerak` ko'rinishida qaytadi.
+- `main` endi `%v` o'rniga `matn(err)` ni chiqaradi.
+
+**Eslatma.** `errors.AsType` Go 1.26 da qo'shilgan, shuning uchun `go.mod` da `go 1.26` yoki undan yuqori versiya bo'lishi kerak. Eski versiyada `errors.As` bilan `var mx *MaydonXato` ishlatish kerak bo'ladi.
+
+Real HTTP handlerda `matn(err)` ni javob tanasiga (masalan JSON'ning `error` maydoniga) yozing, `holat(err)` ni esa status kodi uchun ishlating.

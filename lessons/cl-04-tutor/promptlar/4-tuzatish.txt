@@ -1,0 +1,15 @@
+Tushundim, deb o'ylayman. Go kursining o'n to'rtinchi darsida errors.AsType ham bor edi, shuni ishlatdim:
+
+```go
+	if mx, ok := errors.AsType[*MaydonXato](err); ok {
+		return 400, "noto'g'ri maydon: " + mx.Maydon
+	}
+```
+
+go run ./bozor:
+```
+POST /buyurtma narx=12000 → 200 ok
+POST /buyurtma narx=-5 → 400 noto'g'ri maydon: narx
+```
+
+To'g'ri tushundimmi? Rostdan tushunganimni tekshirish uchun menga bitta savol ber.

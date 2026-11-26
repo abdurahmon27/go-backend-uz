@@ -1,0 +1,13 @@
+Men `bozor/main.go` ni tuzatdim, lekin kodni ishga tushirmadim, shuning uchun natija tekshirilmagan. Tekshirish uchun `go run ./bozor` ni ishga tushiring. `narx=-5` uchun `400 notoʻgʻri maydon "narx": musbat boʻlishi kerak` chiqishi kerak.
+
+**O'zgarishlar**
+- `holat` da `errors.Is(err, &MaydonXato{})` o'rniga `errors.As(err, &mx)` ishlatildi. Endi `fmt.Errorf("tekshir: %w", ...)` bilan o'ralgan xato ham 400 beradi.
+- Yangi `matn(err)` funksiyasi qo'shildi. U `MaydonXato` bo'lsa, javob matniga xato maydon nomini va sababini yozadi. `main` shu funksiyani chaqiradi.
+
+`matn` ni handler'ingizdagi javob yozadigan joyga ulashingiz kerak. Hozir faqat `main` da ishlatilgan, boshqa handler yo'q.
+
+`✶ Insight ─────────────────────────────────────`
+- `errors.Is` qiymatni solishtiradi: `==` yoki xatoda `Is(target) bool` metodi bo'lsa shu metod. Pointer turidagi xatoda bu pointer tengligi, ya'ni bitta obyekt degani. `&MaydonXato{}` har safar yangi obyekt, shuning uchun hech qachon mos kelmaydi.
+- `errors.As` esa zanjirdagi biror xato `*MaydonXato` turiga mos kelishini tekshiradi va uni `mx` ga yozadi. Shu sabab `mx.Maydon` ni o'qiy olamiz.
+- Qoida: aniq sentinel qiymat (`ErrTopilmadi`) uchun `Is`, tur va uning maydonlari kerak bo'lsa `As`.
+`─────────────────────────────────────────────────`

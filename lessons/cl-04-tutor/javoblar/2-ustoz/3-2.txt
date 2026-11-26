@@ -1,0 +1,9 @@
+To'g'ri funksiyani topdingiz va `var mx *MaydonXato` e'loni ham to'g'ri. Xato shu qatorda:
+
+`if errors.As(err, mx) {`
+
+Panic xabariga qarang: *"target must be a non-nil pointer"*. `mx` ning o'zi `*MaydonXato` turida va hozircha `nil`. Siz `As` ga `nil` qiymatni uzatyapsiz. `errors.As` esa topgan xatoni **yozib qo'yish uchun joy** so'raydi, ya'ni shu joyning manzilini. Joy bu yerda `mx` o'zgaruvchisi.
+
+E'tibor bering: `12000` holatida panic yo'q, chunki `err == nil` bo'lib, funksiya avvalroq `200` qaytargan. Panic faqat `-5` da, ya'ni `As` chaqirilganda chiqdi.
+
+Savol: Go'da o'zgaruvchining o'zini emas, uning manzilini olish uchun qaysi operator ishlatiladi? `mx` ning turi `*MaydonXato` bo'lsa, uning manzili qanday turda bo'ladi va `As` aynan shuni kutayotgani nega mantiqli?

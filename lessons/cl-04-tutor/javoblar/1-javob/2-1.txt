@@ -1,0 +1,31 @@
+**Muammo:** `errors.Is(err, &MaydonXato{})` xatolarni `==` bilan solishtiradi. Pointerlar uchun bu manzillarni solishtirish degani. `&MaydonXato{}` yangi obyekt va `tekshir` ichida yaratilgan obyekt bilan hech qachon bir xil bo'lmaydi. Shuning uchun `Is` `false` qaytaradi va kod 500 ga tushadi.
+
+`errors.Is` aniq qiymatni (masalan `ErrTopilmadi` sentinel xatosini) topish uchun kerak. Xato turini tekshirish yoki uning maydonlarini o'qish uchun `errors.As` ishlatiladi.
+
+**Tuzatish** (`bozor/main.go`, faqat `holat` funksiyasi):
+
+```go
+func holat(err error) int {
+	if err == nil {
+		return 200
+	}
+	if errors.Is(err, ErrTopilmadi) {
+		return 404
+	}
+	var me *MaydonXato
+	if errors.As(err, &me) {
+		return 400
+	}
+	return 500
+}
+```
+
+`errors.As` xatolar zanjirini (`%w` orqali o'ralgan) yuqoridan pastga yuradi. U `*MaydonXato` turidagi birinchi xatoni topib, `me` ga yozadi va `true` qaytaradi.
+
+**Kutilgan natija:**
+```
+POST /buyurtma narx=12000 → 200 <nil>
+POST /buyurtma narx=-5 → 400 tekshir: narx: musbat boʻlishi kerak
+```
+
+**Qo'shimcha:** `me` endi to'ldirilgan, shuning uchun kerak bo'lsa `me.Maydon` va `me.Sabab` ni javob matniga qo'shish mumkin. Agar `errors.Is` ni tur bo'yicha ishlatmoqchi bo'lsangiz, `MaydonXato` uchun `Is(target error) bool` metodini yozish kerak, lekin bu holatda `errors.As` oddiyroq va to'g'riroq yechim.

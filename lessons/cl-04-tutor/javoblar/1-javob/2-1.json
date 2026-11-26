@@ -1,0 +1,15 @@
+{
+  "sana": "2026-11-26T04:48:37Z",
+  "model": "claude-sonnet-5-5",
+  "tizim": "-",
+  "xabar": "1-javob.txt",
+  "navbat": 1,
+  "effort": "high",
+  "stop_reason": "end_turn",
+  "duration_ms": 7547,
+  "output_tokens": 800,
+  "input_tokens_jami": 1158,
+  "models": [
+    "claude-sonnet-5-5"
+  ]
+}

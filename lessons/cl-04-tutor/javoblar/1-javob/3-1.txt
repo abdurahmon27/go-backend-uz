@@ -1,0 +1,40 @@
+Muammo `errors.Is` da. U xatolar zanjirini `==` bilan solishtiradi, `*MaydonXato` esa ko'rsatkich (pointer), shuning uchun `&MaydonXato{}` har safar yangi manzil bo'ladi va hech qachon zanjirdagi xatoga teng chiqmaydi. Natijada tekshiruv o'tmaydi va `500` qaytadi.
+
+Xatoni **turi** bo'yicha tekshirish uchun `errors.As` kerak. U zanjirdan `*MaydonXato` turidagi xatoni topadi va o'zgaruvchiga joylaydi.
+
+```go
+// holat: handler shu kodni HTTP javobga yozadi
+func holat(err error) int {
+	if err == nil {
+		return 200
+	}
+	if errors.Is(err, ErrTopilmadi) {
+		return 404
+	}
+	var mx *MaydonXato
+	if errors.As(err, &mx) {
+		return 400
+	}
+	return 500
+}
+```
+
+Kutilgan natija:
+
+```
+POST /buyurtma narx=12000 → 200 <nil>
+POST /buyurtma narx=-5 → 400 tekshir: narx: musbat boʻlishi kerak
+```
+
+Qachon qaysi birini ishlatish kerak:
+- `errors.Is(err, ErrTopilmadi)` — aniq bir qiymatni (sentinel xato) tekshirganda. `ErrTopilmadi` bitta global o'zgaruvchi bo'lgani uchun u to'g'ri ishlaydi.
+- `errors.As(err, &mx)` — xato turini tekshirganda yoki uning maydonlariga (`mx.Maydon`, `mx.Sabab`) murojaat qilmoqchi bo'lganda.
+
+`As` dan keyin `mx` to'ldirilgan bo'ladi, shuning uchun kerak bo'lsa javobga aynan qaysi maydon xato ekanini ham yozish mumkin:
+
+```go
+if errors.As(err, &mx) {
+    // mx.Maydon == "narx"
+    return 400
+}
+```

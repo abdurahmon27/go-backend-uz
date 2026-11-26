@@ -1,0 +1,18 @@
+`holat` endi manfiy narxda 400 qaytaradi va javob matnida xato maydonini ko'rsatadi. Kodni ishga tushirib ko'ra olmadim, chunki bu sessiyada Bash o'chirilgan. Shuning uchun natija tekshirilmagan.
+
+**Sabab:** `errors.Is(err, &MaydonXato{})` ishlamayapti. `Is` xatolarni `==` bilan solishtiradi. `&MaydonXato{}` esa yangi pointer, `tekshir` qaytargan pointerga teng emas. Shu sababli shart hech qachon bajarilmay, 500 qaytgan.
+
+**O'zgarish (`bozor/main.go`):**
+- `errors.Is` o'rniga `errors.As` ishlatildi. U xatolar zanjiridan `*MaydonXato` turini topadi va uni `mx` ga yozadi.
+- `holat` endi `(int, string)` qaytaradi: HTTP kod va javob matni.
+- 400 uchun matn `notoʻgʻri maydon "narx": musbat boʻlishi kerak` ko'rinishida chiqadi.
+- 404 va 500 uchun ham matn qaytariladi. 500 da ichki xato matni tashqariga chiqmasligi uchun `"ichki xatolik"` yoziladi.
+- `main` yangi imzoga moslandi. `holat` ning boshqa chaqiruvchisi yo'q edi.
+
+**Kutilgan chiqish:**
+```
+POST /buyurtma narx=12000 → 200 ok
+POST /buyurtma narx=-5 → 400 notoʻgʻri maydon "narx": musbat boʻlishi kerak
+```
+
+`tekshir` da shart `narx <= 0`, ya'ni `0` ham 400 beradi. Matn ("musbat boʻlishi kerak") bilan mos bo'lgani uchun tegmadim. Agar 0 ruxsat etilishi kerak bo'lsa, shartni `< 0` ga o'zgartirish va matnni moslash kerak.

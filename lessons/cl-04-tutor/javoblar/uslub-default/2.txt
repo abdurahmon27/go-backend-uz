@@ -1,0 +1,20 @@
+`holat` endi manfiy narxda 400 qaytaradi va javob matnida xato maydon nomi chiqadi. Men kodni ishga tushirib tekshira olmadim, chunki bu sessiyada Bash o'chirilgan. Quyidagi chiqish kod bo'yicha taxmin.
+
+**Sabab:** `errors.Is(err, &MaydonXato{})` har safar yangi koʻrsatkichni solishtiradi, shuning uchun hech qachon mos kelmasdi. Natijada 500 qaytardi. `errors.Is` oʻrniga `errors.As` kerak, u xato zanjiridan `*MaydonXato` turini topadi.
+
+**Oʻzgarishlar (`bozor/main.go`):**
+- `holat` endi `(int, string)` qaytaradi, ya'ni kod va javob matni.
+- `errors.As` orqali `*MaydonXato` topilsa, 400 va `notoʻgʻri maydon "narx": musbat boʻlishi kerak` qaytadi.
+- 404 uchun `buyurtma topilmadi`, 200 uchun `ok` qaytadi.
+- 500 uchun faqat `ichki xato` chiqadi, shunda ichki xato matni mijozga oshkor boʻlmaydi.
+- `holat` ning yagona chaqiruvchisi `main` edi, uni yangi signaturaga moslab yangiladim.
+
+Kutilgan chiqish:
+```
+POST /buyurtma narx=12000 → 200 ok
+POST /buyurtma narx=-5 → 400 notoʻgʻri maydon "narx": musbat boʻlishi kerak
+```
+
+Tekshirish uchun `cd bozor && go run main.go` ni ishga tushiring.
+
+Eslatma: `tekshir` ichida `narx <= 0` sharti bor, ya'ni 0 ham xato hisoblanadi. Siz faqat manfiy narx dedingiz. Agar 0 ruxsat etilishi kerak boʻlsa, shartni `narx < 0` ga oʻzgartirish kerak.

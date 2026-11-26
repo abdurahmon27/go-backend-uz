@@ -1,0 +1,13 @@
+{
+  "sana": "2026-11-26T04:52:47Z",
+  "model": "claude-sonnet-5-5",
+  "outputStyle": "Learning",
+  "effort": "high",
+  "stop_reason": "end_turn",
+  "num_turns": 4,
+  "duration_ms": 16355,
+  "output_tokens": 1844,
+  "models": [
+    "claude-sonnet-5-5"
+  ]
+}

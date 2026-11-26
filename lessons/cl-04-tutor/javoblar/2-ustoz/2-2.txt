@@ -1,0 +1,7 @@
+To'g'ri funksiyani topding, `var mx *MaydonXato` deb turni e'lon qilishing ham to'g'ri. Xato `errors.As(err, mx)` qatorida, ikkinchi argumentda.
+
+Panic matni buni aytyapti: target "non-nil pointer" bo'lishi kerak. `var mx *MaydonXato` yozganingda `mx` hali hech narsaga ishora qilmaydi, ya'ni `nil`. Sen `As`ga aynan shu `nil`ni berding. `As` esa natijani qayerga yozishni bilmay qoladi.
+
+E'tibor ber: `As` xatoni topgach, uni target ko'rsatgan joyga **yozadi**. Shuning uchun u o'zgaruvchining qiymatini emas, o'zgaruvchining joylashgan joyini kutadi.
+
+Savol: `mx` hozir nimaga teng, va `As` uning ichiga yozishi uchun uni qanday uzatish kerak?

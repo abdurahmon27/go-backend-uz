@@ -1,0 +1,15 @@
+{
+  "sana": "2026-11-26T04:48:38Z",
+  "model": "claude-sonnet-5-5",
+  "tizim": "ustoz-tizim.txt",
+  "xabar": "3-urinish.txt",
+  "navbat": 2,
+  "effort": "high",
+  "stop_reason": "end_turn",
+  "duration_ms": 7062,
+  "output_tokens": 619,
+  "input_tokens_jami": 2556,
+  "models": [
+    "claude-sonnet-5-5"
+  ]
+}

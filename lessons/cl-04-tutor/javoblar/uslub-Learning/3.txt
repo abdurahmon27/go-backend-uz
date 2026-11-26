@@ -1,0 +1,21 @@
+`bozor/main.go` da narx manfiy bo'lsa endi 400 qaytadi. Javob matnida xato maydon nomi ham chiqadi. Kodni ishga tushirib ko'rmadim, chunki bu sessiyada buyruq bajarish vositasi yo'q. `go run ./bozor` ni o'zingiz yurgizib tekshiring.
+
+**O'zgarishlar:**
+- **`holat`:** `errors.Is(err, &MaydonXato{})` o'rniga `errors.AsType[*MaydonXato](err)` ishlatildi. Sabab: `errors.Is` pointerlarni manzil bo'yicha solishtiradi, shuning uchun `&MaydonXato{}` hech qachon mos kelmasdi va 500 qaytardi.
+- **`matn`:** yangi funksiya. `MaydonXato` topilsa `notoʻgʻri maydon "narx": musbat boʻlishi kerak` ko'rinishidagi matn qaytaradi. Boshqa xatolarda `err.Error()` qaytadi.
+- **`main`:** endi `holat(err)` va `matn(err)` ni chiqaradi.
+
+`go.mod` da `go 1.26` yozilgan, `errors.AsType` esa shu versiyada qo'shilgan, shuning uchun u bilan kompilyatsiya bo'lishi kerak.
+
+Kutilgan natija:
+```
+POST /buyurtma narx=12000 → 200 ok
+POST /buyurtma narx=-5 → 400 notoʻgʻri maydon "narx": musbat boʻlishi kerak
+```
+
+Haqiqiy HTTP handlerda `holat(err)` ni `w.WriteHeader` ga, `matn(err)` ni javob tanasiga yozing. `tekshir` dagi `%w` o'rovi zanjirni saqlab turgani uchun xato qancha qatlamdan o'tsa ham `AsType` uni topadi.
+
+`✶ Insight ─────────────────────────────────────`
+- Bu xato turi ko'p uchraydi: sentinel xatolar (`ErrTopilmadi`) uchun `errors.Is` to'g'ri, ma'lumot tashuvchi struct xatolar (`*MaydonXato`) uchun `errors.As`/`AsType` kerak. Qoidasi: xatoning ichidagi ma'lumot kerak bo'lsa, `As` ishlating.
+- `holat` va `matn` bir xil `AsType` chaqiruvini takrorlayapti. Handler ko'payganda ikkalasini bitta `javob(err) (int, string)` funksiyasiga birlashtirish mumkin. Shunda status va matn bir-biridan ajralib qolmaydi.
+`─────────────────────────────────────────────────`

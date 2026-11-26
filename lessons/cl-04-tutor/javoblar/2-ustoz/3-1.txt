@@ -1,0 +1,9 @@
+`tekshir` ichida `%w` bilan o'rash to'g'ri, `ErrTopilmadi` uchun `errors.Is` ham to'g'ri ishlayapti. Xato `holat` ichidagi shu qatorda:
+
+`if errors.Is(err, &MaydonXato{}) {`
+
+`errors.Is` zanjirdagi har bir xatoni berilgan qiymat bilan tenglik orqali solishtiradi. Pointerlarda bu manzillarni solishtirish degani. `tekshir` ichida yaratilgan `&MaydonXato{...}` bilan `holat` ichidagi yangi `&MaydonXato{}` esa xotirada turli obyektlar, shuning uchun natija `false`. `ErrTopilmadi` esa bitta global o'zgaruvchi, shu sababli u ishlagan.
+
+Sizga esa qiymat emas, **tur** bo'yicha tekshirish kerak. Maydon nomini javobga yozish uchun ham zanjirdan `*MaydonXato` ni o'zgaruvchiga olib chiqish kerak.
+
+Savol: Go standart `errors` paketida zanjirni aylanib, ma'lum turdagi xatoni topib, o'zgaruvchiga joylab beradigan qaysi funksiya bor deb o'ylaysiz? Hujjatni ochib qarang va natijani yuboring.

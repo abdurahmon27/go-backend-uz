@@ -1,0 +1,39 @@
+--- a/bozor/main.go
++++ b/bozor/main.go
+@@ -22,24 +22,27 @@
+ 	return nil
+ }
+ 
+-// holat: handler shu kodni HTTP javobga yozadi
+-func holat(err error) int {
++// holat: handler shu kod va matnni HTTP javobga yozadi
++func holat(err error) (int, string) {
+ 	if err == nil {
+-		return 200
++		return 200, "ok"
+ 	}
+ 	if errors.Is(err, ErrTopilmadi) {
+-		return 404
++		return 404, ErrTopilmadi.Error()
+ 	}
+-	// mening urinishim: oʻtgan safar errors.Is yordam bergan edi
+-	if errors.Is(err, &MaydonXato{}) {
+-		return 400
++	// errors.Is ishlamaydi: &MaydonXato{} boshqa koʻrsatkich, tenglik bajarilmaydi.
++	// Tur boʻyicha tekshirish uchun errors.As kerak.
++	var mx *MaydonXato
++	if errors.As(err, &mx) {
++		return 400, fmt.Sprintf("notoʻgʻri maydon %q: %s", mx.Maydon, mx.Sabab)
+ 	}
+-	return 500
++	return 500, "ichki xato"
+ }
+ 
+ func main() {
+ 	for _, narx := range []int{12000, -5} {
+ 		err := tekshir(narx)
+-		fmt.Printf("POST /buyurtma narx=%d → %d %v\n", narx, holat(err), err)
++		kod, matn := holat(err)
++		fmt.Printf("POST /buyurtma narx=%d → %d %s\n", narx, kod, matn)
+ 	}
+ }

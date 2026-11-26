@@ -1,0 +1,17 @@
+Men `holat` funksiyasini tuzatdim (`bozor/main.go`), lekin kodni ishga tushirib tekshira olmadim, chunki bu sessiyada Bash o'chirilgan. Kodni o'zingiz `go run main.go` bilan sinab ko'ring.
+
+**Sabab:** `errors.Is(err, &MaydonXato{})` xatoni ko'rsatkich bo'yicha solishtiradi. Yangi yaratilgan `&MaydonXato{}` `tekshir` qaytargan xato bilan hech qachon bir xil bo'lmaydi. Shuning uchun shart ishlamay, 500 qaytyapti. `fmt.Errorf("%w")` bilan o'ralgan xatoni turi bo'yicha topish uchun `errors.As` kerak.
+
+**O'zgarishlar:**
+- `errors.Is(err, &MaydonXato{})` o'rniga `errors.As(err, &mx)` ishlatildi, `mx` esa `*MaydonXato`.
+- `holat` endi `(int, string)` qaytaradi, ya'ni status kod va javob matni. Narx manfiy bo'lsa `400` va `notoʻgʻri maydon "narx": musbat boʻlishi kerak` qaytadi.
+- Boshqa holatlar: `200 ok`, `404` xatoning o'z matni bilan, qolganlari uchun `500 ichki xato`. Ichki xato tafsilotlari mijozga chiqmaydi.
+- `main` yangi imzoga moslashtirildi. Loyihada `holat` ni boshqa chaqiradigan joy yo'q.
+
+Kutilgan natija:
+```
+POST /buyurtma narx=12000 → 200 ok
+POST /buyurtma narx=-5 → 400 notoʻgʻri maydon "narx": musbat boʻlishi kerak
+```
+
+Eslatma: `tekshir` `narx <= 0` bo'lganda ham xato qaytaradi, ya'ni nol narx ham 400 oladi. Siz faqat manfiy narx haqida yozgansiz. Nol narx ruxsat etilishi kerak bo'lsa, shartni `narx < 0` ga o'zgartirish kerak.

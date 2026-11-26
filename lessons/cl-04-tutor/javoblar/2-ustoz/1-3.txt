@@ -1,0 +1,5 @@
+Ha, to'g'ri tushunibsan. `errors.AsType[*MaydonXato]` Go 1.26 da bor va sening versiyangda ishlaydi. Natija ham to'g'ri: 400 qaytdi va `mx.Maydon` orqali maydon nomi javobga chiqdi. Ilgari kerak bo'lgan `var mx` va `&mx` bilan ovora bo'lmaysan, tur esa kvadrat qavs ichida ko'rsatiladi.
+
+Tushunganingni tekshirish uchun savol:
+
+`errors.Is(err, &MaydonXato{})` zanjirda `*MaydonXato` turidagi xato bo'lsa ham nega `false` qaytardi, `AsType[*MaydonXato]` esa nega `true`? Ikkalasi nimani solishtirishini o'z so'zlaring bilan tushuntir.

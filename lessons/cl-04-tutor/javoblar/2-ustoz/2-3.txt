@@ -1,0 +1,5 @@
+Ha, to'g'ri tushunding. `errors.AsType` Go 1.26 dagi variant: tur type argument sifatida beriladi, natija esa `mx` va `ok` sifatida qaytadi. Shuning uchun nil pointer uzatish xatosi bu yerda umuman bo'lmaydi. Chiqish ham to'g'ri: 400 va `narx` maydoni.
+
+Tushunganingni tekshirish uchun savol:
+
+`main` ichida `tekshir(narx)` natijasini yana bir bor `fmt.Errorf("handler: %w", ...)` bilan o'rasang, `holat` baribir 400 qaytaradimi? Javobingni **nega** shunday bo'lishini tushuntirib yoz. Agar `%w` o'rniga `%v` yozsang-chi?

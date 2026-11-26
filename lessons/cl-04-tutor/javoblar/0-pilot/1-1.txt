@@ -1,0 +1,11 @@
+`tekshir` ichidagi `%w` bilan o'rash to'g'ri, `ErrTopilmadi` uchun `errors.Is` ham to'g'ri ishlaydi. Xato shu qatorda:
+
+```go
+if errors.Is(err, &MaydonXato{}) {
+```
+
+`errors.Is` zanjirdagi har bir xatoni siz bergan qiymat bilan `==` orqali solishtiradi. `ErrTopilmadi` bitta global o'zgaruvchi, shuning uchun manzili hamisha bir xil. Siz esa har safar yangi `&MaydonXato{}` yaratyapsiz, uning manzili `tekshir` ichida yaratilgan ko'rsatkichnikidan boshqa. Maydonlari bo'sh yoki to'liqligi hech qanday rol o'ynamaydi, shuning uchun solishtirish hech qachon mos kelmaydi.
+
+Javobga qaysi maydon xato ekanini yozish uchun ham sizga yangi qiymat emas, zanjir ichidagi o'sha xatoning o'zi kerak bo'ladi.
+
+Savol: `ErrTopilmadi` ni bitta qiymat sifatida solishtirish mumkin, `MaydonXato` esa har safar yangi yaratiladi. Shunda zanjirda aynan shu *turdagi* xato bor-yo'qligini tekshirish va uni o'zgaruvchiga olish uchun `errors` paketida qaysi vosita bor, deb o'ylaysiz? Hujjatni ochib qidiring.

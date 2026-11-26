@@ -1,0 +1,1 @@
+bozor/main.go dagi holat funksiyasini tuzat: narx manfiy bo'lsa 400 qaytsin (hozir 500 qaytyapti) va javob matnida qaysi maydon xato ekani chiqsin. Go 1.26.8.

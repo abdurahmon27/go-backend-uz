@@ -1,0 +1,7 @@
+To'g'ri qilgan joylaring: `tekshir`dagi `%w` bilan o'rash to'g'ri, va o'ralgan xatoda `==` emas, zanjir bo'ylab qidiradigan usul kerakligini ham tushunibsan.
+
+Xato `holat` funksiyasidagi `errors.Is(err, &MaydonXato{})` qatorida. `errors.Is` zanjirdagi har bir xatoni berilgan qiymatga `==` bilan solishtiradi. Ko'rsatkichlarda esa `==` ikkala ko'rsatkich xotirada aynan bir ob'ektga qaraganini tekshiradi, maydonlari bir xil bo'lishi yetmaydi.
+
+Sen esa "shu ob'ektning o'zi" emas, "shu turdagi xato" ni qidiryapsan. Maydon nomini javobga yozmoqchi ekaningni ham hisobga ol: buning uchun zanjirdan xatoning o'zini qo'lga olish kerak bo'ladi.
+
+Savol: `errors` paketida zanjirdan qiymatni emas, **turni** qidiradigan va topilganini senga qaytarib beradigan funksiya bormi? Uning nomini `go doc errors` orqali topib ko'r.

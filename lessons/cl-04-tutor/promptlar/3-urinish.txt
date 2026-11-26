@@ -1,0 +1,15 @@
+Hujjatni o'qidim: errors.As zanjirdan kerakli turdagi xatoni topib, o'zgaruvchiga yozar ekan. Mana mening tuzatishim:
+
+```go
+	var mx *MaydonXato
+	if errors.As(err, mx) {
+		return 400
+	}
+```
+
+Endi go run qilsam panic chiqyapti:
+
+```
+POST /buyurtma narx=12000 → 200 <nil>
+panic: errors: target must be a non-nil pointer
+```

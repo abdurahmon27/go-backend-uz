@@ -1,0 +1,34 @@
+Muammo `errors.Is` da. U xatolarni `==` bilan solishtiradi. `&MaydonXato{}` esa yangi ko'rsatkich bo'lgani uchun `tekshir` qaytargan ko'rsatkichga hech qachon teng bo'lmaydi. Natijada `errors.Is` `false` qaytaradi va kod 500 ga tushadi.
+
+Xato **turini** tekshirish uchun `errors.As` kerak. U zanjirdagi (`%w` orqali o'ralgan) xatolar ichidan shu turdagisini topib, o'zgaruvchiga yozadi.
+
+`holat` funksiyasini shunday o'zgartiring:
+
+```go
+func holat(err error) int {
+	if err == nil {
+		return 200
+	}
+	if errors.Is(err, ErrTopilmadi) {
+		return 404
+	}
+	var me *MaydonXato
+	if errors.As(err, &me) {
+		return 400
+	}
+	return 500
+}
+```
+
+Kutilgan natija:
+
+```
+POST /buyurtma narx=12000 → 200 <nil>
+POST /buyurtma narx=-5 → 400 tekshir: narx: musbat boʻlishi kerak
+```
+
+Qoida:
+- `errors.Is(err, ErrXxx)` — aniq qiymatni (sentinel xato, masalan `ErrTopilmadi`) tekshirish uchun.
+- `errors.As(err, &x)` — xato turini tekshirish va uning maydonlariga (`me.Maydon`, `me.Sabab`) kirish uchun.
+
+`errors.As` topilgan xatoni `me` ga yozgani uchun, xohlasangiz javobga maydon nomini ham qo'shishingiz mumkin, masalan `me.Maydon` ni JSON xabarida qaytarish.
