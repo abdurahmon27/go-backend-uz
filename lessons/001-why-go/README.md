@@ -127,7 +127,8 @@ Javoblar: [`uyga/README.md`](uyga/README.md).
 
 **analyzer**
 
-- `analyzer` Goʻda tayyor bundle analyzer yoʻq, lekin go tool nm har bir funksiyaning hajmini beradi. Dars papkasidagi paketlar.sh ularni paketlar boʻyicha qoʻshadi. API’da eng kattasi runtime, keyin crypto tls va net http. Bizning yigirma qatorimiz esa bor-yoʻgʻi bir ming besh yuz toʻqson besh bayt.
+- `savol1` Avval taxmin qiling: bizning yigirma qatorimiz shu sakkiz megabaytning qanchasi? A: bir megabayt atrofida. B: yuz kilobayt atrofida. C: ikki kilobaytdan kam. Pauza qiling.
+- `analyzer` Javob: C. Goʻda tayyor bundle analyzer yoʻq, lekin go tool nm har bir funksiyaning hajmini beradi. Dars papkasidagi paketlar.sh ularni paketlar boʻyicha qoʻshadi. API’da eng kattasi runtime, keyin crypto tls va net http. Bizning yigirma qatorimiz esa bor-yoʻgʻi bir ming besh yuz toʻqson besh bayt.
 - `analyzer-fayl` E’tibor bering, bu faqat mashina kodi: ikki yarim megabaytdan sal koʻp, faylning uchdan biriga yaqin. Qolgani funksiya nomlari jadvali va debug ma’lumoti, ularni Chuqurroq qismida ochamiz. Endi eng kichik dasturda runtime’ning narxini oʻlchaymiz.
 
 **runtime**
@@ -143,13 +144,13 @@ Javoblar: [`uyga/README.md`](uyga/README.md).
 - `st-kod` Endi frontend’dagi tree-shaking savoli. net http’ni import qilamiz, lekin undan faqat bitta kichik funksiya, StatusText’ni chaqiramiz: u toʻrt yuz toʻrt uchun Not Found matnini qaytaradi.
 - `savol-st` Binary qancha boʻladi? A: Salom, dunyoʻga yaqin, chunki linker ishlatilmaganini tashlaydi. B: oʻrtada, chunki bir qismi qoladi. C: API’ga yaqin, chunki paket butunlay kiradi. Pauza qiling.
 - `javob-st` Javob: B, qariyb besh million bir yuz qirq ming bayt. net http’ning oʻz kodi esa API’dagidan qirq barobardan koʻp kichik: linker chaqirilmagan funksiyalarni haqiqatan tashladi. Unda qoʻshimcha kod qayerdan keldi?
-- `init` Javob init’da. JavaScript modulining yuqori darajadagi kodi import paytida ishlaydi. Goʻda bunga har bir paketning init’i va global oʻzgaruvchilarni boshlash toʻgʻri keladi: ular main’dan oldin albatta bajariladi. Linker ularni va ular chaqiradigan hamma narsani qoldiradi. Shu yoʻl bilan net va qirqdan ortiq crypto paketi kirdi. package.json’dagi sideEffects false kabi bayroq Goʻda yoʻq.
+- `init` Javob init’da. JavaScript modulining yuqori darajadagi kodi import paytida ishlaydi. Goʻda bunga har bir paketning init’i va global oʻzgaruvchilarni boshlash toʻgʻri keladi: ular main’dan oldin albatta bajariladi. Linker ularni va ular chaqiradigan hamma narsani qoldiradi. Masalan, net http’dagi DefaultTransport global oʻzgaruvchisi net paketini tortadi, shunday qilib net va qirqdan ortiq crypto paketi kirdi. package.json’dagi sideEffects false kabi bayroq Goʻda yoʻq.
 
 **from-scratch**
 
 - `xato-kod` Endi production’dan bir holat. Servis Toshkent soatini koʻrsatadi: time.LoadLocation vaqt zonasini yuklaydi. Xatoni oldingi kursdagidek err orqali tekshiramiz. Laptop’da soat toʻgʻri chiqadi.
 - `savol4` Uni CGO_ENABLED teng nol bilan build qilib, oldingi kursdagi FROM scratch image’ga qoʻyamiz. docker run nima chiqaradi? A: Toshkent soati. B: UTC soati. C: xato. Pauza qiling.
-- `xato-javob` Javob: C, unknown time zone. Vaqt zonalari bazasi binary ichida emas: LoadLocation uni tizimning zoneinfo papkasidan oʻqiydi, scratch’da esa u yoʻq. B ham boʻlishi mumkin edi: zonasiz time.Now xatosiz, jimgina UTC koʻrsatadi. Node’da bu kam uchraydi, chunki Intl ishlatadigan ICU oʻz bazasini node faylining ichida olib yuradi.
+- `xato-javob` Javob: C, unknown time zone. Vaqt zonalari bazasi binary ichida emas: LoadLocation uni tizimning zoneinfo papkasidan oʻqiydi, scratch’da esa u yoʻq. B esa boshqa holatda chiqadi: zonasiz time.Now xatosiz, jimgina UTC koʻrsatadi. Node’da bu kam uchraydi, chunki Intl ishlatadigan ICU oʻz bazasini node faylining ichida olib yuradi.
 - `tuzatish` Tuzatish import guruhiga bitta qator: pastki chiziq va time slesh tzdata. Pastki chiziqsiz Go kompilyatsiya qilmaydi, imported and not used deydi, chunki paketdan hech narsa chaqirmaymiz. Bizga faqat uning init’i kerak: u binary ichidagi bazani time paketiga roʻyxatdan oʻtkazadi.
 - `tuzatish-run` Qayta build qilib, scratch’da ishga tushiramiz: Toshkent soati chiqdi. Narxi qariyb toʻrt yuz oʻn ming bayt. Yoki scratch oʻrniga distroless static image oling: unda vaqt zonalari bazasi bor.
 
