@@ -3,6 +3,10 @@
 Kurs: **Go backend: noldan guru'gacha** · loyiha: **bozor** · video: YouTube'dagi "Golang backend #13"
 (kanaldagi "Go backend" playlist'i) · yozma dars: [haywan.uz/lab](https://haywan.uz/lab)
 
+> **Go versiyasi.** Modul 2 darslari Go 1.27 bilan yozilgan (`go.mod`: `go 1.27`). Sizda eskiroq Go boʻlsa,
+> `go run`/`go test` birinchi marta kerakli versiyani oʻzi yuklab oladi (`go: downloading go1.27…`). Bu oddiy hol;
+> `GOTOOLCHAIN=local` qoʻygan boʻlsangiz, Go'ni go.dev/dl'dan yangilang.
+
 Oldingi dars: [`gb-2-04-pointer`](../gb-2-04-pointer) (pointer: nusxa yoki umumiy qiymat) · keyingi dars: `gb-2-06` (paketlar: katta harf,
 `internal/` va loyiha tuzilishi). Domen turlari: [`gb-2-03-struct-turlar`](../gb-2-03-struct-turlar).
 
