@@ -312,6 +312,10 @@ func vaqt(ns float64) string {
 }
 
 func bittaJadval(data map[kalit]*olchov, n int) {
+	if data[kalit{"Ketma", n}] == nil {
+		fmt.Fprintf(os.Stderr, "n = %d uchun o'lchov yo'q (natija.txt'dagi n qiymatlaridan birini bering)\n", n)
+		os.Exit(2)
+	}
 	fmt.Printf("n = %s, slice %s, %d o'lchov mediani\n", daraja2(n), hajm(8*n), len(data[kalit{"Ketma", n}].nsOp))
 	baza := median(data[kalit{"Ketma", n}].nsOp)
 	for _, u := range usullar {
