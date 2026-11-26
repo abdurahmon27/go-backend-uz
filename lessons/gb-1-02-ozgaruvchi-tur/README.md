@@ -5,7 +5,7 @@ Kurs: **Go backend: noldan guru'gacha** · loyiha: **bozor** · Golang backend #
 Oldingi dars: [GB-1.01 · birinchi dastur, go mod init, go run va go build](../gb-1-01-birinchi-dastur/) ·
 Keyingi dars: [GB-1.03 · butun sonlar va pul: narx tiyinda, float64 nega emas](../gb-1-03-pul-tiyinda/)
 
-Video: YouTube'dagi "Golang backend" playlist'ida (#2) · Yozma dars: https://haywan.uz/lab/youtube/gb#gb-1-02
+Video: YouTube'dagi "Golang backend" playlist'ida (#2) · Yozma dars: https://www.haywan.uz/lab/youtube/gb/gb-1-02
 
 ## Darsda nima boʻladi
 

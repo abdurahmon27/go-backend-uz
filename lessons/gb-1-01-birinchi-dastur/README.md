@@ -5,7 +5,7 @@ Kurs: **Go backend: noldan guru'gacha** · loyiha: **bozor** · Golang backend #
 Oldingi dars: yoʻq (kursning birinchi darsi) ·
 Keyingi dars: [GB-1.02 · qiymat, oʻzgaruvchi va zero value](../gb-1-02-ozgaruvchi-tur/)
 
-Video: YouTube'dagi "Golang backend" playlist'ida (#1) · Yozma dars: https://haywan.uz/lab/youtube/gb#gb-1-01
+Video: YouTube'dagi "Golang backend" playlist'ida (#1) · Yozma dars: https://www.haywan.uz/lab/youtube/gb/gb-1-01
 
 ## Darsda nima boʻladi
 
