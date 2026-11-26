@@ -7,17 +7,23 @@ const vatPercent = 12      // QQS, foizda
 const deliverySom = 15_000 // yetkazib berish, soʻmda (QQS qoʻshilmaydi)
 const maxFree = 2          // bitta buyurtmada koʻpi bilan shuncha dona bepul
 
-// Buyurtma. main'dan tashqarida: test ularni oʻzgartirib, main'ni qayta ishga tushiradi.
-var name = "choy"
-var price int64 = 1_999 * tiyinPerSom // tiyinda
-var active = true                     // sotuvda
-var stock = 40                        // omborda, dona
-var sold = 7                          // buyurtmada, dona
-
 func main() {
 	fmt.Println("bozor ishga tushdi")
 	fmt.Println("versiya: 0.1.0")
 
+	var name string
+	var price int64
+	var active bool
+	fmt.Println(name, price, active)
+
+	name = "choy"
+	price = 1_999 * tiyinPerSom // tiyinda
+	active = true
+	stock := 40
+	weight := 1.5
+	fmt.Println(name, price, active, stock, weight)
+
+	sold := 7
 	if name == "" {
 		fmt.Println("xato: mahsulot nomi boʻsh")
 		return
@@ -34,13 +40,12 @@ func main() {
 		fmt.Println("xato: miqdor kamida 1 dona boʻlishi kerak")
 		return
 	}
-	if sold > stock {
-		fmt.Printf("xato: omborda %d dona bor, %d soʻraldi\n", stock, sold)
+	if left := stock - sold; left < 0 {
+		fmt.Printf("xato: omborda %d dona yetmaydi\n", -left)
 		return
 	}
-	if left := stock - sold; left < 5 {
-		fmt.Printf("diqqat: omborda %d dona qoladi\n", left)
-	}
+	stock = stock - sold
+	fmt.Println(name, stock)
 
 	var subtotal int64
 	free := 0

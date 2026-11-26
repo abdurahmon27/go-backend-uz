@@ -91,6 +91,9 @@ Bozor (`go run .`):
 ```
 bozor ishga tushdi
 versiya: 0.1.0
+ 0 false
+choy 199900 true 40 1.5
+choy 33
 choy, 7 dona        9995.00
 QQS                 1199.40
 yetkazish          15000.00

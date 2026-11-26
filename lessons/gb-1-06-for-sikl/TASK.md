@@ -15,6 +15,9 @@ Kutilgan natija (`sold = 12` boʻlsa: 3- va 6-dona bepul, 9- va 12-dona endi pul
 ```
 bozor ishga tushdi
 versiya: 0.1.0
+ 0 false
+choy 199900 true 40 1.5
+choy 28
 choy, 12 dona      19990.00
 QQS                 2398.80
 yetkazish          15000.00
@@ -31,8 +34,10 @@ go test
 ```
 
 `ok` chiqsa, vazifa bajarildi. Hozir test `FAIL` beradi va qaysi buyurtmada nima kutilganini koʻrsatadi
-(`kerak:` va `hozir:` qatorlari). `main_test.go` faylini oʻzgartirmang: u `name`, `price`, `active`, `stock`, `sold` ni
-almashtirib, `main()` ni bir necha marta ishga tushiradi (test yozishni GB-1.08'da ochamiz).
+(`kerak:` va `hozir:` qatorlari, boshidagi toʻrt qatordan keyingisi). `main_test.go` faylini oʻzgartirmang: u
+`main.go`'dagi `name = …`, `price = …`, `active = …`, `stock := 40` va `sold := 7` qatorlaridagi qiymatlarni
+almashtirib, dasturni har xil buyurtma bilan ishga tushiradi (test yozishni GB-1.08'da ochamiz). Shuning uchun bu besh
+qatorni oʻchirmang.
 
 **Maslahatlar**
 1. Oʻzgarish faqat sikl ichida: qaysi holatda `continue` ishlashi kerak? Dona bepul boʻlishi uchun endi **ikki**
