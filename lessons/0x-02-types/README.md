@@ -10,7 +10,7 @@ oʻrganayotgan boʻlsangiz, avval [Mohirdev](https://mohirdev.uz/kurslar/go-dast
 Hamma natijalar shu kompyuterda olingan (2026-11-26): `go1.26.8 linux/amd64`, Node v24.10.0, Python 3.13.15,
 TypeScript 5.9.3. Har bir Go dasturini https://go.dev/play da ham ishga tushirish mumkin.
 
-**Bitta gʻoya:** Go'da har bir oʻzgaruvchining turi build paytida qatʼiy belgilanadi va binary ichida ham qoladi:
+**Bitta gʻoya:** Go'da har bir oʻzgaruvchining turi build paytida qatʼiy tekshiriladi, tur haqidagi maʼlumot esa runtime'ga ham olib boriladi:
 `"2" + 2` build boʻlmaydi, JSON'dagi `"2"` int maydonga tushmaydi, qiymat berilmagan oʻzgaruvchi esa `undefined`
 emas, oʻz turining *zero value*'si.
 
@@ -108,7 +108,7 @@ oʻchiradi, tekshirmaydi ([Node.js: Type stripping](https://nodejs.org/api/types
 ## Uy vazifasi
 
 - 🟢 **Oson** — `uyga/oson/main.go`: savat summasi build boʻlmaydi. Uchta xatoni tuzating (kompilyator avval ikkitasini
-  koʻrsatadi, birini tuzatsangiz uchinchisi chiqadi). Avval natijani taxmin qiling. Javob: `uyga/javob/oson/` → `jami: 40`.
+  koʻrsatadi; `p * qty` ni tuzatsangiz, uchinchisi chiqadi). Avval natijani taxmin qiling. Javob: `uyga/javob/oson/` → `jami: 40`.
 - 🟡 **Oʻrta** — `uyga/orta/main.go`: GO-X.01 dagi `GET /users/{id}`. `r.PathValue("id")` string qaytaradi: uni `int`ga
   aylantiring, `{"id": 42, "next": 43}` qaytaring, `/users/abc` uchun `400 Bad Request`. Faylda `strconv.Atoi` qolipi bor
   (`if err != nil` — GO-X.03 mavzusi, hozircha nusxalab oling). Javob: `uyga/javob/orta/`.
