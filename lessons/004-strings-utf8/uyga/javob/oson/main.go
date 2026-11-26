@@ -5,10 +5,19 @@ import (
 	"unicode/utf8"
 )
 
-// Javob: "Gʻayrat" = 8 bayt, 7 rune (G ʻ a y r a t; ʻ ikki bayt).
-// "G'ayrat" (klaviatura apostrofi) = 7 bayt, 7 rune: faqat bayt soni oʻzgaradi.
+// Javob: len baytlarni sanaydi: "Gʻani" = 6 bayt (ʻ ikki bayt), lekin 5 rune.
+// Frontend'dagi .length UTF-16 birliklarini sanaydi; bu ismlarda u rune soniga teng, shuning uchun backend
+// rune'larni sanashi kerak: utf8.RuneCountInString.
+// (Emoji kabi U+FFFF dan katta belgilarda JS .length 2 beradi, rune esa 1 — bu yerda ular uchramaydi.)
+func ismTekshir(ism string) string {
+	if utf8.RuneCountInString(ism) <= 5 {
+		return "qabul"
+	}
+	return "juda uzun"
+}
+
 func main() {
-	for _, ism := range []string{"Gʻayrat", "G'ayrat"} {
-		fmt.Println(ism, len(ism), utf8.RuneCountInString(ism))
+	for _, ism := range []string{"Anvar", "Gʻani", "Oʻktam"} {
+		fmt.Println(ism, ismTekshir(ism))
 	}
 }

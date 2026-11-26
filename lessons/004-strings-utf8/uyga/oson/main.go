@@ -1,15 +1,21 @@
 package main
 
-import (
-	"fmt"
-	"unicode/utf8"
-)
+import "fmt"
 
-// 🟢 Oson: ism oʻrniga oʻz ismingizni yozing.
-// Ishga tushirishdan OLDIN ikkala sonni qogʻozga yozib qoʻying, keyin tekshiring.
-// Keyin ʻ ni klaviaturadagi ' ga almashtiring: qaysi son oʻzgaradi?
+// 🟢 Oson: roʻyxatdan oʻtish formasi.
+// Frontend'da <input maxLength={5}>: React "Gʻani" ni oʻtkazadi ("Gʻani".length === 5).
+// Backend esa xuddi shu ismni "juda uzun" deb rad etadi.
+// 1) Ishga tushirishdan OLDIN yozing: har bir ism uchun nima chiqadi?
+// 2) Nega "Gʻani" rad etildi? Tuzating, toki backend frontend bilan bir xil sanasin.
+func ismTekshir(ism string) string {
+	if len(ism) <= 5 {
+		return "qabul"
+	}
+	return "juda uzun"
+}
+
 func main() {
-	ism := "Gʻayrat"
-	fmt.Println(len(ism))
-	fmt.Println(utf8.RuneCountInString(ism))
+	for _, ism := range []string{"Anvar", "Gʻani", "Oʻktam"} {
+		fmt.Println(ism, ismTekshir(ism))
+	}
 }

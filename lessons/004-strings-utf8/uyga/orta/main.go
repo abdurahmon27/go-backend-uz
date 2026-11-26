@@ -2,15 +2,19 @@ package main
 
 import "fmt"
 
-// 🟡 Oʻrta: sayt ismni "koʻpi bilan 5 ta belgi" deb len bilan tekshiradi.
-// Ekranda "Gʻani" 5 ta belgi (G ʻ a n i), lekin dastur "juda uzun" deydi.
-// 1) Nega? Avval oʻylab koʻring, keyin tushuntiring.
-// 2) Dasturni tuzating, toki "Gʻani" qabul qilinsin.
-func main() {
-	ism := "Gʻani"
-	if len(ism) <= 5 {
-		fmt.Println("qabul")
-	} else {
-		fmt.Println("juda uzun")
+// 🟡 Oʻrta: bildirishnoma (push, Telegram) uchun matnning qisqa koʻrinishi.
+// qisqa(s, n) matnning birinchi n ta belgisini qaytarishi va kesilgan boʻlsa oxiriga "…" qoʻshishi kerak.
+// Hozirgi kod baytlab kesadi: oʻzbekcha matnda belgi yarmidan kesiladi va ilovada "�" chiqadi.
+// Tuzating: kesish belgilar (rune'lar) boʻyicha boʻlsin. %q buzilgan baytni \xca kabi koʻrsatadi.
+func qisqa(s string, n int) string {
+	if len(s) <= n {
+		return s
 	}
+	return s[:n] + "…"
+}
+
+func main() {
+	fmt.Printf("%q\n", qisqa("Toʻlov qabul qilindi", 3)) // kutilgan: "Toʻ…"
+	fmt.Printf("%q\n", qisqa("Gʻalaba", 7))              // kutilgan: "Gʻalaba"
+	fmt.Printf("%q\n", qisqa("Payme orqali toʻlov", 5))  // kutilgan: "Payme…"
 }

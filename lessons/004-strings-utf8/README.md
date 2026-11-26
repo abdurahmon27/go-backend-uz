@@ -1,145 +1,177 @@
-# 04 · `len("oʻzbek")` = 7? Harf, rune va bayt
+# 04 · `len("oʻzbek")` = 7? Bayt, rune va UTF-8
 
 Video: *Golang oʻzbek tilida #4* · Lab: https://haywan.uz/lab/youtube/go#go-1-04 ·
 Oldingi dars: [03 · Konstantalar va `iota`](../003-const-iota/) · Keyingi dars: [05 · Go'da `while` yoʻq](../005-for-switch/) ·
-Avval koʻring: Go 0 darslari ([000-01](../000-01-birinchi-dastur/) … [000-05](../000-05-for/)), [01](../001-why-go/) (bayt), [02](../002-types-overflow/) (int8).
+Avval: "Go: JS/Python/PHP dasturchilari uchun" kursi ([0x-01](../0x-01-http-api/) …), [01](../001-why-go/), [03](../003-const-iota/).
 
-Go 0 dan keyin koʻriladigan dars (2026-11-26 da qayta yozildi). Hamma natijalar `go1.26.8 linux/amd64`da olingan.
-Har bir dasturni https://go.dev/play da ham ishga tushirish mumkin: faylni nusxalab qoʻying va **Run** bosing.
+Boshqa tilda (JS/TS, Python, PHP) ishlaydigan, Go'ga yangi dasturchilar uchun (2026-11-26 da qayta yozildi).
+Natijalar: `go1.26.8 linux/amd64`, Node v24.10.0, Python 3.13.15, PHP 8.4.26. Har bir Go dasturini
+https://go.dev/play da ham ishga tushirish mumkin.
 
-**Bitta gʻoya:** kompyuter har bir belgini raqam qilib baytlarda saqlaydi: oddiy klaviatura belgisi bitta bayt,
-oʻ dagi teskari vergul (ʻ) esa ikki bayt oladi. `len` harflarni emas, baytlarni sanaydi, shuning uchun koʻzga bir xil
-koʻringan soʻzlar ichida har xil baytlar boʻlishi va Go ularni teng emas deyishi mumkin.
+**Bitta gʻoya:** Go'da string — baytlar ketma-ketligi (kod ichidagi matn UTF-8 da): `len`, indeks va `==` baytlar
+bilan ishlaydi (PHP `strlen` kabi). Python sanaydigan birlik (code point) Go'da `rune`, JS esa UTF-16 birliklarini
+sanaydi. Shuning uchun bitta oʻzbekcha soʻzga tillar har xil uzunlik beradi, koʻzga bir xil soʻzlar esa teng chiqmaydi.
 
-| Soʻz | Maʼnosi |
-|---|---|
-| harf | alifbo harfi: `oʻ` bitta harf |
-| belgi | ekrandagi bitta belgi: `oʻ` ekranda ikki belgi (`o` + `ʻ`) |
-| Unicode | dunyodagi hamma belgilarning raqamlangan roʻyxati (Unicode 18.0: 172 808 ta belgi) |
-| rune | belgining Unicode raqami (`ʻ` → 699) |
-| UTF-8 | raqamni baytlarga yozish qoidasi: 1–4 bayt |
-| `len(s)` | matndagi **baytlar** soni |
-| `utf8.RuneCountInString(s)` | matndagi rune'lar soni |
+| Til | Ifoda | `"oʻzbek"` | `"😀"` | Nimani sanaydi |
+|---|---|---|---|---|
+| JavaScript / TS | `s.length` | 6 | 2 | UTF-16 birliklari |
+| Python | `len(s)` | 6 | 1 | code point'lar |
+| PHP | `strlen($s)` · `mb_strlen($s)` | 7 · 6 | 4 · 1 | baytlar · belgilar |
+| Go | `len(s)` | 7 | 4 | baytlar |
+| Go | `utf8.RuneCountInString(s)` | 6 | 1 | rune'lar (code point'lar) |
+| JavaScript | `[...s].length` | 6 | 1 | code point'lar |
 
-`oʻzbek` = **5 harf · 6 rune · 7 bayt**.
+`oʻzbek` = **5 harf · 6 rune · 7 bayt** (`6f ca bb 7a 62 65 6b`). `rune` — `int32` ning boshqa nomi, bitta code point.
 
 | Papka | Nima | Natija |
 |---|---|---|
-| `uzunlik/` | `len` va `RuneCountInString` | `7` / `6` |
-| `sinov/` | oʻrtadagi sinov: `len("gʻoz")` | `5` |
+| `hook/` | `len("oʻzbek")` | `7` |
+| `tillar/tekshir.sh` | bitta soʻz toʻrt tilda (node, python3, php, go — borlari) | `6 · 6 · 7 · 7` |
+| `uzunlik/` | `len` va `utf8.RuneCountInString` | `7` / `6` |
+| `indeks/` | `s[1]` — bayt (son), `string([]rune(s)[1])` — belgi | `202` / `ca` / `ʻ` |
+| `emoji/` | oraliq savol: `len("😀")` | `4` / `1` |
 | `tort/` | bitta soʻz, toʻrt xil apostrof | `len` 6 · 7 · 8 · 8, rune hammasida 6 |
 | `teng/` | xato: `"Oʻzbekiston" == "O'zbekiston"` | `false` |
-| `tuzat/` | `strings.ReplaceAll` bilan tuzatish va uning cheklovi | `true` / `maʻno` |
+| `normal/` | tuzatish: `strings.NewReplacer` faqat o/g dan keyin (`'` va egri `’ ‘`) | `true` / `ma'no` / `true true` |
+| `tuzat/` | xato tuzatish: `strings.ReplaceAll` hamma `'` ni almashtiradi | `true` / `maʻno` (buzildi) |
+| `tozala/` | toʻliqroq qoida: o/g dan keyin `ʻ`, boshqa harflar orasida `ʼ`, egri `’ ‘` ham | pastda |
 | `lexuz/` | lex.uz sahifasida oʻ/gʻ dan keyingi belgilarni sanash (tarmoq kerak) | `U+02BB 50 · U+2018 13 · U+2019 1` |
-| `bitlar/` | Chuqurroq: `ʻ` qanday qilib `ca bb` boʻladi | `ca bb` (699 = 10 bit) |
+| `bitlar/` | Chuqurroq: `ʻ` qanday qilib `ca bb` boʻladi | `ca bb` |
 | `kesish/` | Chuqurroq: `s[:2]` belgini yarmidan kesadi | `"o\xca"` / `false` / `"oʻ"` / `"o"` |
+| `sinov/` | qoʻshimcha mashq: `len("gʻoz")` | `5` |
 | `uyga/` | uy vazifasi: boshlangʻich fayllar va `javob/` | |
 
-Qolgan papkalar (`uch/`, `aylanish/`, `bayt/`, `qidiruv/`, `tozala/`, `yangi/`, `kirill/`, `homework/`) darsning
-birinchi versiyasidan qoldi, ular pastdagi **Ilova**da (`tozala/` — toʻliqroq tozalash funksiyasi, videoda tilga olinadi).
+Qolgan papkalar (`uch/`, `aylanish/`, `bayt/`, `qidiruv/`, `yangi/`, `kirill/`, `homework/`) birinchi versiyadan
+qoldi, ular pastdagi **Ilova**da.
 
 ## Videodagi buyruqlar
 ```bash
-go run uzunlik/main.go   # 7 / 6
-go run sinov/main.go     # 5
-go run tort/main.go      # o'zbek len=6 rune=6 · oʻzbek len=7 · o’zbek len=8 · o‘zbek len=8
-go run teng/main.go      # false
-go run tuzat/main.go     # true / maʻno
-go run bitlar/main.go    # U+02BB = 699 = 1010111011 (10 bit) / 110|01010  10|111011  = ca bb
-go run kesish/main.go    # "o\xca" / false / "oʻ" / "o"
+node -p '"oʻzbek".length'                  # 6
+go run hook/main.go                        # 7
+python3 -c 'print(len("oʻzbek"))'          # 6
+php -r 'echo strlen("oʻzbek");'            # 7   (yoki: ./tillar/tekshir.sh)
+go run uzunlik/main.go                     # 7 / 6
+go run indeks/main.go                      # 202 / ca / ʻ
+go run emoji/main.go                       # 4 / 1     (node -p '"😀".length' → 2)
+go run tort/main.go                        # o'zbek len=6 · oʻzbek len=7 · o’zbek len=8 · o‘zbek len=8, rune=6
+go run teng/main.go                        # false
+go run normal/main.go                      # true / ma'no / true true
+go run bitlar/main.go                      # U+02BB = 699 = 1010111011 (10 bit) / 110|01010  10|111011  = ca bb
+go run kesish/main.go                      # "o\xca" / false / "oʻ" / "o"
 curl -sL https://lex.uz/uz/docs/8548754 | go run ./lexuz   # 2026-11-26: U+02BB 50, U+2018 13, U+2019 1
 ```
 
 ## Dars matni (qisqa)
 
-**Hook.** Oʻzbek soʻzida nechta harf bor? Besh: oʻ, z, b, e va k. Go'dan shu soʻzning uzunligini soʻrasangiz, yetti deydi.
+**Hook.** Bitta oʻzbekcha soʻz: `node` uzunligini 6 deydi, Go'ning `len`i 7. Frontend'dagi 5 belgilik limit va Go
+backend'dagi tekshiruv shu farq tufayli bitta ismga ikki xil javob beradi.
 
-**Eslash.** Bitta baytga nima sigʻadi? *Bitta oddiy harf* (01-dars). Bayt sakkizta nol yoki bir; 02-darsdagi `int8`
-ham bitta bayt, unga 256 xil son sigʻadi. Kompyuter harfni ham son qilib saqlaydi: har bir belgining raqami bor (`z` → 122).
+**Eslash (03-dars).** `time.Sleep(2)` qancha kutadi? — 2 nanosekund: `time.Duration` nanosekundlarni sanaydi. Bugungi
+savol ham birlik haqida: `len` qaytargan 7 — yettita nima?
 
-**Unicode va UTF-8.** Dunyoda belgilar juda koʻp (lotin, kirill, xitoy yozuvi, emoji): hammasi bitta katta roʻyxatda
-raqamlangan — **Unicode** (170 mingdan ortiq belgi), bitta baytga esa faqat 256 xil son sigʻadi. Shuning uchun katta
-raqamli belgi bir nechta baytga yoziladi, xuddi avtoturargohda avtobus ikki-uch joy egallagani kabi. Oddiy ingliz
-klaviaturasidagi belgilar bittadan bayt, `ʻ` (699) ikki bayt, `’` (8217) va `‘` (8216) uch baytdan. Belgini baytlarga
-yozish qoidasi — **UTF-8**.
+**Toʻrt til.** Python `len` → 6, PHP `strlen` → 7. Go'da string — baytlar ketma-ketligi (kod ichidagi matn UTF-8 da),
+`len` baytlarni sanaydi, PHP `strlen` kabi. Python sanagan birlik Go'da **rune**. JS'niki uchinchi xil: UTF-16 birliklari.
 
-**len.** `oʻzbek`: o 1 + ʻ 2 + z b e k 4 = **7 bayt**. `len` (inglizcha *length*, uzunlik) harflarni emas, baytlarni
-sanaydi. Ekranda esa oltita belgi: o, ʻ, z, b, e, k. Har bir belgining Unicode raqami Go'da **rune** deyiladi.
+**UTF-8.** Har bir belgining Unicode raqami bor (JS `codePointAt`) — **code point**. UTF-8 uni 1–4 baytga yozadi:
+0…127 → 1, …2047 → 2, …65535 → 3, …1114111 → 4 bayt. `ʻ` (U+02BB = 699) ikki bayt: `ca bb`.
+
+**Rune.** Python sanagan oltita narsa — code point'lar: o, ʻ, z, b, e, k. Go'da bitta code point turi `rune` (`int32`).
+Rune ham harf emas: `oʻ` bitta harf, lekin ikki rune.
 
 ```go
 s := "oʻzbek"
 fmt.Println(len(s))                    // 7 — baytlar
-fmt.Println(utf8.RuneCountInString(s)) // 6 — rune'lar (fayl boshida: import "unicode/utf8")
+fmt.Println(utf8.RuneCountInString(s)) // 6 — rune'lar (JS: [...s].length → 6)
 ```
 
-**Toʻrt xil apostrof.** Teskari vergulni oddiy klaviaturada topish qiyin, shuning uchun oʻzbek soʻzi toʻrt xil yoziladi.
-Toʻgʻrisi `ʻ` U+02BB: Unicode'ning tillar maʼlumotlari (CLDR `uz.xml`) oʻ va gʻ uchun shuni koʻrsatadi.
+**Indeks.** JS'da `"oʻzbek"[1]` → `"ʻ"`. Go'da `s[1]` → `202`: bitta **bayt** (`byte` turi, son), `ʻ` ning birinchi
+bayti `ca`. Belgi kerak boʻlsa: `string([]rune(s)[1])` → `ʻ`. JS'da baytlarni `new TextEncoder().encode(s)` beradi
+(`[1]` → 202) (Go spec: https://go.dev/ref/spec#Index_expressions).
+
+**Oraliq savol.** `len("😀")`? U+1F600 = 128 512 > 65 535 → **4** bayt, rune 1. JS `.length` → 2: UTF-16 bu belgini
+ikki birlikka (surrogate pair) boʻladi.
+
+**Toʻrt xil apostrof.** Teskari vergulni oddiy klaviaturada topish qiyin, shuning uchun bitta soʻz toʻrt xil yoziladi.
+Unicode'ning til maʼlumotlari (CLDR `uz.xml`) oʻ va gʻ uchun `ʻ` U+02BB ni koʻrsatadi.
 
 ```
-o'zbek  len=6  rune=6     ' U+0027 klaviatura apostrofi
-oʻzbek  len=7  rune=6     ʻ U+02BB teskari vergul (MODIFIER LETTER TURNED COMMA)
-o’zbek  len=8  rune=6     ’ U+2019 oʻng egri apostrof (RIGHT SINGLE QUOTATION MARK)
-o‘zbek  len=8  rune=6     ‘ U+2018 chap egri apostrof (LEFT SINGLE QUOTATION MARK)
+o'zbek  len=6  rune=6     ' U+0027 = 39     klaviatura apostrofi
+oʻzbek  len=7  rune=6     ʻ U+02BB = 699    teskari vergul (MODIFIER LETTER TURNED COMMA)
+o’zbek  len=8  rune=6     ’ U+2019 = 8217   oʻng egri apostrof (RIGHT SINGLE QUOTATION MARK)
+o‘zbek  len=8  rune=6     ‘ U+2018 = 8216   chap egri apostrof (LEFT SINGLE QUOTATION MARK)
 ```
 
-**Hayotda.** lex.uz'dagi bitta qonun sahifasida (https://lex.uz/uz/docs/8548754, 2026-11-26) koʻrinadigan matnda
-oʻ/gʻ dan keyin: `ʻ` 50 marta, `‘` 13, `’` 1; hatto bitta qatorda ikki xil: "Oʻzbekiston Respublikasining Qonuni,
-21.10.2026 yildagi O‘RQ-1184-son". Hisoblash usuli: `lexuz/` `<head>`, `<script>`, `<style>` va teglarni olib tashlaydi
-(menyular va sarlavhalar sanaladi). Qonun matnining oʻzi faqat `ʻ` ishlatadi.
+**Hayotda.** lex.uz'dagi bitta qonun sahifasining (https://lex.uz/uz/docs/8548754, 2026-11-26) koʻrinadigan matnida
+(menyular, sarlavha va footer bilan) oʻ/gʻ dan keyin: `ʻ` 50 marta, `‘` 13, `’` 1; bitta qatorda (sahifa sarlavhasi)
+ikki xil: "Oʻzbekiston Respublikasining Qonuni, 21.10.2026 yildagi O‘RQ-1184-son". `‘` larning koʻpi sayt
+interfeysida (menyular), `’` — til tanlash tugmasi ("O’zb"). `lexuz/` `<head>`, `<script>`, `<style>` va teglarni
+olib tashlab sanaydi.
 
-**Koʻp uchraydigan xato.** Saytdagi roʻyxatda `Oʻzbekiston` (ʻ, 12 bayt), foydalanuvchi qidiruvga `O'zbekiston`
-(', 11 bayt) yozdi. `saytda == qidiruv` → **false**: Go matnlarni baytlari boʻyicha solishtiradi
-(Go qoidasi: https://go.dev/ref/spec#Comparison_operators). Qidiruv topa olmaydi.
+**Koʻp uchraydigan xato.** Bazada `Oʻzbekiston` (ʻ, 12 bayt), qidiruvda `O'zbekiston` (', 11 bayt). `==` → **false**:
+Go string'larni bayt boʻyicha solishtiradi (https://go.dev/ref/spec#Comparison_operators). JS `===` ham false;
+Unicode normalizatsiyasi (`normalize("NFC")`, `"NFKC"`) ham yordam bermaydi — bular boshqa-boshqa belgilar.
 
-**Tuzatish.**
+**Tuzatish.** Har bir `'` ni `ʻ` ga almashtirish xato (`tuzat/`): *maʼno* dagi belgi — **tutuq belgisi** `ʼ` (U+02BC),
+`strings.ReplaceAll("ma'no", "'", "ʻ")` → `maʻno`. Faqat o/g dan keyingi apostroflarni (egrilarini ham) almashtiramiz (`normal/`):
 
 ```go
-qidiruv = strings.ReplaceAll(qidiruv, "'", "ʻ") // har bir ' ni ʻ ga almashtir
-fmt.Println(saytda == qidiruv)                  // true
-fmt.Println(strings.ReplaceAll("ma'no", "'", "ʻ")) // maʻno — notoʻgʻri!
+r := strings.NewReplacer(
+	"o'", "oʻ", "g'", "gʻ", "O'", "Oʻ", "G'", "Gʻ",
+	"o’", "oʻ", "g’", "gʻ", "O’", "Oʻ", "G’", "Gʻ",
+	"o‘", "oʻ", "g‘", "gʻ", "O‘", "Oʻ", "G‘", "Gʻ",
+)
+fmt.Println(r.Replace(qidiruv) == saytda) // true
+fmt.Println(r.Replace("ma'no"))           // ma'no — tegilmadi
 ```
 
-Cheklov: *maʼno* dagi belgi — **tutuq belgisi** `ʼ` (U+02BC), uni `ʻ` ga aylantirish xato. Shuning uchun tozalashni bir
-joyda qiling (saqlashdan oldin ham, qidirishdan oldin ham). Toʻliqroq qoida `tozala/` da: o/g dan keyin → `ʻ`, boshqa
-harflar orasida → `ʼ`; uning ham chegaralari bor (`Go'da` → `Goʻda`), pastdagi Ilovaga qarang.
+Normalizatsiyani bitta funksiyaga yigʻing va uni saqlashdan oldin ham, qidirishdan oldin ham chaqiring. Toʻliqroq
+qoida `tozala/` da: o/g dan keyin → `ʻ`, boshqa harflar orasida → `ʼ` (soʻz boshidagi `‘` qoʻshtirnoqqa tegmaydi); uning ham chegaralari bor
+(`Go'da` → `Goʻda`), pastdagi Ilovaga qarang.
 
-**Chuqurroq (ixtiyoriy).** `ʻ` = 699 = `1010111011` (10 bit). UTF-8 ning ikki baytli qolipi `110xxxxx 10xxxxxx`:
-`110|01010 10|111011` = `ca bb`. `110…` belgi boshini, `10…` davomini bildiradi, shuning uchun dastur istalgan baytga
-qarab belgining boshimi yoki davomimi biladi (RFC 3629 §3). Baytlab kesish: `s[:2]` = `"o\xca"`, `utf8.ValidString` →
-`false`; `string([]rune(s)[:2])` = `"oʻ"` (lekin `[:1]` = `"o"`: rune ham harf emas).
+**Chuqurroq.** `ʻ` = 699 = `1010111011` (10 bit). UTF-8 ning ikki baytli qolipi `110xxxxx 10xxxxxx`:
+`110|01010 10|111011` = `ca bb`. `110…`/`1110…`/`11110…` — belgi boshi, `10…` — davomi, shuning uchun dastur istalgan
+UTF-8 baytdan belgining boshini topadi (RFC 3629 §3). Baytlab kesish: JS `"oʻzbek".slice(0, 2)` → `"oʻ"`, Go `s[:2]` →
+`"o\xca"` (`%q` buzilgan baytni `\xca` deb koʻrsatadi), `utf8.ValidString` → `false`; `string([]rune(s)[:2])` = `"oʻ"`.
 
-Videoga sigʻmaganlar (Ilovada batafsil): har bir baytni `%c` bilan chiqarish → `oÊ»zbek` (kodirovkasi adashgan
-saytlardagi "gʻalati belgilar" ham shunday paydo boʻladi; `bayt/`); `for range` string ustida rune beradi, indeks esa
-bayt oʻrni (`aylanish/`); saralash bayt boʻyicha, shuning uchun `oʻrik` olma bilan pomidor orasiga tushadi (`qidiruv/`);
-2027-yil 22-apreldan kuchga kiradigan yangi alifbo qonuni (OʻRQ-1184, Ö, Ğ) va `ö` ning ikki xil yozilishi (`yangi/`);
+Videoga sigʻmaganlar: `for i, r := range s` string ustida rune beradi, `i` esa bayt oʻrni (`aylanish/`, keyingi
+darsda `range` shakllari); `%c` bilan har bir baytni chiqarish → `oÊ»zbek` (mojibake, `bayt/`); saralash bayt boʻyicha
+(`qidiruv/`); 2027-yildan kuchga kiradigan yangi alifbo (OʻRQ-1184, Ö, Ğ) va `ö` ning ikki xil yozilishi (`yangi/`);
 lotin `A` va kirill `А` (`kirill/`).
 
-**Takror (savollar).** 1) `len("oʻzbek")` nega 7? — `len` baytlarni sanaydi, `ʻ` ikki bayt. 2) Rune'larni nima
-sanaydi? — `utf8.RuneCountInString`. 3) (01-darsdan) `go build` nima yasaydi? — kodni tarjima qilib, tayyor faylga
-(binary) saqlaydi.
+**Takror (savollar).** 1) `len("oʻzbek")`: Go 7, Python 6 — nega? — Go'ning `len`i baytlarni sanaydi (`ʻ` ikki bayt),
+Python code point'larni. 2) `s[1]` nima qaytaradi? — bitta bayt (`202`); belgi uchun `[]rune(s)[1]`. 3) (01-darsdan)
+`scratch` image'da `unknown time zone` chiqsa? — `import _ "time/tzdata"` yoki distroless image.
 
 ## Uy vazifasi
 
-- 🟢 **Oson** — [`uyga/oson/main.go`](uyga/oson/main.go): `ism` ga oʻz ismingizni yozing. Ishga tushirishdan **oldin**
-  ikkala sonni (bayt va rune) qogʻozga yozing. Keyin `ʻ` ni klaviaturadagi `'` ga almashtiring: qaysi son oʻzgaradi?
-- 🟡 **Oʻrta** — [`uyga/orta/main.go`](uyga/orta/main.go): sayt ismni `len` bilan "koʻpi bilan 5" deb tekshiradi.
-  `Gʻani` ekranda 5 belgi, lekin dastur `juda uzun` deydi. Nega? Tuzating.
+- 🟢 **Oson** — [`uyga/oson/main.go`](uyga/oson/main.go): roʻyxatdan oʻtish formasi. Frontend'da
+  `<input maxLength={5}>` "Gʻani" ni oʻtkazadi (`"Gʻani".length === 5`), Go'dagi `ismTekshir` esa `len(ism) <= 5` bilan
+  "juda uzun" deydi. Ishga tushirishdan **oldin** har bir ism uchun natijani yozing, keyin backend frontend bilan bir
+  xil sanaydigan qilib tuzating.
+- 🟡 **Oʻrta** — [`uyga/orta/main.go`](uyga/orta/main.go): bildirishnoma uchun `qisqa(s, n)` matnning birinchi `n` ta
+  belgisini qaytarishi va kesilgan boʻlsa `…` qoʻshishi kerak. Hozir u baytlab kesadi: `"To\xca…"`, `"Gʻalab…"`.
+  Rune boʻyicha kesadigan qiling.
 
 ### Javoblar
-- 🟢 [`uyga/javob/oson`](uyga/javob/oson/main.go): `Gʻayrat` → `8` bayt, `7` rune; `G'ayrat` → `7`, `7`. Faqat bayt soni
-  oʻzgaradi, chunki `ʻ` ikki bayt, `'` esa bitta.
-- 🟡 [`uyga/javob/orta`](uyga/javob/orta/main.go): `len("Gʻani")` = 6 (`ʻ` ikki bayt). Belgilarni sanash uchun
-  `utf8.RuneCountInString(ism) <= 5` (va `import "unicode/utf8"`) → `qabul`.
+- 🟢 [`uyga/javob/oson`](uyga/javob/oson/main.go): `len("Gʻani")` = 6 (`ʻ` ikki bayt), rune'lar 5. Tekshiruv
+  `utf8.RuneCountInString(ism) <= 5` boʻlsin → `Anvar qabul · Gʻani qabul · Oʻktam juda uzun` (Oʻktam frontend'da ham
+  6). Eslatma: emoji kabi U+FFFF dan katta belgilarda JS `.length` 2 beradi, rune soni 1 — bunday ismlar uchun
+  frontend'da `[...s].length` ishlating.
+- 🟡 [`uyga/javob/orta`](uyga/javob/orta/main.go): `r := []rune(s)`; `len(r) <= n` boʻlsa `s`, aks holda
+  `string(r[:n]) + "…"` → `"Toʻ…"` · `"Gʻalaba"` · `"Payme…"`.
 
 Qoʻshimcha mashqlar (birinchi versiyadan, qiyinroq): [`homework/`](homework/).
 
 ## Manbalar
-- Go qoidalari: String types (`len` = baytlar) https://go.dev/ref/spec#String_types · Rune literals (rune = Unicode
-  raqami) https://go.dev/ref/spec#Rune_literals · Source code (UTF-8) https://go.dev/ref/spec#Source_code_representation ·
-  Comparison operators (string baytma-bayt) https://go.dev/ref/spec#Comparison_operators
-- `unicode/utf8` https://pkg.go.dev/unicode/utf8 · `strings.ReplaceAll` https://pkg.go.dev/strings#ReplaceAll
+- Go qoidalari: String types (string = baytlar, `len` = baytlar) https://go.dev/ref/spec#String_types · Index
+  expressions (`s[i]` = bayt) https://go.dev/ref/spec#Index_expressions · Numeric types (`rune` = `int32`)
+  https://go.dev/ref/spec#Numeric_types · Comparison operators https://go.dev/ref/spec#Comparison_operators
+- `unicode/utf8` https://pkg.go.dev/unicode/utf8 · `strings.NewReplacer` https://pkg.go.dev/strings#NewReplacer ·
+  `strings.ReplaceAll` https://pkg.go.dev/strings#ReplaceAll
+- JS: ECMAScript String type (16-bit elements) https://tc39.es/ecma262/#sec-ecmascript-language-types-string-type ·
+  Python: str = code points https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str · PHP: `strlen`
+  baytlarni sanaydi https://www.php.net/manual/en/function.strlen.php
 - RFC 3629 (UTF-8) https://www.rfc-editor.org/rfc/rfc3629
-- Unicode 18.0.0 (172 808 ta belgi) https://www.unicode.org/versions/latest/
 - CLDR `uz.xml` (`{oʻ} {gʻ}` = U+02BB, `ʼ` = U+02BC) https://github.com/unicode-org/cldr/blob/main/common/main/uz.xml
 - Rob Pike, "Strings, bytes, runes and characters in Go" https://go.dev/blog/strings
 - lex.uz, OʻRQ-1184 https://lex.uz/uz/docs/8548754
