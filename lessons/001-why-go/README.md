@@ -1,150 +1,177 @@
 # 01 · Go nega bor? `go build` ichida nima bor
 
-Video: *Golang oʻzbek tilida #1* (2026-11-26 yangi versiya, Go 0 mavsumidan keyin) · Lab:
-https://haywan.uz/lab/youtube/go#go-1-01 · Oldingi: [Go 0 · 5 — for](../000-05-for/) · Keyingi:
+Video: *Golang oʻzbek tilida #1* (2026-11-26, dasturchilar uchun versiya) · Lab: https://haywan.uz/lab/youtube/go#go-1-01 ·
+Oldingi: [GO-X.01 · 20 qatorlik HTTP API va bitta binary](../0x-01-http-api/) · Keyingi:
 [02 · Turlar va overflow](../002-types-overflow/)
 
-**Bitta gʻoya:** `go build` kodimizni tarjima qilib, alohida tayyor faylga (*binary*) saqlaydi. Go bu fayl ichiga har
-safar oʻz yordamchisini (*runtime*) ham joylaydi: shuning uchun eng kichik dastur ham qariyb ikki million bayt boʻladi
-va Go oʻrnatilmagan kompyuterda ham ishlaydi. Kodni oʻzgartirsangiz, faylni qayta yasash kerak.
+**Kim uchun:** boshqa stack'da (JS/TS, Python, PHP) ishlaydigan, Go'ga yangi dasturchi. GO-X.01'dagi `go build`,
+static binary, `GOOS`/`GOARCH`, `FROM scratch` va `CGO_ENABLED=0` maʼlum deb olinadi.
 
-Hamma raqamlar `go1.26.8 linux/amd64`da oʻlchangan. Boshqa papkada bir necha bayt, boshqa tizimda bir necha oʻn KB
-farq qiladi (fayl yoʻllari ham binary ichida saqlanadi).
+**Bitta gʻoya:** Go binary'sining katta qismi bizning kod emas. Har bir dasturda runtime bor; import qilingan
+paketlardan linker faqat chaqiriladigan funksiyalarni va har bir paketning `init` kodini qoldiradi; tizimdagi
+maʼlumot (vaqt zonalari bazasi) esa umuman kirmaydi — uni `import _ "time/tzdata"` bilan ataylab qoʻshasiz.
 
-| Papka | Nima |
+Hamma raqamlar `go1.26.8 linux/amd64`, node v24.10.0, Docker 29.8.1'da oʻlchangan (2026-11-26). Boshqa papkada bir
+necha bayt farq qiladi: fayl yoʻllari ham binary ichida (`-trimpath` buni olib tashlaydi).
+
+| Papka / fayl | Nima |
 |---|---|
-| [`salom/`](salom/) | videodagi dastur (7 qator, Go 0 · 1 dagi Salom, dunyo) |
-| [`bosh/`](bosh/) | ichi boʻsh `func main() {}`: runtime'ning oʻzi qancha joy oladi |
-| [`uyga/`](uyga/) | uy vazifasi: starter fayllar va javoblar |
-| `hello/`, `empty/`, `nomain/`, `bug/`, `asm/`, `homework/` | eski (2026-11-25) video materiallari, pastdagi ilovada |
+| [`paketlar.sh`](paketlar.sh) | Go binary uchun "bundle analyzer": `go tool nm -size` natijasini paketlar boʻyicha qoʻshadi |
+| [`salom/`](salom/) | Salom, dunyo (7 qator): 74 B → 2 409 990 B |
+| [`bosh/`](bosh/) | ichi boʻsh `func main() {}`: runtime'ning doimiy narxi (1 829 988 B) |
+| [`statustext/`](statustext/) | `net/http`dan faqat `http.StatusText(404)`: tree-shaking va `init` (5 143 595 B) |
+| [`vaqt/`](vaqt/) | `time.LoadLocation("Asia/Tashkent")` + `FROM scratch` → `unknown time zone` |
+| [`vaqt-tz/`](vaqt-tz/) | tuzatish: `import _ "time/tzdata"` (+410 400 B) |
+| [`vaqt-local/`](vaqt-local/) | zonasiz `time.Now()`: `scratch`da xatosiz, jimgina `UTC` |
+| [`uyga/`](uyga/) | uy vazifasi, starter'lar va javoblar |
+| `hello/`, `empty/`, `nomain/`, `bug/`, `asm/`, `homework/` | 2026-11-25 dagi birinchi video materiallari (pastdagi ilova) |
 
 ## Videodagi buyruqlar
 ```bash
-cd salom
-go build main.go        # ekranda hech narsa chiqmaydi: tarjima main fayliga saqlandi
-ls -l                   # main.go 74 bayt · main 2409990 bayt (Windows cmd: dir)
-./main                  # Salom, dunyo!     (Windows cmd: main · PowerShell: .\main)
+cd ../0x-01-http-api && go build -o api .   # GO-X.01 API: 8659683 bayt
+../001-why-go/paketlar.sh api 6                  # runtime 17.7 % · crypto/tls 9.4 % · net/http 8.9 % …
+../001-why-go/paketlar.sh api 400 | grep ' main$' # 1595: bizning 20 qator
+
+cd ../001-why-go/salom
+go build main.go && ls -l          # main.go 74 · main 2409990
+../paketlar.sh main 4              # mashina kodi: runtime 71.4 % · fmt 4.8 % · reflect 4.2 %
+go tool nm -size main | grep ' main.main$'   # 83 bayt
 
 cd ../bosh
-go build main.go && ls -l main     # 1829988 bayt: ichi boʻsh dastur ham ~1.8 million bayt
+go build main.go && ls -l main     # 1829988: hech narsa qilmaydigan dastur (Salom, dunyo'ning 76 %)
 
-cd ../salom             # main.go'da dunyo → Aziza qilib saqlang, lekin build qilmang:
-./main                  # Salom, dunyo!   ← eski fayl!
-go build main.go && ./main         # Salom, Aziza!
+cd ../statustext                   # bu laptop'da gcc yoʻq: net uchun CGO_ENABLED=0 shart
+CGO_ENABLED=0 go build -o st main.go && ls -l st   # 5143595 (toʻliq api: 8381628)
+../paketlar.sh st 300 | grep ' net/http$'          # 5262 bayt (GO-X.01 api'da 231802)
+../paketlar.sh st 6                                # net 121834 · math/big · crypto/internal/fips140/... (47 ta crypto/* paket)
+
+cd ../vaqt
+go build -o vaqt main.go && ./vaqt                 # Toshkent soati: 16   (laptop: tizimda zoneinfo bor)
+docker build -t vaqt . && docker run --rm vaqt     # xato: unknown time zone Asia/Tashkent
+cd ../vaqt-tz
+go build -o vaqt main.go && docker build -t vaqt . && docker run --rm vaqt   # Toshkent soati: 16
+ls -l vaqt ../vaqt/vaqt                            # 2885090 vs 2474690 (+410400)
+cd ../vaqt-local && go build -o vaqt main.go && docker build -t vaqt-local . && docker run --rm vaqt-local   # 11:48 UTC (laptop: 16:48 +05)
+
+cd ../salom
+go build -ldflags="-s -w" -o main-sw main.go && ls -l main-sw   # 1601698 (−33.5 %)
 ```
-Videodan keyin `salom/main.go`ni yana `Salom, dunyo!` holiga qaytaring.
 
 ## Asosiy tushunchalar
-- **`go run`** = tarjima + darhol ishga tushirish (Go 0'da shuni ishlatdik). Tarjimani sizga bermaydi.
-- **`go build`** = tarjimani faylga saqlaydi ("kitob qilib chop etadi"). Muvaffaqiyatli boʻlsa, jim turadi.
-- **binary** (tayyor fayl): `main.go`dan yasalgan `main` (Windows'da `main.exe`). Ichida kompyuter tili.
-- **runtime** (ichki yordamchi): har bir Go dasturi ichiga qoʻshiladigan yordamchi qism: xotirani tozalaydi
-  (garbage collector), ishlarni navbatga qoʻyadi (scheduler), stack'ni boshqaradi
-  ([Go FAQ](https://go.dev/doc/faq#runtime)).
-- **static binary**: kerakli hamma narsa bitta faylda; Go oʻrnatilmagan, lekin **xuddi shu turdagi** (tizim va
-  protsessor, masalan, amd64 Linux) kompyuterda ishlaydi (`ldd main` → *not a dynamic executable*). Eslatma: toʻliq
-  static faqat Linux'da va cgo'siz; macOS'da Go fayllari tizim kutubxonasiga (libSystem), Windows'da tizim DLL'lariga
-  bogʻlanadi — lekin Go'ning oʻzi hech qayerda kerak emas.
-- **Eng koʻp xato:** `main.go`ni oʻzgartirib, `go build`ni qayta bajarmaslik: `./main` eski matnni chiqaradi.
+- **runtime — doimiy narx.** Garbage collector, scheduler, map'lar, stack boshqaruvi har bir Go binary'si ichida
+  ([Go FAQ](https://go.dev/doc/faq#runtime)). Node'da ular bitta `node` faylida (V8 + libuv) va serverga bir marta
+  oʻrnatiladi; Go'da har bir xizmat oʻz runtime'ini olib yuradi. Ichi boʻsh dastur: 1.8 MB (uning ichida runtime
+  kodi, uning jadvallari va DWARF debug maʼlumoti; `-s -w` bilan 1.2 MB).
+- **linker = tree-shaking, lekin `init` qoladi.** Linker `main.main` va barcha paketlarning `init` vazifalaridan
+  boshlab yetib boriladigan funksiyalarni qoldiradi, qolganini tashlaydi
+  ([`cmd/link/internal/ld/deadcode.go`](https://github.com/golang/go/blob/go1.26.8/src/cmd/link/internal/ld/deadcode.go)).
+  Paket `init` funksiyalari va global oʻzgaruvchilarni boshlash main'dan oldin albatta bajariladi
+  ([spec: Package initialization](https://go.dev/ref/spec#Package_initialization)), shuning uchun ular va ular
+  chaqiradigan hamma narsa qoladi — bundler'dagi side effect'li modul kabi. `statustext`: `net/http` kodi 232 KB (GO-X.01 api) → 5 KB,
+  lekin `net`, `math/big` va 47 ta `crypto/*` paketi init va global oʻzgaruvchilar orqali kirdi (zanjir: `main.inittasks` →
+  `net/http.init` → `DefaultTransport` → `net.(*Dialer).DialContext`). Ikkinchi qoida: interfeysga saqlangan turning
+  metodlari, xuddi shu nomli interfeys metodi chaqirilsa, qoladi (`math/big` shu yoʻl bilan, `-ldflags=-dumpdep`). Katta
+  global `map` initsializatorlarini esa linker ishlatilmasa tashlay oladi. JS'da `"sideEffects": false` bor; Go'da bunday bayroq yoʻq.
+- **Tizim maʼlumoti binary'da yoʻq.** `time.LoadLocation` bazani tartib bilan qidiradi: `$ZONEINFO` → Unix tizim
+  joylari (`/usr/share/zoneinfo`, … `/etc/zoneinfo`) → `$GOROOT/lib/time/zoneinfo.zip` → `time/tzdata` (agar import
+  qilingan boʻlsa) (`go doc time.LoadLocation`). `scratch`da birortasi yoʻq. Zonasiz `time.Now()` esa xato bermaydi:
+  `time.Local` jimgina UTC boʻladi (`vaqt-local/`) — bu yashirinroq bug. HTTPS ildiz sertifikatlari ham tizimdan
+  oʻqiladi (`crypto/x509/root_linux.go`) — GO-X.01 Chuqurroq.
+- **`import _ "time/tzdata"`** — paketni nomsiz, faqat `init`i uchun ulash (`import 'dotenv/config'` kabi). `_`siz:
+  `"time/tzdata" imported and not used` (Go ishlatilmagan importni xato deydi). Uning
+  `init`i ichki bazani `time` paketiga roʻyxatdan oʻtkazadi. Hujjat: "about 450 KB"; bizda +410 400 B. Muqobil:
+  `go build -tags timetzdata` yoki `gcr.io/distroless/static` image (ichida tzdata va CA sertifikatlari bor; bizda
+  `vaqt` tzdata'siz ham `Toshkent soati: 16` chiqardi). Node'da muammo kam: `node` ichidagi ICU oʻz bazasini olib
+  yuradi (`node -p process.versions.tz` → `2025b`).
 
-## Nega Go?
-2007-yil, Google: katta C++ dasturining bitta build'i ~45 daqiqa davom etgan
-([Pike, 2012](https://go.dev/talks/2012/splash.article)); Pike'ning oʻzi aytishicha, Go gʻoyasi shunday kutishlardan
-birida tugʻilgan (u buni Go'ning *origin myth*i deb ataydi). 2007-yil 21-sentabrda Robert Griesemer, Rob Pike va Ken
-Thompson doskaga yangi tilning maqsadlarini yoza boshlashdi; 2009-yil 10-noyabrda Go ochiq eʼlon qilindi, 2012-yil
-martda Go 1 chiqdi ([Go FAQ: history](https://go.dev/doc/faq#history), [go.dev/blog/go1](https://go.dev/blog/go1)).
-Maqsad: interpretatsiya qilinadigan tillar kabi yozish oson, compile qilinadigan tillar kabi tez va xavfsiz, katta
-dastur ham bitta kompyuterda bir necha soniyada build boʻlsin
-([Go FAQ](https://go.dev/doc/faq#creating_a_new_language)). Bizda: `go` buyrugʻining oʻzi (319 paket) boʻsh cache bilan ~10 s'da
-build boʻldi; bizning 7 qatorlik dastur birinchi marta 2.8 s, keyingisi ~0.1 s (build cache tayyor qismlarni eslab qoladi). Bugun Docker Engine, Kubernetes, Terraform, Prometheus Go'da yozilgan.
+## Chuqurroq
+`size -A salom/main`: `.text` 643 537 (26.7 %) · `.gopclntab` 677 386 (28.1 %: funksiya nomlari va qator raqamlari;
+panic stack trace, GC stack map'lari) · DWARF `.debug_*` 676 118 (28.1 %) · `.rodata` 222 082. `-ldflags="-w"` DWARF'ni,
+`-s` simvollar jadvalini olib tashlaydi (Go 1.22'dan `-s` `-w`ni ham anglatadi; [cmd/link](https://pkg.go.dev/cmd/link)):
+2 409 990 → 1 601 698 B. `.gopclntab` qoladi, shuning uchun stack trace oʻzgarmaydi (`uyga/qiziq`).
 
-## Chuqurroq (ixtiyoriy)
-`go build` = kompilyator (har bir paketni alohida tarjima qiladi) + **linker** (ulovchi: hammasini bitta faylga
-tikadi, `runtime` va `fmt`ni qoʻshadi, hech kim chaqirmaydigan funksiyalarni tashlab yuboradi). `size -A main`:
-
-| Boʻlim | Bayt | Nima |
-|---|---|---|
-| `.text` | 643 537 | kompyuter buyruqlari (machine code); uning 71 % runtime'niki, bizning `main.main` — 83 bayt |
-| `.gopclntab` | 677 386 | funksiya nomlari va qator raqamlari jadvali: panic stack trace, GC va stack oʻsishi shundan foydalanadi |
-| `.debug_*` (DWARF) | 676 118 | debugger uchun; `-ldflags=-w` bilan olib tashlanadi, dastur ishlashiga taʼsir qilmaydi |
-| `.rodata` | 222 082 | turlar haqidagi maʼlumot, matnlar |
-
-Batafsil (compiler bosqichlari, `go tool nm`, `objdump`, `ldd`, stack tekshiruvi) — pastdagi ilovada.
+Nega Go importni shunday qiladi? 2007-yil Google'da C++ binary'sida `#include`lar ochilgach "a blow-up of 2000 bytes
+for every C++ source byte", build esa "took 45 minutes using a precursor distributed build system". Go'da "the
+compiler reads the object file for B, not its source code". Pike buni "the origin myth for Go" deydi
+([Go at Google, 2012](https://go.dev/talks/2012/splash.article)). Go FAQ maqsadi: "at most a few seconds to build a
+large executable on a single computer" ([FAQ](https://go.dev/doc/faq#creating_a_new_language)). (Build cache esa keyinroq, Go 1.10'da qoʻshilgan.)
+Bizda `go` buyrugʻi (319 paket) boʻsh cache bilan ~10 s'da build boʻldi.
 
 ## Uy vazifasi
-- 🟢 **Oson:** `dunyo` oʻrniga ismingiz → `go build main.go` → `./main`. Starter: [`uyga/oson/`](uyga/oson/)
-- 🟡 **Oʻrta:** `for` bilan uch marta `Salom!`; build'dan oldin taxmin qiling: fayl qanchaga oʻsadi?
-  Starter: [`uyga/orta/`](uyga/orta/)
-- 🔍 **Qiziqish:** `main` faylini boshqa papkaga koʻchirib ishga tushiring — ishlaydimi? Qoʻshimcha: boshqa tizim uchun fayl yasang (`GOOS`).
+- 🟢 **Oson:** [`statustext/`](statustext/)da `StatusText` chaqiruvini olib tashlang, `net/http`ni `_` bilan import qiling. Build'dan oldin hajmni taxmin qiling.
+- 🟡 **Oʻrta:** [`uyga/orta/`](uyga/orta/) — `vaqt` servisini `scratch`da ishlating, lekin `main.go`ga tegmang.
+  Maslahat: `go doc time/tzdata`.
+- 🔍 **Qiziqish:** [`uyga/qiziq/`](uyga/qiziq/) — `-ldflags="-s -w"` bilan build qilib, panic stack trace'ni solishtiring.
+- ➕ **GO-X.01 takrori:** [`uyga/qoshimcha/`](uyga/qoshimcha/) — HTTPS soʻrov `scratch`da: `x509: certificate signed by unknown authority`. Tuzating.
 
 Javoblar: [`uyga/README.md`](uyga/README.md).
 
 ## Manbalar
-- Go FAQ, runtime: https://go.dev/doc/faq#runtime
-- Go FAQ, nega binary katta: https://go.dev/doc/faq#Why_is_my_trivial_program_such_a_large_binary
-- Go FAQ, loyiha tarixi: https://go.dev/doc/faq#history · nega yangi til: https://go.dev/doc/faq#creating_a_new_language
+- Go FAQ: runtime https://go.dev/doc/faq#runtime · binary hajmi https://go.dev/doc/faq#Why_is_my_trivial_program_such_a_large_binary · nega yangi til https://go.dev/doc/faq#creating_a_new_language
+- Go spec, Package initialization https://go.dev/ref/spec#Package_initialization · Import declarations https://go.dev/ref/spec#Import_declarations
+- Linker dead code: https://github.com/golang/go/blob/go1.26.8/src/cmd/link/internal/ld/deadcode.go · `cmd/link` flags: https://pkg.go.dev/cmd/link
+- `time.LoadLocation` https://pkg.go.dev/time#LoadLocation · `time/tzdata` https://pkg.go.dev/time/tzdata
+- `net/http.StatusText` https://pkg.go.dev/net/http#StatusText
+- Docker, `scratch`: https://docs.docker.com/build/building/base-images/#create-a-minimal-base-image-using-scratch · distroless: https://github.com/GoogleContainerTools/distroless
+- Node Intl / ICU: https://nodejs.org/api/intl.html
 - Rob Pike, *Go at Google* (2012): https://go.dev/talks/2012/splash.article
-- `go help build`, `go help run`: https://pkg.go.dev/cmd/go
-- Go tutorial, *Compile and install the application*: https://go.dev/doc/tutorial/compile-install
-- Go compiler bosqichlari: https://github.com/golang/go/blob/go1.26.8/src/cmd/compile/README.md
-- Harvard CS50x, lecture 1 (`make hello` → `./hello`): https://cs50.harvard.edu/x/notes/1/
 
 ## Dars matni (video narration)
 
 **intro**
 
-- `hook` Bir varaq retseptni tarjimaga bersangiz-u, tarjimon sizga qalin kitob qaytarsa, hayron qolasiz. Go yetti qatorlik dasturimizni tarjima qilganda aynan shunday qiladi: tayyor fayl asl matndan qariyb oʻttiz ikki ming marta katta. Bugun sababini topamiz.
-- `eslash` Avval Go nol mavsumini eslaymiz. U yerda har safar go run deb yozdik. go run ichida qaysi ikki ish boʻlardi? Pauza qiling va tanlang.
-- `eslash-javob` Javob: B. go run avval main.go’ni kompilyator bilan tarjima qiladi, keyin darhol ishga tushiradi. Bugun shu ikki ishni ajratamiz.
-- `sozlar` Buning uchun bugun uchta soʻz kerak. go build, yaʼni tarjimani faylga saqlash. binary, yaʼni tayyor fayl. Va runtime, yaʼni har bir Go dasturi ichidagi yordamchi.
+- `hook` Oldingi kursdagi yigirma qatorlik API binary’si sakkiz megabaytdan katta edi. Frontend’da sakkiz megabaytlik bundle koʻrsangiz, darhol bundle analyzer ochasiz. Go binary’sida bu megabaytlar nima, va ulardan qanchasi bizning kodimiz? Bugun shuni oʻlchaymiz.
+- `eslash` Avval oldingi kursning birinchi darsidan bitta savol. API’ni golang image’da build qilib scratch’ga qoʻydik, u esa no such file or directory dedi, fayl esa joyida edi. Sabab nima edi? Pauza qiling.
+- `eslash-javob` Javob: B. cgo yoqiq qolgan, binary tizimdan libc va uning yuklovchisini qidirdi. Demak binary’ga nima kirishi va nima kirmasligi deploy’ga toʻgʻridan-toʻgʻri ta’sir qiladi. Bugun binary ichini paketlar boʻyicha oʻlchaymiz.
+- `sozlar` Bugun uchta tushuncha. Birinchisi, runtime’ning doimiy narxi. Ikkinchisi, linker, ya’ni paketlarni bitta faylga yigʻuvchi qism: u Vite yoki Rollup kabi tree-shaking qiladi. Uchinchisi, import pastki chiziq: paketni faqat yon ta’siri uchun ulash, import dotenv slesh config kabi.
 
-**go-build**
+**analyzer**
 
-- `build` go run tarjimani oʻzi ishlatadi va sizga bermaydi. Baʼzan esa tarjimani saqlab qoʻyish kerak: keyin ishlatish yoki boshqa kompyuterga berish uchun. Tasavvur qiling: tarjimon matnni kitob qilib chop etadi va qoʻlingizga beradi. Go’da buni qiladigan buyruq go build deyiladi.
-- `binary` Chop etilgan kitob bu yangi fayl. main.go’da odam oʻqiydigan harflar bor, yangi faylda esa kompyuter bajaradigan buyruqlar. Bu fayl inglizcha binary, oʻzbekcha tayyor fayl deyiladi. go build main.go desak, uning nomi main boʻladi.
-- `savol1` Endi papkada go build main.go deb yozamiz. Ekranda nima chiqadi? A: Salom, dunyo. B: hech narsa. C: xato xabari. Pauza qiling va oʻylab koʻring.
-- `javob1` Javob: B, hech narsa. go build faqat tarjima qiladi, ishga tushirmaydi, ish yaxshi boʻlsa esa jim turadi. Lekin papkada yangi fayl paydo boʻldi. Biz Linux’da ishlayapmiz, u ham Windows va Mac kabi kompyuterning asosiy tizimi. Bu yerda ls minus l buyrugʻi fayllarni hajmi bilan koʻrsatadi, Windows’da esa dir deb yozasiz.
-- `hajm` Har qatorda oxirgi soʻz fayl nomi, sanadan oldingi son esa hajm, boshidagi belgilarga hozircha qaramang. Hajm baytda oʻlchanadi. Bayt bu sakkizta nol yoki birdan iborat kichik joy, unga bitta oddiy harf sigʻadi. main.go yetmish toʻrt bayt, boʻsh joylari bilan. Tayyor main esa qariyb ikki million toʻrt yuz ming bayt.
-- `ishga` Endi tayyor faylni ishga tushiramiz: nuqta slesh main, yaʼni shu papkadagi main fayli. Windows’da esa shunchaki main deb yozasiz. Salom, dunyo chiqdi. Qisqasi, go build tarjimani faylga saqlaydi, kompyuter esa shu tayyor faylni bajaradi.
+- `analyzer` Goʻda tayyor bundle analyzer yoʻq, lekin go tool nm har bir funksiyaning hajmini beradi. Dars papkasidagi paketlar.sh ularni paketlar boʻyicha qoʻshadi. API’da eng kattasi runtime, keyin crypto tls va net http. Bizning yigirma qatorimiz esa bor-yoʻgʻi bir ming besh yuz toʻqson besh bayt.
+- `analyzer-fayl` E’tibor bering, bu faqat mashina kodi: ikki yarim megabaytdan sal koʻp, faylning uchdan biriga yaqin. Qolgani funksiya nomlari jadvali va debug ma’lumoti, ularni Chuqurroq qismida ochamiz. Endi eng kichik dasturda runtime’ning narxini oʻlchaymiz.
 
 **runtime**
 
-- `runtime` Bir qator ish uchun shuncha bayt nimaga kerak? Oshxonada retseptdan tashqari yordamchi ish ham bor: idish yuvish. Dastur ishlaganda ham shunday: keraksiz boʻlib qolgan qiymatlarni xotiradan tozalash kerak. Go bu yordamchi ishlarning buyruqlarini har bir tayyor faylga qoʻshadi, ular runtime deyiladi.
-- `kitob` Demak, main faylidagi buyruqlar uch joydan keladi. Bizning yetti qatorimizning tarjimasi, bor-yoʻgʻi sakson uch bayt. Println’ni bergan fmt qutisi. Va eng kattasi, runtime: buyruqlarning toʻrtdan uch qismiga yaqini uniki.
-- `bosh-kod` Bu ichi boʻsh dastur: tanish package main va func main bor, lekin na import, na Println bor. Jingalak qavslar orasida hech qanday buyruq yoʻq, u hech narsa qilmaydi.
-- `savol2` Uni go build qilsak, tayyor fayl qancha boʻladi? A: deyarli nol bayt. B: yetmish bayt atrofida. C: million baytdan katta. Pauza qiling va oʻylab koʻring.
-- `javob2` Javob: C. ls minus l koʻrsatadi: hech narsa qilmaydigan dastur ham qariyb bir million sakkiz yuz ming bayt. Println va fmt esa qariyb besh yuz sakson ming bayt qoʻshadi. Qisqasi, runtime har qanday Go dasturi ichida bor.
-- `savol3` Endi tezkor savol. Tayyor main faylini doʻstingizning kompyuteriga koʻchiramiz. Unda ham Linux bor, lekin Go oʻrnatilmagan. Ishlaydimi? Pauza qiling va tanlang.
-- `javob3` Javob: A, ishlaydi. Kerakli hamma narsa, runtime ham, fmt ham, bitta main faylining ichida, Go’ning oʻzi kerak emas. Faqat kompyuter xuddi shunday boʻlsin: masalan, Linux uchun yasalgan fayl Windows’da ishlamaydi.
+- `build` Yetti qatorlik Salom, dunyo. main.go yetmish toʻrt bayt, go build yasagan main esa ikki million toʻrt yuz ming baytdan sal koʻp.
+- `runtime` Bu yerda mashina kodining yetmish bir foizi runtime’niki, bizning main.main esa sakson uch bayt. Runtime oldingi kursdan tanish: garbage collector va scheduler. Yangisi shu: API’da ham, Salom, dunyoʻda ham u bor, bu har bir Go dasturining doimiy narxi.
+- `bosh-kod` Bu doimiy narxni oʻlchash uchun fmt’ni ham olib tashlaymiz: import yoʻq, func main boʻsh, dastur hech narsa qilmaydi.
+- `savol2` Uning binary’si Salom, dunyoʻning qancha qismi boʻladi? A: yigirmadan biri, chunki hajmning koʻpi fmt edi. B: toʻrtdan uchi, chunki fmt va u tortgan paketlar chorakka yaqin. C: deyarli teng, chunki fmt arzimas. Pauza qiling.
+- `javob2` Javob: B. Hech narsa qilmaydigan dastur ham bir million sakkiz yuz ming baytdan sal koʻp, ya’ni toʻrtdan uchi. Bu runtime, uning jadvallari va debug ma’lumoti. fmt’ning oʻzi kichik, lekin u reflect va strconv kabi paketlarni tortgan edi.
 
-**nega-go**
+**tree-shaking**
 
-- `tarix` Go nega yaratilgan? Ikki ming yettinchi yilda Google'dagi katta dasturning bitta tarjimasi qirq besh daqiqa davom etgan. Hikoyaga koʻra, Go gʻoyasi shunday kutishda tugʻilgan: yozish oson boʻlsin, katta dastur ham bir necha soniyada tarjima qilinsin.
+- `st-kod` Endi frontend’dagi tree-shaking savoli. net http’ni import qilamiz, lekin undan faqat bitta kichik funksiya, StatusText’ni chaqiramiz: u toʻrt yuz toʻrt uchun Not Found matnini qaytaradi.
+- `savol-st` Binary qancha boʻladi? A: Salom, dunyoʻga yaqin, chunki linker ishlatilmaganini tashlaydi. B: oʻrtada, chunki bir qismi qoladi. C: API’ga yaqin, chunki paket butunlay kiradi. Pauza qiling.
+- `javob-st` Javob: B, qariyb besh million bir yuz qirq ming bayt. net http’ning oʻz kodi esa API’dagidan qirq barobardan koʻp kichik: linker chaqirilmagan funksiyalarni haqiqatan tashladi. Unda qoʻshimcha kod qayerdan keldi?
+- `init` Javob init’da. JavaScript modulining yuqori darajadagi kodi import paytida ishlaydi. Goʻda bunga har bir paketning init’i va global oʻzgaruvchilarni boshlash toʻgʻri keladi: ular main’dan oldin albatta bajariladi. Linker ularni va ular chaqiradigan hamma narsani qoldiradi. Shu yoʻl bilan net va qirqdan ortiq crypto paketi kirdi. package.json’dagi sideEffects false kabi bayroq Goʻda yoʻq.
 
-**xato**
+**from-scratch**
 
-- `xato-kod` Endi eng koʻp uchraydigan xato. main.go’dagi fmt nuqta Println qatorida dunyo soʻzini Aziza deb oʻzgartirdik va saqladik. Lekin go build’ni qayta yozmadik, darhol nuqta slesh main deb ishga tushiramiz.
-- `savol4` Ekranda nima chiqadi? A: Salom, Aziza. B: Salom, dunyo. C: xato xabari. Kitobni eslang: u chop etilgandan keyin biz retseptni oʻzgartirdik. Pauza qiling va oʻylab koʻring.
-- `xato-javob` Javob: B, eski Salom, dunyo. Tayyor fayl tarjima qilingan paytdagi koddan yasalgan. main.go’ni oʻzgartirsangiz, chop etilgan kitob oʻzgarmaydi, ular ikki alohida fayl.
-- `tuzatish` Tuzatish oson: avval go build, keyin nuqta slesh main. Endi Salom, Aziza chiqdi. Qoida: kodni oʻzgartirdingizmi, faylni qayta yasang. go run buni har safar oʻzi qiladi, shuning uchun Go nol darslarida bu xato boʻlmagan.
+- `xato-kod` Endi production’dan bir holat. Servis Toshkent soatini koʻrsatadi: time.LoadLocation vaqt zonasini yuklaydi. Xatoni oldingi kursdagidek err orqali tekshiramiz. Laptop’da soat toʻgʻri chiqadi.
+- `savol4` Uni CGO_ENABLED teng nol bilan build qilib, oldingi kursdagi FROM scratch image’ga qoʻyamiz. docker run nima chiqaradi? A: Toshkent soati. B: UTC soati. C: xato. Pauza qiling.
+- `xato-javob` Javob: C, unknown time zone. Vaqt zonalari bazasi binary ichida emas: LoadLocation uni tizimning zoneinfo papkasidan oʻqiydi, scratch’da esa u yoʻq. B ham boʻlishi mumkin edi: zonasiz time.Now xatosiz, jimgina UTC koʻrsatadi. Node’da bu kam uchraydi, chunki Intl ishlatadigan ICU oʻz bazasini node faylining ichida olib yuradi.
+- `tuzatish` Tuzatish import guruhiga bitta qator: pastki chiziq va time slesh tzdata. Pastki chiziqsiz Go kompilyatsiya qilmaydi, imported and not used deydi, chunki paketdan hech narsa chaqirmaymiz. Bizga faqat uning init’i kerak: u binary ichidagi bazani time paketiga roʻyxatdan oʻtkazadi.
+- `tuzatish-run` Qayta build qilib, scratch’da ishga tushiramiz: Toshkent soati chiqdi. Narxi qariyb toʻrt yuz oʻn ming bayt. Yoki scratch oʻrniga distroless static image oling: unda vaqt zonalari bazasi bor.
 
 **chuqurroq**
 
-- `chuqur` Endi ixtiyoriy Chuqurroq qism: endi boshlayotgan boʻlsangiz, uni keyinroq koʻrsangiz ham boʻladi. Avval kompilyator main.go’ni, fmt qutisini va runtime’ni alohida tarjima qiladi. Tayyor qismlarni u eslab qoladi, keyingi safar ularni qayta tarjima qilmaslik uchun. Keyin ulovchi, inglizcha linker. U hammasini bitta main fayliga tikadi.
-- `chuqur-ichi` Faylning qariyb chorak qismi kompyuter buyruqlari. Yana chorak qismi buyruqlar guruhlarining nomlari va qator raqamlari: dastur ishlayotganda xato bilan toʻxtasa, qaysi qatorda toʻxtaganini shundan aytadi, runtime ham undan foydalanadi. Yana chorak qismi dasturchi xato qidirganda kerak boʻladigan maʼlumot, usiz ham dastur ishlaydi.
+- `chuqur-ichi` Chuqurroq qism. Salom, dunyo faylida mashina kodi chorak qism. Yana chorak qismi funksiya nomlari va qator raqamlari jadvali: runtime undan stack trace va garbage collector uchun foydalanadi. Yana chorak qismi debug ma’lumoti.
+- `chuqur-sw` Minus ldflags linker’ga flag beradi. Minus w debug ma’lumotini olib tashlaydi, minus s esa nm oʻqiydigan simvollar jadvalini ham, va Go bir nuqta yigirma ikkidan beri minus w’ni ham anglatadi. Fayl hajmining qariyb uchdan biri ketadi, xuddi source map’larsiz production build kabi. Runtime ishlatadigan nomlar jadvali qoladi, stack trace oʻzgarmaydi.
+- `tarix` Goʻning import modeli ham shu tezlik uchun qurilgan. Google’dagi C plyus plyus dasturida include’lar ochilgach, kompilyatorga manbadan ikki ming marta koʻp bayt borgan, build qirq besh daqiqa olgan. Go kompilyatori esa import qilingan paketning manbasini emas, tayyor obyekt faylini oʻqiydi. Rob Pike Go gʻoyasi shunday kutishda tugʻilganini kelib chiqish afsonasi deydi.
 
 **xulosa**
 
-- `takror` Endi uchta savol bilan xulosa qilamiz. go run bilan go build farqi nima? Ichi boʻsh dastur nega million baytdan katta? Kodni oʻzgartirdingiz, endi nima qilasiz? Pauza qiling va javob bering.
-- `takror-javob` Javoblarni tekshiramiz. go run tarjima qilib darhol ishga tushiradi, go build esa tarjimani tayyor faylga saqlaydi. Har bir tayyor faylning ichida runtime bor. Kod oʻzgarsa, go build’ni qayta bajaring.
+- `takror` Uchta savol bilan xulosa qilamiz. Boʻsh Go dasturi nega bir million sakkiz yuz ming bayt? Bitta StatusText uchun net http import qilsak, hajm nega ikki barobar oshadi? scratch’da unknown time zone chiqsa, nima qilasiz? Pauza qiling.
+- `takror-javob` Javoblar. Har bir binary oʻz runtime’ini, jadvallari va debug ma’lumoti bilan olib yuradi. Linker chaqirilmagan funksiyalarni tashlaydi, lekin paketlarning init’i va global oʻzgaruvchilari qoladi. Vaqt zonalari tizimdan oʻqiladi: import pastki chiziq time slesh tzdata yoki distroless image.
 
 **vazifa**
 
-- `vazifa` Uy vazifasi uch qismli. Oson: dunyo oʻrniga ismingizni yozing va build qilmasdan natijani taxmin qiling. Oʻrta: for bilan uch marta Salom chiqaring, fayl qanchaga kattalashishini taxmin qiling. Qiziqish uchun: main faylini boshqa papkaga koʻchirib, shu papkada ishga tushiring. Javoblar dars papkasida.
-- `outro` Keyingi darsda Go’da son qachon toʻlib qolishini koʻramiz. Darsni koʻrganingiz uchun rahmat, koʻrishguncha.
-
+- `vazifa` Uy vazifasi dars papkasida. Oson: statustext’da StatusText chaqiruvini olib, net http’ni pastki chiziq bilan import qiling; build’dan oldin hajmni taxmin qiling. Oʻrta: vaqt servisini main.goʻga tegmasdan, faqat build buyrugʻi bilan tuzating. Qiziqish uchun: minus s minus w’dan keyin crash’dagi stack trace’ni solishtiring.
+- `outro` Keyingi darsda Goʻdagi son turlari va overflow’ni koʻramiz. Darsni koʻrganingiz uchun rahmat, koʻrishguncha.
 
 ---
+
+Oldingi versiya (2026-11-26, dasturlashni noldan boshlaganlar uchun, Go 0 asosida) git tarixida: `git log -- lessons/001-why-go/README.md` (commit b452013).
 
 ## Ilova: eski video (2026-11-25)
 

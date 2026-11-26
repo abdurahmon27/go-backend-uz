@@ -1,9 +1,15 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 func main() {
-	for i := 1; i <= 3; i++ {
-		fmt.Println("Salom!")
+	loc, err := time.LoadLocation("Asia/Tashkent")
+	if err != nil {
+		fmt.Println("xato:", err)
+		return
 	}
+	fmt.Println("Toshkent soati:", time.Now().In(loc).Hour())
 }

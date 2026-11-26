@@ -1,72 +1,90 @@
-# 01 · Uy vazifasi (2026-11-26 dagi yangi video)
+# 01 · Uy vazifasi (2026-11-26, dasturchilar uchun versiya)
 
-Avval oʻzingiz urinib koʻring, keyin javobni oching. 🙂 Hamma oʻlchovlar `go1.26.8 linux/amd64`da.
+Avval taxmin qiling, keyin oʻlchang, keyin javobni oching. Hamma oʻlchovlar `go1.26.8 linux/amd64`, Docker 29.8.1.
+Bu laptop'da gcc yoʻq, shuning uchun `net` import qiladigan dasturlar `CGO_ENABLED=0` bilan build qilinadi
+(GO-X.01'dagi retsept). Papka yoʻli oʻzgarsa, baytlar bir necha bayt farq qiladi.
 
-## 🟢 Oson: oʻz ismingiz (build qilmasdan oldin taxmin qiling)
-Starter: [`oson/main.go`](oson/main.go).
-
-1. Avval `go build main.go`, keyin `./main` (Windows cmd: `main`): `Salom, dunyo!`.
-2. `dunyo`ni oʻz ismingizga almashtiring va faylni saqlang. **Build qilmang.**
-3. Taxmin qiling: `./main` endi nima chiqaradi? Keyin tekshiring.
-4. `go build main.go` → `./main`.
-
-<details><summary>Javob</summary>
-
-```
-$ ./main            # 3-qadam: hali eski fayl
-Salom, dunyo!
-$ go build main.go  # 4-qadam: qayta yasaymiz
-$ ./main
-Salom, Aziza!
-```
-Tayyor fayl (`main`) tarjima qilingan paytdagi koddan yasalgan: `main.go` oʻzgarsa ham, u oʻzgarmaydi.
-</details>
-
-## 🟡 Oʻrta: `for` bilan uch marta
-Starter: [`orta/main.go`](orta/main.go) (Go 0 · 5-darsdagi `for`). Build qilishdan **oldin** taxmin qiling: fayl
-`salom/main`dan (2 409 990 bayt) qanchaga katta boʻladi? Bir necha baytgami, minglab baytgami, million baytgami?
+## 🟢 Oson: `import _ "net/http"` — hajm qancha?
+Starter: [`../statustext/`](../statustext/). `fmt.Println(http.StatusText(404))` oʻrniga `fmt.Println("salom")` yozing va
+importni `_ "net/http"` qiling (endi `net/http`dan hech narsa chaqirilmaydi). Build'dan **oldin** taxmin qiling:
+binary 2.4 MB'ga (Salom, dunyo) tushadimi yoki ~5.1 MB'da qoladimi? Keyin `paketlar.sh` bilan `net/http` ulushini koʻring.
 
 <details><summary>Javob</summary>
 
 ```
-$ go build main.go && ls -l main
--rwxr-xr-x 1 haywan users 2410174 Nov 26 12:25 main
-$ ./main
-Salom!
-Salom!
-Salom!
+$ CGO_ENABLED=0 go build -o st main.go && ls -l st
+-rwxr-xr-x 1 haywan users 5139103 Nov 26 16:49 st
+$ ../paketlar.sh st 300 | grep ' net/http$'
+    3729   0.3% net/http
 ```
-Bor-yoʻgʻi **+184 bayt**. Sikl uchun bir necha kompyuter buyrugʻi kerak, xolos; faylning asosiy qismi baribir
-runtime va `fmt`. (Aniq son papka yoʻliga qarab bir necha bayt farq qilishi mumkin.)
+Deyarli oʻzgarmadi (5 143 595 → 5 139 103). `StatusText`ning oʻzi arzimas edi; hajmni `net/http` va uning
+bogʻliqliklarining `init` kodi va global oʻzgaruvchilari (`DefaultTransport` → `net`, TLS, `crypto/*`) beradi, ular esa
+paket import qilinishi bilanoq ishlaydi. `import _` aynan shu: "faqat init uchun". Xulosa: Go'da import qilish
+bepul emas, uni `paketlar.sh` bilan oʻlchang.
 </details>
 
-## 🔍 Qiziqish: faylni boshqa papkaga koʻchiring
-`main` faylini (Windows'da `main.exe`) boshqa papkaga, masalan, Ish stoliga koʻchiring va oʻsha papkada terminal ochib
-ishga tushiring: Linux/Mac `./main`, Windows cmd `main`. Ishlaydimi? Nega yonida `main.go` yoʻqligi muhim emas?
+## 🟡 Oʻrta: `vaqt` → `scratch`, `main.go`ga tegmasdan
+Starter: [`orta/`](orta/) (videodagi xato versiya + `Dockerfile`). `main.go`ni oʻzgartirmasdan shunday build qiling-ki,
+`docker run` Toshkent soatini chiqarsin. Maslahat: `go doc time/tzdata`.
 
 <details><summary>Javob</summary>
 
-Ishlaydi (oʻlchangan: `cp main /tmp/x/ && cd /tmp/x && ./main` → `Salom, dunyo!`; hatto Go topilmaydigan
-muhitda ham: `env -i ./main` → `Salom, dunyo!`). Tayyor fayl ichida bizning kod, `fmt` va runtime bor: unga na
-`main.go`, na Go kerak. Faqat kompyuter turi bir xil boʻlsin (tizim va protsessor): Linux amd64 uchun yasalgan fayl
-Windows'da yoki arm64'da ishlamaydi.
+`go doc time/tzdata`: "This package will be automatically imported if you build with -tags timetzdata."
+```
+$ go build -tags timetzdata -o vaqt main.go && ls -l vaqt
+-rwxr-xr-x 1 haywan users 2884802 Nov 26 16:34 vaqt
+$ docker build -q -t vaqt . && docker run --rm vaqt
+Toshkent soati: 16
+```
+Hajm `import _ "time/tzdata"` bilan deyarli bir xil (2 885 090 — farq papka yoʻlida). Qaysi biri yaxshi? `import _`
+kodning oʻzida turadi va build buyrugʻini unutib boʻlmaydi; `-tags` esa kutubxona yoki bir nechta binary uchun qulay.
+Hujjat tavsiyasi: tzdata'ni kutubxona emas, `main` paketi import qilsin. Uchinchi yoʻl: `FROM gcr.io/distroless/static-debian13`
+(ichida tzdata bor; oʻlchangan: tuzatilmagan `vaqt` ham `Toshkent soati: 16`).
 </details>
 
-## ➕ Qoʻshimcha: boshqa tizim uchun fayl
-Go bir kompyuterning oʻzida boshqa tizim uchun ham fayl yasay oladi. `GOOS` = maqsad tizim.
+## 🔍 Qiziqish: `-s -w` dan keyin stack trace
+Starter: [`qiziq/main.go`](qiziq/main.go) (indeks chegaradan chiqadi → panic). Oddiy va `-ldflags="-s -w"` bilan build
+qiling, ikkala panic chiqishini solishtiring. Taxmin: funksiya nomlari va qator raqamlari yoʻqoladimi?
 
-| Siz qayerdasiz | Buyruq | Natija |
-|---|---|---|
-| Linux / Mac | `GOOS=windows go build main.go` | `main.exe` |
-| Windows, cmd | `set GOOS=linux` keyin `go build main.go` (oxirida `set GOOS=` bilan qaytaring) | `main` (Linux uchun) |
-| Windows, PowerShell | `$env:GOOS="linux"; go build main.go` | `main` |
+<details><summary>Javob</summary>
 
-Linux'da oʻlchangan: `GOOS=windows go build main.go` → `main.exe`, **2 472 448 bayt** (ichida Windows uchun runtime
-bor). Windows buyruqlari bu kompyuterda tekshirilmagan (Windows yoʻq); ular
-[go.dev/doc/install/source#environment](https://go.dev/doc/install/source#environment) va cmd/PowerShell
-qoidalariga asoslangan.
+```
+$ go build -o p main.go && ./p
+panic: runtime error: index out of range [5] with length 3
 
+goroutine 1 [running]:
+main.boshla(...)
+	/home/haywan/Developer/go-backend-uz/lessons/001-why-go/uyga/qiziq/main.go:5
+main.main()
+	/home/haywan/Developer/go-backend-uz/lessons/001-why-go/uyga/qiziq/main.go:9 +0xa
+$ go build -ldflags="-s -w" -o p2 main.go && ./p2
+(xuddi shu chiqish)
+$ ls -l p p2
+-rwxr-xr-x 1 haywan users 1830012 Nov 26 16:13 p
+-rwxr-xr-x 1 haywan users 1208482 Nov 26 16:13 p2
+```
+Hech narsa yoʻqolmadi: stack trace `.gopclntab` jadvalidan chiqadi, uni runtime oʻzi ishlatadi va linker uni
+tashlamaydi. `-w` faqat DWARF'ni (debugger, masalan Delve uchun), `-s` simvollar jadvalini (`go tool nm` endi "no
+symbols" deydi) olib tashlaydi. Fayl yoʻllarini yashirish uchun esa `-trimpath` kerak.
+</details>
 
----
+## ➕ Qoʻshimcha: HTTPS soʻrov `scratch`da
+Starter: [`qoshimcha/`](qoshimcha/) (`http.Get("https://go.dev")` + `FROM scratch`). `CGO_ENABLED=0 go build -o app main.go`,
+`docker build`, `docker run` → nima chiqadi va qanday tuzatasiz?
 
-Eski videodagi (2026-11-25) uy vazifasi javoblari: [`../homework/README.md`](../homework/README.md).
+<details><summary>Javob</summary>
+
+```
+$ docker run --rm https
+xato: Get "https://go.dev": tls: failed to verify certificate: x509: certificate signed by unknown authority
+```
+Ildiz CA sertifikatlari ham tizimdan oʻqiladi (`crypto/x509/root_linux.go`: `/etc/ssl/certs/ca-certificates.crt`, …),
+`scratch`da esa ular yoʻq. Ikki tuzatish (ikkalasi ham oʻlchangan → `200 OK`):
+```dockerfile
+FROM scratch
+COPY --from=alpine:3.24 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY app /app
+ENTRYPOINT ["/app"]
+```
+yoki `FROM gcr.io/distroless/static-debian13` (sertifikatlar va tzdata bilan, ~2 MB).
+</details>

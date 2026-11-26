@@ -7,3 +7,13 @@
 lessons/001-why-go/salom/main
 lessons/001-why-go/bosh/main
 lessons/001-why-go/uyga/*/main
+# go-1-01 developer revision (2026-11-26 evening)
+lessons/001-why-go/vaqt/vaqt
+lessons/001-why-go/vaqt-tz/vaqt
+lessons/001-why-go/statustext/st
+lessons/001-why-go/salom/main-*
+lessons/001-why-go/uyga/*/vaqt
+lessons/001-why-go/uyga/*/app
+lessons/001-why-go/uyga/*/p
+lessons/001-why-go/uyga/*/p2
+lessons/001-why-go/vaqt-local/vaqt
