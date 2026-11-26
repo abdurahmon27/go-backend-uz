@@ -3,3 +3,7 @@
 **/hello/hello-small
 *.exe
 **/empty/empty
+# go-1-01 rewrite (2026-11-26): go build main.go writes ./main
+lessons/001-why-go/salom/main
+lessons/001-why-go/bosh/main
+lessons/001-why-go/uyga/*/main
