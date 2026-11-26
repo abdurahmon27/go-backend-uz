@@ -1,17 +1,43 @@
+// 🟡 Javob: nom ↔ Holat. Bazada "paid" saqlansa, const blokidagi tartib oʻzgarsa ham maʼno buzilmaydi.
 package main
 
 import "fmt"
 
+type Holat int
+
+const (
+	Nomalum Holat = iota
+	Yangi
+	Tolangan
+	Bekor
+)
+
+func HolatNomi(h Holat) string {
+	if h == Yangi {
+		return "new"
+	}
+	if h == Tolangan {
+		return "paid"
+	}
+	if h == Bekor {
+		return "cancelled"
+	}
+	return "unknown"
+}
+
+func HolatNomdan(s string) (Holat, error) {
+	for _, h := range []Holat{Nomalum, Yangi, Tolangan, Bekor} {
+		if HolatNomi(h) == s {
+			return h, nil
+		}
+	}
+	return Nomalum, fmt.Errorf("nomaʼlum holat: %q", s)
+}
+
 func main() {
-	const (
-		Nomalum    = iota // 0: nomaʼlum kun (nol qiymat)
-		Dushanba          // 1
-		Seshanba          // 2
-		Chorshanba        // 3
-		Payshanba         // 4
-		Juma              // 5
-		Shanba            // 6
-		Yakshanba         // 7
-	)
-	fmt.Println(Dushanba, Juma, Yakshanba)
+	h, err := HolatNomdan(HolatNomi(Tolangan))
+	fmt.Println(HolatNomi(h), h, err)
+
+	h, err = HolatNomdan("refund")
+	fmt.Println(h, err)
 }

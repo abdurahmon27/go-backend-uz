@@ -1,10 +1,14 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 func main() {
-	const narx = 300
-	var a int = narx
-	var b int8 = narx // ataylab xato: 300 int8 ga sigʻmaydi
-	fmt.Println(a, b)
+	const a = 3     // untyped
+	const b int = 3 // typed: turi int
+	x := a * time.Second
+	y := b * time.Second // ataylab xato: int × time.Duration
+	fmt.Println(x, y)
 }

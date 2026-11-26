@@ -6,10 +6,10 @@ import (
 )
 
 func main() {
-	var kutish time.Duration = 2 // vaqt turi: nanosekundlarni sanaydi
-	fmt.Println(kutish)          // Println birlik qoʻshadi: ns = nanosekund
-	time.Sleep(kutish)           // = time.Sleep(2): deyarli kutmaydi
-	kutish = 2 * time.Second     // time.Second = 1 soniya = 1 000 000 000 nanosekund
-	fmt.Println(kutish)          // s = soniya
-	time.Sleep(kutish)           // 2 soniya kutadi
+	time.Sleep(2) // untyped 2 → time.Duration: 2 nanosekund soʻraydi
+	var d time.Duration = 2
+	fmt.Println(d)      // Duration birligi bilan chiqadi: 2ns
+	d = 2 * time.Second // time.Second: typed constant, turi Duration (1 000 000 000 ns)
+	fmt.Println(d)      // 2s
+	time.Sleep(d)       // 2 soniya kutadi
 }

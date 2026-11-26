@@ -7,9 +7,6 @@ import (
 
 func main() {
 	start := time.Now()
-	time.Sleep(2) // 2 sekund kutadi deb o'ylaysizmi?
-	fmt.Println(time.Since(start) < time.Second)
-
-	var d time.Duration = 2
-	fmt.Println(d)
+	time.Sleep(2) // 2 soniya? 2 millisekund?
+	fmt.Println(time.Duration(2), time.Since(start) < time.Millisecond)
 }

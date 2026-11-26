@@ -1,116 +1,171 @@
-# 03 · Konstanta va `iota`: oʻzgarmas nomlar, `time.Sleep(2)` va jim buziladigan raqamlar
+# 03 · Konstanta va `iota`: JS `const` emas, `time.Sleep(2)` va enum oʻrtasidagi jim bug
 
-Video: *Golang o'zbek tilida #3* · Lab: https://haywan.uz/lab/youtube/go#go-1-03 ·
-Oldingi dars: [02 · Turlar va overflow](../002-types-overflow/) · Keyingi dars: [04 · Matn, byte, rune va UTF-8](../004-strings-utf8/) ·
-Avval koʻring: Go 0 darslari ([000-01](../000-01-birinchi-dastur/) … [000-05](../000-05-for/)) va 02-dars.
+Video: *Golang oʻzbek tilida #3* · Lab: https://haywan.uz/lab/youtube/go#go-1-03 ·
+Oldingi dars: [02 · Turlar va overflow](../002-types-overflow/) · Keyingi dars: [04 · `len("oʻzbek") = 7?` Bayt, rune va UTF-8](../004-strings-utf8/)
 
-Go 0 va 02-darsdan keyin koʻriladigan dars. Hamma natijalar `go1.26.8 linux/amd64`da olingan (2026-11-26).
-Har bir dasturni https://go.dev/play da ham ishga tushirish mumkin: faylni nusxalab qoʻying va **Run** bosing.
+Boshqa tilda (JS/TS, Python, PHP) ishlaydigan, Go'ga yangi dasturchilar uchun. Avval "Go: JS/Python/PHP dasturchilari
+uchun" kursi (GO-X: `go run`, statik turlar, yashirin konversiya yoʻqligi, `:=` → `int`, zero value, `error`) va 02-dars.
+Hamma natijalar shu kompyuterda olingan (2026-11-26): `go1.26.8 linux/amd64`, Node v24.10.0, Python 3.13.15,
+PHP 8.4.26, tsc 5.9.3. Go dasturlarini https://go.dev/play da ham ishga tushirish mumkin.
 
-**Bitta gʻoya:** konstanta oʻzgarmaydi, lekin uning maʼnosi qayerda turganiga bogʻliq. Turi yoʻq konstanta turini
-tushgan katagidan oladi (`time.Sleep(2)` → ikki nanosekund), `iota` esa raqamini `const ( … )` ichidagi qator oʻrnidan
-oladi (roʻyxat oʻrtasiga qator qoʻshilsa, faylda saqlangan raqamlarning maʼnosi jim oʻzgaradi).
+**Bitta gʻoya:** Go'da `const` — kompilyatsiya paytida maʼlum qiymat, va tur yozilmagan konstanta (*untyped constant*)
+turini ishlatilgan joydan oladi: `time.Sleep(2)` shuning uchun ikki nanosekund soʻraydi. `iota` esa qiymatini `const`
+blokidagi eʼlon oʻrnidan oladi, shuning uchun roʻyxat oʻrtasiga qoʻshilgan holat bazadagi raqamlarning maʼnosini jim
+oʻzgartiradi.
 
 | Papka | Nima | Natija |
 |---|---|---|
-| `ozgarmas/` | konstantaga yangi qiymat — ataylab tarjima boʻlmaydi | `cannot assign to soniyalar (neither addressable nor a map index expression)` |
-| `suv/` | bitta turi yoʻq konstanta `int8` va `float64` katakka tushadi | `12 12.5` |
-| `suv-xato/` | `int` oʻzgaruvchi esa `float64` katakka tushmaydi — ataylab xato | `cannot use n (variable of type int) as float64 value in variable declaration` |
-| `kutish/` | `time.Duration` katagidagi `2` → `2ns`; `2 * time.Second` → `2s` | `2ns` / `2s` |
-| `sleep2/` | `time.Sleep(2)` haqiqatan ham deyarli kutmaydi | `true` / `2ns` |
-| `sinov/` | oʻrtadagi sinov: `const narx = 300` → `int` ✅, `int8` ❌ | `cannot use narx (untyped int constant 300) as int8 value in variable declaration (overflows)` |
-| `holat/` | `iota`: `Nomalum`, `Yangi`, `Tolangan` | `1 2` |
+| `eslash/` | 02-darsdan: `int8` 127 + 3 | `-126` |
+| `anchors/` | JS / Python / PHP / TS solishtirishlar (`const.js`, `const.py`, `const.php`, `sleep.py`, `sleep.js`, `literal.ts`, `alias.ts`, `enum1.ts`, `enum2.ts`) | pastda |
+| `notconst/` | `const maxSize = 10 * 1024 * 1024` ✅, `math.Sqrt(2)` ❌, `time.Now()` ❌ | `… is not constant` |
+| `untyped-xato/` | `int` oʻzgaruvchi `float64` ga oʻtmaydi — ataylab xato | `cannot use n (variable of type int) as float64 value …` |
+| `untyped/` | bitta untyped constant → `int8` va `float64`; `:=` → default type `int` | `12 12.5` / `int` |
+| `duration-type/` | `type Duration int64` alohida tur: `int` oʻzgaruvchi oʻtmaydi — ataylab xato | `cannot use n (variable of type int) as time.Duration value …` |
+| `sleep2/` | `time.Sleep(2)` | `2ns true` |
+| `kutish/` | `2` → `2ns`, `2 * time.Second` → `2s` (keyin 2 soniya kutadi) | `2ns` / `2s` |
+| `config/` | `n := 2; time.Sleep(n * time.Second)` — ataylab xato | `mismatched types int and time.Duration` |
+| `config-fix/`, `wrongfix/` | `time.Duration(n) * time.Second` ✅ · `time.Duration(n)` ❌ (2ns) | `2s` · `2s` / `2ns` |
+| `sinov/` | oʻrtadagi sinov: untyped `a` ✅, typed `const b int` ❌ | `b * time.Second (mismatched types …)` |
+| `holat/` | `type Holat int` + `iota`; zero value = `Nomalum` | `1 2 true` |
 | `xato/` | xato: `Bekor` roʻyxat oʻrtasiga qoʻshildi, saqlangan `2` maʼnosini oʻzgartirdi | `false true` |
 | `tuzatish/` | raqamlar qoʻlda, yangi holat oxirida | `true false` |
-| `big/`, `float/` | Chuqurroq: `1 << 100 >> 98`, `0.1 + 0.2` | `4` · `true` / `false` / `0.30000000000000004` |
+| `ochirish/` | takror savoli: `Yangi` oʻchirilsa `2` = `Bekor`; `_` bilan raqam band qoladi | `false true` / `true false` |
+| `float/` | Chuqurroq: `0.1 + 0.2 == 0.3` — untyped / typed `float64` / oʻzgaruvchi | `true` / `false` / `false 0.30000000000000004` |
+| `addr/` | qoʻshimcha: `&Port` — konstantaning manzili yoʻq (Go qoidasi: addressable emas) | `cannot take address of Port (untyped int constant 8080)` |
 | `uyga/` | uy vazifasi: boshlangʻich fayllar va `javob/` | |
 
-Qolgan papkalar (`huge/`, `edge/`, `limit/`, `maxuint/`, `maxfix/`, `pi/`, `duration/`, `durfix/`, `status/`,
-`sizes/`, `bug/`, `fix/`, `homework/`) darsning birinchi versiyasidan qoldi, ular pastdagi **Ilova**da.
+Qolgan papkalar (`ozgarmas/`, `big/`, `huge/`, `edge/`, `limit/`, `maxuint/`, `maxfix/`, `pi/`, `duration/`, `durfix/`,
+`status/`, `sizes/`, `bug/`, `fix/`, `homework/`) darsning oldingi versiyalaridan qoldi (pastdagi **Ilova**).
 
 ## Videodagi buyruqlar
 ```bash
-go run ozgarmas/main.go    # ozgarmas/main.go:7:2: cannot assign to soniyalar (neither addressable nor a map index expression)
-go run suv/main.go         # 12 12.5
-go run kutish/main.go      # 2ns / 2s (keyin 2 soniya kutadi)
-go run sinov/main.go       # sinov/main.go:8:15: cannot use narx (untyped int constant 300) as int8 value in variable declaration (overflows)
-go run holat/main.go       # 1 2
-go run xato/main.go        # false true
-go run tuzatish/main.go    # true false
-go run big/main.go         # 4
-go run float/main.go       # true / false / 0.30000000000000004
+go run eslash/main.go        # -126
+node -p 'const start = Date.now(); typeof start'   # number
+go run notconst/main.go      # notconst/main.go:11:16: math.Sqrt(2) (value of type float64) is not constant
+                             # notconst/main.go:12:16: time.Now() (value of struct type time.Time) is not constant
+php anchors/const.php        # Fatal error: Constant expression contains invalid operations in …/anchors/const.php on line 5
+                             # (PHP: nix shell nixpkgs#php -c php anchors/const.php)
+tsc --strict anchors/literal.ts   # anchors/literal.ts(5,7): error TS2322: Type 'number' is not assignable to type '3'.
+python3 anchors/sleep.py     # 2.0   (time.sleep(2) = 2 soniya)
+node anchors/sleep.js        # 2     (setTimeout(…, 2) = 2 millisekund)
+go run sleep2/main.go        # 2ns true
+go run kutish/main.go        # 2ns / 2s
+go run config/main.go        # config/main.go:10:13: invalid operation: n * time.Second (mismatched types int and time.Duration)
+go run config-fix/main.go    # 2s
+go run sinov/main.go         # sinov/main.go:12:7: invalid operation: b * time.Second (mismatched types int and time.Duration)
+tsc anchors/enum1.ts && node anchors/enum1.js   # 1 2
+go run xato/main.go          # false true
+tsc anchors/enum2.ts && node anchors/enum2.js   # false true
+go run tuzatish/main.go      # true false
+go run float/main.go         # true / false / false 0.30000000000000004
 ```
+(`tsc` 5.9.3: `npx -p typescript@5.9.3 tsc --strict --types --lib es2022,dom anchors/enum1.ts`; `.js` fayllar
+`anchors/` ichida paydo boʻladi.)
 
 ## Dars matni (qisqa)
 
-**Hook.** Sinf jurnalida baholar ism bilan emas, tartib raqami bilan yozilgan: uchinchi oʻquvchiga besh. Roʻyxat
-oʻrtasiga yangi oʻquvchi qoʻshilsa, oʻsha besh baho endi kimniki? Go dasturlarida ham shunday jim xato bor.
+**Hook.** Bazada toʻlangan buyurtmalar `status = 2` bilan saqlangan. Kimdir Go'dagi holatlar roʻyxati oʻrtasiga yangi
+holat qoʻshdi, kompilyator jim. Ertasi kuni oʻsha buyurtmalar qanday koʻrinadi? (Javob `xato/` da.)
 
-**Eslash.** 02-darsda `var x int8 = 128` tarjima boʻlmadi: 128 kodda tayyor yozilgan son, Go uni oldindan tekshiradi.
-Kodda tayyor yozilgan, oʻzgarmaydigan son — *konstanta*
-([Go qoidasi](https://go.dev/ref/spec#Constants): literallar ham konstanta).
+**Eslash (02-dars).** `var x int8 = 127; x += 3` → `-126`: oʻzgaruvchi ishlash paytida jim aylanadi. Konstantani esa
+Go kompilyatsiya paytida tekshiradi; 02-darsdagi xabarda *untyped int constant* degan soʻz bor edi.
 
-**Konstanta (`const`).** Oʻzgaruvchi — stadion tablosi, son almashadi. Konstanta — toshga oʻyilgan yozuv:
-`const soniyalar = 60`. Unga yangi qiymat berish (`soniyalar = 61`) tarjima xatosi: `cannot assign to soniyalar`
-([Assignment statements](https://go.dev/ref/spec#Assignment_statements): chap tomon oʻzgaruvchi boʻlishi kerak).
+**1. `const` — JS `const` emas.** JS'da `const` faqat nomni qayta bogʻlashni taqiqlaydi, qiymat ishlash paytida
+hisoblanadi (`Date.now()`). Python'da konstanta — kelishuv (katta harfli nom, `MAX_RETRIES = 4` ham ishlaydi;
+`typing.Final` ni faqat mypy kabi tekshiruvchi tekshiradi). Go'da `const` qiymati **kompilyatsiya paytida** maʼlum
+boʻlishi shart va u faqat son (rune ham), string yoki bool boʻladi
+([Constants](https://go.dev/ref/spec#Constants)). Konstanta ifodada konstantalar va operatorlar qatnashadi; oddiy
+funksiya chaqiruvi emas (`len("abc")`, `min`/`max` kabi baʼzi built-in'lar konstantalar bilan istisno,
+[Constant expressions](https://go.dev/ref/spec#Constant_expressions)). Shuning uchun `const root2 = math.Sqrt(2)` va
+`const start = time.Now()` — `is not constant`. PHP'ning `const` i ham shunday: `const START = time();` →
+`Fatal error: Constant expression contains invalid operations`, fayl umuman ishga tushmaydi. Ishlash paytidagi qiymat
+uchun Go'da oddiy oʻzgaruvchi (`var` / `:=`).
 
-**Turi yoʻq konstanta (untyped constant).** Tur yozilmagan konstantaning turi u katakka tushganda aniqlanadi — suv
-idish shaklini olgandek: `const yuz = 100` ham `int8`, ham `float64` katakka tushadi (`suv/`), `n := 100` esa `int`
-oʻzgaruvchi va `float64` katakka tushmaydi (`suv-xato/`). Idish kichik boʻlsa, Go suvni toʻkmaydi: `const narx = 300`
-`int8` ga tarjima xatosi (`sinov/`). Katak aytilmasa (masalan `fmt.Println(yuz)`), Go *default* turni tanlaydi: butun
-son uchun `int`. Batafsil: Rob Pike, [*Constants*](https://go.dev/blog/constants).
+**2. Untyped constant.** Go'da yashirin konversiya yoʻq (`untyped-xato/`). Tur yozilmagan konstantaning esa hali turi
+yoʻq — *untyped constant*. U turini ishlatilgan joydan oladi (`int8`, `float64`); tur aytilmagan joyda (`:=`,
+`fmt.Println`) *default type* oladi: butun son uchun `int`, kasr uchun `float64`, `'a'` uchun `rune`
+([Constants](https://go.dev/ref/spec#Constants)). TypeScript'da oʻxshash gʻoya: `const a = 3` ning turi `3` (literal
+type), `let b = a` da `number` ga kengayadi (`anchors/literal.ts`).
 
-**`time.Sleep(2)`.** `time.Sleep` qavs ichidagi sonni `time.Duration` katagiga qoʻyadi, u vaqtni **nanosekund**da
-sanaydi ([time.go](https://github.com/golang/go/blob/go1.26.8/src/time/time.go#L915)). Turi yoʻq `2` jim moslashadi:
-dastur ikki soniya emas, ikki nanosekund soʻraydi — `Sleep` kamida shuncha kutadi, bu kompyuterda 1000 marta oʻlchaganda
-0,4–27 mikrosekund ([pkg.go.dev/time#Sleep](https://pkg.go.dev/time#Sleep)). Ikki soniya: `2 * time.Second`.
-Kompilyator ham, `go vet` ham jim; [staticcheck SA1004](https://staticcheck.dev/docs/checks/#SA1004) buni ushlaydi.
-Teskari holat: `n := 2; n * time.Second` tarjima boʻlmaydi (`int` va `time.Duration` mos emas, `duration/`),
-yechim `time.Duration(n) * time.Second` (`durfix/`).
+**`time.Duration`.** `func Sleep(d Duration)`, `type Duration int64` — nanosekundlar soni
+([time.go](https://github.com/golang/go/blob/go1.26.8/src/time/time.go#L915)). `type` Go'da **yangi tur** yaratadi:
+TS'dagi `type Ms = number` faqat taxallus (`anchors/alias.ts`), Go'da esa `int` oʻzgaruvchini `Duration` ga qoʻyib
+boʻlmaydi (`duration-type/`). Python `time.sleep(2)` = 2 soniya, JS `setTimeout(f, 2)` = 2 ms, Go `time.Sleep(2)` =
+**2 nanosekund soʻraydi** (xatosiz: `2` untyped, `Duration` boʻladi). Oʻlchovda 1000 ta `time.Sleep(2)` 0,3–14 µs da
+qaytdi (Sleep kamida *d* kutadi). Ikki soniya: `2 * time.Second`; `time.Second` — *typed constant*, turi `Duration`,
+qiymati 1 000 000 000 ([time.go L934](https://github.com/golang/go/blob/go1.26.8/src/time/time.go#L934)).
+staticcheck [SA1004](https://staticcheck.dev/docs/checks/#SA1004) `time.Sleep(2)` kabi kichik **konstantani** ushlaydi,
+lekin `time.Sleep(time.Duration(n))` ni ushlamaydi.
 
-**`iota`.** `const ( … )` ichida `iota` = qator raqami, 0 dan boshlanadi. Faqat nom yozilgan qatorda Go oldingi
-yozuvni (bu yerda `iota`ni) takrorlaydi, `iota` har qatorda bittaga oshadi
+**Ishdagi holat: config.** `n := 2` (default type `int`) → `n * time.Second` — `mismatched types int and time.Duration`.
+Tuzatish: `time.Duration(n) * time.Second` ([time.go L930](https://github.com/golang/go/blob/go1.26.8/src/time/time.go#L930)
+dagi rasmiy misol). Notoʻgʻri tuzatish: `time.Duration(n)` — yana 2 ns (`wrongfix/`). Config'da `"2s"` kabi matn boʻlsa,
+`time.ParseDuration("2s")` (npm'dagi `ms('2s')` ga oʻxshash). Nega shunday: Go yashirin konversiyani ataylab olib
+tashlagan ([FAQ](https://go.dev/doc/faq#conversions)), untyped constant esa literallarni qulay qoldiradi
+([Rob Pike, Constants](https://go.dev/blog/constants)).
+
+**Sinov.** `const a = 3` (untyped) → `a * time.Second` ✅; `const b int = 3` (typed) → `b * time.Second` ❌.
+
+**3. `iota`.** TS `enum Status { Unknown, New, Paid }` → `New = 1`, `Paid = 2`. Go'da `enum` kalit soʻzi yoʻq:
+`type Holat int` + `const` blokida `iota`. `iota` = blokdagi eʼlonning (ConstSpec) tartib raqami, 0 dan; izoh va boʻsh
+qatorlar sanalmaydi, `_` esa raqam oladi. Faqat nom yozilgan eʼlon oldingi ifodani (`Holat = iota`) takrorlaydi
 ([Iota](https://go.dev/ref/spec#Iota), [Constant declarations](https://go.dev/ref/spec#Constant_declarations)).
-`Nomalum = 0`: qiymat berilmagan katakda nol turadi (zero value), shuning uchun nol maʼnoli holat boʻlmasligi kerak
-(Protobuf style guide ham birinchi qiymatni `_UNSPECIFIED` qiladi).
+Bu tur yopiq emas: `Holat(42)` ham kompilyatsiya boʻladi (barcha holatlar tekshirilishini `exhaustive` linter beradi).
+`0` = `Nomalum`, chunki holat berilmagan oʻzgaruvchida zero value turadi (Protobuf'da ham birinchi qiymat
+`…_UNSPECIFIED = 0`, [style guide](https://protobuf.dev/programming-guides/style/#enums)).
 
-**Koʻp uchraydigan xato.** Kecha `Tolangan = 2` faylga `2` deb yozildi. Bugun `Bekor` `Yangi`dan keyin qoʻshildi:
-endi `2 = Bekor`, `Tolangan = 3`. `saqlangan == Tolangan` → `false`, `== Bekor` → `true`, xato chiqmaydi (`xato/`).
-Xulosa: faylga yoki bazaga yozilgan raqamning maʼnosi hech qachon oʻzgarmasin. Saqlanadigan holatlarga raqamni qoʻlda
-yozing (`tuzatish/`); `iota` qoldirsangiz, yangi holatni faqat oxiriga qoʻshing va hech birini oʻchirmang (oʻchirilgan
-oʻrniga `_` qoldiring). Protobuf ham oʻchirilgan raqamlarni
-[qayta ishlatmaslikni](https://protobuf.dev/best-practices/dos-donts/#reserve-deleted-numbers) talab qiladi.
+**Koʻp uchraydigan xato.** Kecha `Tolangan = 2` bazaga `2` deb yozildi. Bugun `Bekor` `Yangi`dan keyin qoʻshildi:
+`Bekor = 2`, `Tolangan = 3`, kompilyator jim, saqlangan `2` endi «bekor» (`xato/` → `false true`; TS enum'da ham
+`false true`). **Qoida:** bazaga yoki JSON'ga ketadigan raqamning maʼnosi oʻzgarmasin. (1) raqamni qoʻlda yozing
+(`tuzatish/`), (2) `iota` qoldirsangiz, yangi holatni faqat oxiriga qoʻshing, oʻchirilgan holat oʻrniga `_` qoldiring
+(`ochirish/`), (3) raqam emas, nom saqlang (`"paid"`; uy vazifasi 🟡). Protobuf ham raqamni qoʻlda yozdiradi va
+oʻchirilgan raqamni `reserved` qiladi ([dos and don'ts](https://protobuf.dev/best-practices/dos-donts/#reserve-deleted-numbers)).
+Keyinroq (metodlar darsi): `func (h Holat) String() string` yoki `stringer` vositasi `fmt.Println(Tolangan)` da nom chiqaradi.
 
-**Chuqurroq (ixtiyoriy).** Go qoidasi: butun konstanta kamida 256 bit bilan saqlanadi. `const big = 1 << 100` (2¹⁰⁰,
-101 bit) hech bir *butun son* turiga sigʻmaydi, lekin konstanta sifatida yashaydi; `big >> 98` = 2¹⁰⁰ / 2⁹⁸ = `4`
-([Constant expressions](https://go.dev/ref/spec#Constant_expressions) — aynan shu misol). Konstantalar aniq
-hisoblanadi: `0.1 + 0.2 == 0.3` konstantalar bilan `true`, `float64` oʻzgaruvchilar bilan `false`, yigʻindi
-`0.30000000000000004` (0.1 va 0.2 ikkilik sanoqda aniq yozilmaydi va yaxlitlanadi).
+**Chuqurroq.** JS `0.1 + 0.2 === 0.3` → `false`. Go'da **untyped** konstantalar bilan `true` (konstanta ifodalar aniq
+hisoblanadi), `const c, d float64` (typed) bilan `false` (har biri `float64` ga yaxlitlanadi), `float64` oʻzgaruvchilar
+bilan `false`, yigʻindi `0.30000000000000004` (`float/`). Qoʻshimcha: `&Port` — `cannot take address` (konstanta
+addressable emas, `addr/`); Go 1.26 dan `new(Port)` ishlaydi (qiymat nusxasi bilan yangi oʻzgaruvchi).
 
 ## Uy vazifasi
-- 🟢 **Oson** (`uyga/oson/main.go`, videodagi `xato` dasturi): `Bekor` qatorini roʻyxat oxiriga koʻchiring.
-  Ishga tushirishdan oldin natijani taxmin qiling.
-- 🟡 **Oʻrta** (`uyga/orta/main.go`): hafta kunlarini `iota` bilan yozing, `0` ni `Nomalum` (nomaʼlum kun) ga
-  qoldiring. `Juma` necha?
+- 🟢 **Oson** (`uyga/oson/main.go`: `Nomalum, Yangi, Tolangan, Bekor` — `iota` bilan, toʻgʻri tartibda): pul qaytarilgan buyurtmalar uchun `Qaytarilgan` holatini
+  qoʻshing, shunda bazadagi `2` (`Tolangan`) va `3` (`Bekor`) maʼnosini saqlasin. Boshlangʻich fayl hozir kompilyatsiya
+  boʻlmaydi (`undefined: Qaytarilgan`) — holatni qoʻshganingizda `true false false` chiqishi kerak.
+- 🟡 **Oʻrta** (`uyga/orta/main.go`): bazaga raqam emas, nom saqlang. `HolatNomi(h Holat) string` va
+  `HolatNomdan(s string) (Holat, error)` yozing; nomaʼlum nomga `error` qaytsin.
+  Kutilgan natija: `paid 2 <nil>` va `0 nomaʼlum holat: "refund"`.
 - Qiyinroq vazifalar (bit flaglar, `1.5 * time.Second`, `time.Month` nega 1 dan): [homework/](homework/).
 
 <details><summary>Javoblar</summary>
 
-🟢 `true false`: `Tolangan` yana `2`, `Bekor` = `3`. Eski raqamlar joyida qoldi. [`uyga/javob/oson`](uyga/javob/oson/main.go)
+🟢 `Qaytarilgan` roʻyxat **oxiriga** (`= 4`), eski raqamlar joyida → `true false false`. Qoʻlda yozilgan raqam bilan
+ham boʻladi (`Qaytarilgan Holat = 4`). [`uyga/javob/oson`](uyga/javob/oson/main.go)
 
-🟡 [`uyga/javob/orta`](uyga/javob/orta/main.go) → `1 5 7`: `Dushanba` 1, `Juma` 5, `Yakshanba` 7.
+🟡 [`uyga/javob/orta`](uyga/javob/orta/main.go) → `paid 2 <nil>` / `0 nomaʼlum holat: "refund"`. Bazada `"paid"`
+saqlansa, `const` blokidagi tartib oʻzgarsa ham maʼno buzilmaydi.
 </details>
 
 ## Manbalar
 - Go qoidalari (spec): [Constants](https://go.dev/ref/spec#Constants), [Constant expressions](https://go.dev/ref/spec#Constant_expressions),
   [Iota](https://go.dev/ref/spec#Iota), [Constant declarations](https://go.dev/ref/spec#Constant_declarations),
-  [Assignment statements](https://go.dev/ref/spec#Assignment_statements), [The zero value](https://go.dev/ref/spec#The_zero_value)
-- Rob Pike, *Constants* (Go blog, 2014): https://go.dev/blog/constants
+  [Address operators](https://go.dev/ref/spec#Address_operators), [The zero value](https://go.dev/ref/spec#The_zero_value)
+- Rob Pike, *Constants* (Go blog, 2014): https://go.dev/blog/constants · Go FAQ: https://go.dev/doc/faq#conversions
 - `time.Duration`, `time.Second`: https://github.com/golang/go/blob/go1.26.8/src/time/time.go#L915 · https://pkg.go.dev/time#Sleep
-- Protobuf: [enum zero value](https://protobuf.dev/programming-guides/style/), [oʻchirilgan raqamlar](https://protobuf.dev/best-practices/dos-donts/#reserve-deleted-numbers)
+- JS `const`: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const ·
+  `setTimeout`: https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout
+- Python `time.sleep`: https://docs.python.org/3/library/time.html#time.sleep · PEP 8 constants: https://peps.python.org/pep-0008/#constants
+- PHP constants: https://www.php.net/manual/en/language.constants.syntax.php
+- TypeScript enums: https://www.typescriptlang.org/docs/handbook/enums.html
+- Protobuf: [enum zero value](https://protobuf.dev/programming-guides/style/#enums), [oʻchirilgan raqamlar](https://protobuf.dev/best-practices/dos-donts/#reserve-deleted-numbers)
 - staticcheck SA1004: https://staticcheck.dev/docs/checks/#SA1004
 
 ---
+
+## Ilova: ikkinchi versiya (2026-11-26, Go 0 tomoshabinlari uchun)
+
+Bu versiya hayotiy oʻxshatishlar (sinf jurnali, tosh, suv) bilan yozilgan edi; video dasturchilar uchun qayta
+yozilganda ular olib tashlandi. Dasturlari: `ozgarmas/` (`const soniyalar = 60; soniyalar = 61` →
+`cannot assign to soniyalar`), `untyped/` va `untyped-xato/` (oldingi `suv/`, `suv-xato/`), `big/` (`1 << 100 >> 98` → `4`).
 
 ## Ilova: darsning birinchi versiyasi (2026-11-25)
 
@@ -143,7 +198,7 @@ go run ./pi         # float32: 3.14159274... / float64: 3.14159265358979311600
 go run ./float      # true / false / 0.30000000000000004
 go run ./duration   # invalid operation: n * time.Second (mismatched types int and time.Duration)
 go run ./durfix     # 2s
-go run ./sleep2     # true / 2ns
+go run ./sleep2     # (oʻsha versiyada: true / 2ns; endi sleep2 `2ns true` chiqaradi)
 go run ./status     # 0 1 2 3 / true
 go run ./sizes      # 1024 1048576 1073741824 1099511627776
 go run ./bug        # to'langanmi? false / bekor qilinganmi? true

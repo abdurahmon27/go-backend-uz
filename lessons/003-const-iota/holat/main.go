@@ -2,11 +2,15 @@ package main
 
 import "fmt"
 
+type Holat int // time.Duration kabi: asosi int boʻlgan alohida tur
+
+const (
+	Nomalum  Holat = iota // 0: zero value — holat berilmagan
+	Yangi                 // 1: faqat nom → oldingi ifoda "Holat = iota" takrorlanadi
+	Tolangan              // 2
+)
+
 func main() {
-	const (
-		Nomalum  = iota // 0: qiymat berilmagan (nol qiymat) holat
-		Yangi           // 1
-		Tolangan        // 2
-	)
-	fmt.Println(Yangi, Tolangan)
+	var h Holat // zero value
+	fmt.Println(Yangi, Tolangan, h == Nomalum)
 }
