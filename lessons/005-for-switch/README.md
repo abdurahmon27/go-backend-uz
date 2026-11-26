@@ -130,7 +130,7 @@ qilindi, qolganlari 2020-yil 29-maygacha muddati tugab yoki bekor qilinib yoʻqo
 ([Mozilla 1619047](https://bugzilla.mozilla.org/show_bug.cgi?id=1619047), [1619179](https://bugzilla.mozilla.org/show_bug.cgi?id=1619179),
 [Let's Encrypt eʼloni](https://community.letsencrypt.org/t/2020-02-29-caa-rechecking-bug/114591)).
 
-**Go jamoasi qanday qaror qildi.** Russ Cox: Google ichida ~100 000 testda yangi semantika sinaldi, 58 tasi yiqildi,
+**Go jamoasi qanday qaror qildi.** Russ Cox: Google ichida ~100 000 testda yangi semantika sinaldi, 58 tasi oʻtmadi,
 ulardan faqat 2 tasida kod eski xulqqa haqiqatan tayangan, qolganlarining deyarli hammasi yashirin xatolar edi
 (36 tasi `t.Parallel` bilan notoʻgʻri testlar, ikkinchi eng koʻp sabab esa aynan `&v` ni slice'ga qoʻshish)
 ([discussion #56010](https://github.com/golang/go/discussions/56010)).

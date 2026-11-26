@@ -66,7 +66,7 @@ Son va matn farqi — keyingi dars.
 
 ## Uy vazifasi
 
-🟢 **Oson** (`uyga/yashil/main.go`): `ochko` ni `yosh` deb qayta nomlang (hamma joyda), `2` oʻrniga oʻz yoshingizni
+🟢 **Oson** (`uyga/yashil/main.go`): `ochko` ni `yosh` deb qayta nomlang (hamma joyda), `3` oʻrniga oʻz yoshingizni
 yozing. Dastur hozirgi va keyingi yilgi yoshingizni chiqarsin. Qoʻshimcha: `+ 1` ni `+ 5` ga almashtiring —
 ekranda nima oʻzgaradi?
 
