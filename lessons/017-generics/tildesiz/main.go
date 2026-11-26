@@ -1,5 +1,5 @@
 // tildesiz: ATAYLAB kompilyatsiya boʻlmaydi. ~ olib tashlansa, Ball endi Son emas.
-// go build ./tildesiz
+// go build -o /dev/null ./tildesiz   (plain "go build ./tildesiz" collides with the folder name)
 package main
 
 import "fmt"

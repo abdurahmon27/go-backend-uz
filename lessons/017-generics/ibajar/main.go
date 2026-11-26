@@ -1,5 +1,5 @@
 // ibajar: ATAYLAB kompilyatsiya boʻlmaydi. Generic metod interface metodini bajarmaydi.
-// go build ./ibajar
+// go build -o /dev/null ./ibajar   (plain "go build ./ibajar" collides with the folder name)
 package main
 
 import "fmt"

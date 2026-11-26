@@ -1,5 +1,5 @@
 // imetod: ATAYLAB kompilyatsiya boʻlmaydi. Interface metodi type parameter e'lon qila olmaydi.
-// go build ./imetod
+// go build -o /dev/null ./imetod   (plain "go build ./imetod" collides with the folder name)
 package main
 
 type Aylantiruvchi interface {
