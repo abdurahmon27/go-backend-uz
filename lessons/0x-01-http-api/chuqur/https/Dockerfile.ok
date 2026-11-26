@@ -1,0 +1,4 @@
+FROM scratch
+COPY --from=golang:1.26.8 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY https /https
+ENTRYPOINT ["/https"]

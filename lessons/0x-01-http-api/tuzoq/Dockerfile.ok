@@ -1,0 +1,9 @@
+# TUZATISH: CGO_ENABLED=0 → net paketi sof Go resolver bilan, binary static
+FROM golang:1.26.8 AS build
+WORKDIR /src
+COPY go.mod main.go ./
+RUN CGO_ENABLED=0 go build -o /api .
+
+FROM scratch
+COPY --from=build /api /api
+ENTRYPOINT ["/api"]

@@ -1,0 +1,104 @@
+
+$ go mod init api
+go: creating new go.mod: module api
+module api
+
+go 1.26.8
+
+$ npm install express
+added 65 packages, and audited 66 packages in 5s
+
+$ go run .
+
+$ curl localhost:3000/users/42
+{"id":"42"}
+
+
+$ curl -i -X POST localhost:3000/health
+HTTP/1.1 405 Method Not Allowed
+Allow: GET, HEAD
+Content-Type: text/plain; charset=utf-8
+X-Content-Type-Options: nosniff
+Content-Length: 19
+
+Method Not Allowed
+2026/11/26 17:52:27 listening on :3000
+
+$ ls -A after go run
+go.mod
+main.go
+
+$ Express POST/HEAD
+HTTP/1.1 404 Not Found
+<pre>Cannot POST /health</pre>
+HTTP/1.1 200 OK
+
+$ cd xato && go build
+# api/xato
+./main.go:4:2: "encoding/json" imported and not used
+exit 1
+main.go
+
+$ go build -o api .
+-rwxr-xr-x 1 haywan users 8659683 Nov 26 17:52 api
+
+$ node binary
+-rwxr-xr-x 1 haywan users 129491456 Oct  9  2025 /home/haywan/.nvm/versions/node/v24.10.0/bin/node
+x64
+
+$ ./api-arm
+bash: ./api-arm: cannot execute binary file: Exec format error
+
+$ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o api .
+-rwxr-xr-x 1 haywan users 8659683 Nov 26 17:52 api
+
+$ docker images
+REPOSITORY:TAG    SIZE
+api-go:latest     8.66MB
+api-node:latest   235MB
+8659683
+
+$ docker run api-go
+{"status":"ok"}
+
+OCI runtime exec failed: exec failed: unable to start container process: exec: "sh": executable file not found in $PATH
+
+$ tuzoq Dockerfile
+FROM golang:1.26.8 AS build
+RUN go build -o /api .
+FROM scratch
+
+$ docker run tuzoq
+exec /api: no such file or directory
+exit 255
+
+$ tuzoq ldd
+	linux-vdso.so.1 (0x000074a085156000)
+	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x000074a084f57000)
+	/lib64/ld-linux-x86-64.so.2 (0x000074a085158000)
+
+$ tuzoq-ok ldd + run
+	not a dynamic executable
+{"status":"ok"}
+
+
+$ go version -m api
+api: go1.26.8
+	build	CGO_ENABLED=0
+	build	GOARCH=amd64
+	build	GOOS=linux
+	build	vcs.revision=31de4693fb62e2e454796bb85460d2f2ed5e6c6a
+	build	vcs.modified=true
+
+$ go run vs build: /version
+{"go":"go1.26.8","revision":"unknown"}
+
+{"go":"go1.26.8","revision":"31de4693fb62e2e454796bb85460d2f2ed5e6c6a"}
+
+
+$ chuqur https
+xato: Get "https://go.dev": tls: failed to verify certificate: x509: certificate signed by unknown authority
+status: 200 OK
+
+$ -ldflags=-s -w (README)
+-rwxr-xr-x 1 haywan users 6004898 Nov 26 17:52 /tmp/api-sw

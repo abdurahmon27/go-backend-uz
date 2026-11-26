@@ -1,0 +1,5 @@
+# build outputs from the lesson commands
+api
+api-*
+chuqur/https/https
+node/node_modules/
