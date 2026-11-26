@@ -78,6 +78,9 @@ func TestAddMiqdor(t *testing.T) {
 	want := strings.Join([]string{
 		"bozor ishga tushdi",
 		"versiya: 0.1.0",
+		" 0 false",
+		"olma 1200000 true 40 1.5",
+		"olma 35",
 		"olma, 5 dona       48000.00",
 		"QQS                 5760.00",
 		"yetkazish          15000.00",
@@ -90,8 +93,8 @@ func TestAddMiqdor(t *testing.T) {
 	}
 }
 
-// start: dastur har doim avval shu ikki qatorni chiqaradi.
-const start = "bozor ishga tushdi\nversiya: 0.1.0"
+// start: dastur har doim avval shu uch qatorni chiqaradi (ishga tushish qatorlari va GB-1.02'dagi zero value qatori).
+const start = "bozor ishga tushdi\nversiya: 0.1.0\n 0 false"
 
 func TestRadEtadi(t *testing.T) {
 	cases := []struct {
@@ -107,8 +110,8 @@ func TestRadEtadi(t *testing.T) {
 	}
 	for _, c := range cases {
 		out, errOut, code := bozor(t, c.args...)
-		if code != 1 || errOut != c.has || out != start {
-			t.Errorf("«%s» rad etilishi kerak: xato oqimida «%s», kod 1, oddiy chiqishda faqat ikki ishga tushish qatori;\n  hozir: xato oqimi «%s», chiqish «%s», kod %d",
+		if code != 1 || errOut != c.has || !strings.HasPrefix(out, start) || strings.Contains(out, "jami") {
+			t.Errorf("«%s» rad etilishi kerak: xato oqimida «%s», kod 1, oddiy chiqishda chek yoʻq;\n  hozir: xato oqimi «%s», chiqish «%s», kod %d",
 				buyruq(c.args), c.has, errOut, out, code)
 		}
 	}

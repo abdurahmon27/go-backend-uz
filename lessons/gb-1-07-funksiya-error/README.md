@@ -23,9 +23,9 @@ chiqish kodi 1 bilan rad etiladi. Vositalar: `os.Args` va `len`, `strconv.Atoi`,
 | `_video/run.sh` | qadamni videodagidek ishga tushiradi: `./_video/run.sh 03-atoi add olma 12k`; `final` = papkadagi `main.go` |
 
 `main.go` GB-1.06'ning `solution/main.go`'sidan boshlangan. Oʻzgarganlar: `import ( … )` (`os`, `strconv`),
-`parsePrice`, `main` boshida ishga tushish qatorlaridan keyin `os.Args` tekshiruvi, `name` va `price` buyruq
-qatoridan (paket darajasidagi `var name`/`var price` olib tashlandi), `price <= 0` tekshiruvi `parsePrice`'ga koʻchdi,
-miqdor hali `var sold = 7` (vazifada buyruq qatoridan). Tekshiruvlar (GB-1.05), aksiya sikli (GB-1.06) va chek oʻzgarmagan.
+`parsePrice`, `main`'da zero value qatoridan keyin `os.Args` tekshiruvi, `name = "choy"` va `price = 1_999 * tiyinPerSom`
+oʻrniga `name = os.Args[2]` va `price, err := parsePrice(os.Args[3])`, `price <= 0` tekshiruvi `parsePrice`'ga
+koʻchdi, miqdor hali `sold := 7` (vazifada buyruq qatoridan). Tekshiruvlar (GB-1.05), aksiya sikli (GB-1.06) va chek oʻzgarmagan.
 Oldingi darsdan farq:
 
 ```bash
@@ -73,6 +73,9 @@ $ echo $?
 $ ./bozor add olma 12000
 bozor ishga tushdi
 versiya: 0.1.0
+ 0 false
+olma 1200000 true 40 1.5
+olma 33
 olma, 7 dona       60000.00
 QQS                 7200.00
 yetkazish          15000.00
@@ -81,10 +84,12 @@ aksiya: 2 dona bepul
 $ ./bozor add olma -5
 bozor ishga tushdi
 versiya: 0.1.0
+ 0 false
 xato: narx musbat boʻlishi kerak, keldi -5
 $ ./bozor add olma 12_000
 bozor ishga tushdi
 versiya: 0.1.0
+ 0 false
 xato: strconv.Atoi: parsing "12_000": invalid syntax
 ```
 
@@ -93,11 +98,12 @@ Uzunlik tekshirilmasa (`05-panic`, `./bozor add olma`), chiqish kodi 2:
 ```
 bozor ishga tushdi
 versiya: 0.1.0
+ 0 false
 panic: runtime error: index out of range [3] with length 3
 
 goroutine 1 [running]:
 main.main()
-	/tmp/…/bozor/main.go:36 +0x933
+	/tmp/…/bozor/main.go:36 +0x953
 ```
 
 Tekshiruv bilan (`final`, `./bozor add olma`), chiqish kodi 1:
@@ -105,6 +111,7 @@ Tekshiruv bilan (`final`, `./bozor add olma`), chiqish kodi 1:
 ```
 bozor ishga tushdi
 versiya: 0.1.0
+ 0 false
 foydalanish: bozor add NOM NARX
 ```
 

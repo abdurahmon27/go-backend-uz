@@ -1,7 +1,7 @@
 # Vazifa · GB-1.07: miqdor buyruq qatoridan, `parseSold`
 
 Hozir bozor nom va narxni buyruq qatoridan oladi (`./bozor add olma 12000`), lekin sotilgan dona soni
-fayl tepasida `var sold = 7` deb qoʻlda yozilgan. Uni ham buyruq qatoridan oling.
+`main` ichida `sold := 7` deb qoʻlda yozilgan. Uni ham buyruq qatoridan oling.
 
 **Nima qilish kerak** (`main.go`'da):
 
@@ -11,6 +11,9 @@ fayl tepasida `var sold = 7` deb qoʻlda yozilgan. Uni ham buyruq qatoridan olin
    $ ./bozor add olma 12000 5
    bozor ishga tushdi
    versiya: 0.1.0
+    0 false
+   olma 1200000 true 40 1.5
+   olma 35
    olma, 5 dona       48000.00
    QQS                 5760.00
    yetkazish          15000.00
@@ -48,9 +51,10 @@ go build && ./bozor add olma 12000 5
 **Maslahatlar**
 
 - `parseSold` `parsePrice`'ning tuzilishini takrorlaydi, faqat natija `int` va tiyinga koʻpaytirish yoʻq.
-- `sold` ham, `err` ham allaqachon eʼlon qilingan, shuning uchun oddiy teng yetadi: `sold, err = parseSold(os.Args[4])`.
-  Ikki nuqta teng (`:=`) yozsangiz, `main` ichida yangi `sold` paydo boʻlib, fayl tepasidagini toʻsib qoʻyadi.
-  `parseSold` ichidagi oʻzgaruvchiga esa boshqa nom bering (masalan `n`).
+- `sold := 7` qatori oʻrniga `sold, err := parseSold(os.Args[4])` yozing. `err` narx qatorida eʼlon qilingan,
+  `sold` esa yangi: chapda kamida bitta yangi nom boʻlgani uchun `:=` ishlaydi, `err`'ga shunchaki yangi qiymat
+  beriladi (videoda `price, err := parsePrice(…)` bilan xuddi shunday). `parseSold` ichidagi oʻzgaruvchiga boshqa nom
+  bering (masalan `n`).
 - `len(os.Args)` endi nechta boʻlishi kerak? Dastur nomi ham hisobga kiradi.
 
 Javob: [`solution/main.go`](solution/main.go).
