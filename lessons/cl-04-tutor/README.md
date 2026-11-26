@@ -3,7 +3,7 @@
 Oldingi dars: [CL-1.03 · Prompt — bu texnik topshiriq: kontekst, misol, cheklov](../cl-03-prompt/) ·
 Keyingi dars: CL-1.05 · AI javobini tekshirish: manba, ishga tushirish va ikkinchi fikr
 
-**Darsning bitta gʻoyasi:** AI javobni yozib bersa, siz oʻrganmaysiz. Avval oʻzingiz yozasiz (xato boʻlsa ham),
+**Darsning bitta gʻoyasi:** AI javobni yozib bersa-yu, siz faqat koʻchirsangiz, keyin oʻzingiz yecha olmasligingiz mumkin. Avval oʻzingiz yozasiz (xato boʻlsa ham),
 Claude esa ustoz boʻladi: tayyor kodni bermaydi, xato qayerda ekanini koʻrsatadi va savol beradi.
 
 Bitta kichik Go xatosini Claude Sonnet 5.5 ga ikki xil berdik — «tuzatib ber» (javob mashinasi) va ustoz qoidalari
