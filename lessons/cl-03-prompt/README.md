@@ -52,7 +52,7 @@ grep -h "o'zingiz almashtiring" javoblar/2-kontekst/*.txt
 tail -4 promptlar/3-format.txt
 cat javoblar/3-format/1.txt
 go run ./olchov
-grep -hE '^func Test|:= \[\]struct' javoblar/6-test/1.txt javoblar/7-test-misol/1.txt
+grep -E '^func Test|:= \[\]struct' javoblar/6-test/1.txt javoblar/7-test-misol/1.txt
 go run ./olchov -test
 go run ./homework/guru
 ```
