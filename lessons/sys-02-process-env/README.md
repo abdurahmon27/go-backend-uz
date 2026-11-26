@@ -79,7 +79,7 @@ bunday signalni qayta yoqadi, lekin `stop()` dan keyin u yana eʼtiborsiz holati
 tushmaydi va bolaga oʻtmaydi. `export` uni shu shell'dan keyin ishga tushadigan jarayonlarga beradi. (Videoda bola uchun alohida `SHAHAR` oʻzgaruvchisi olingan: har bir qadam
 alohida `bash -c` da ishlaydi; bitta terminalda ketma-ket yozsangiz, oldingi `export ISM=Vali` ham koʻrinib qoladi.) Bola jarayon ota-onasining muhitidan **nusxa** oladi (`environ(7)`), shuning uchun `bash -c 'export ISM=Vali'`
 tashqaridagi shell'ga taʼsir qilmaydi. Ishlayotgan jarayonning boshlangʻich muhiti `/proc/PID/environ` da, yozuvlar
-nol bayt bilan ajratilgan (SYS-0.01 dagi `-print0` kabi), shuning uchun `tr '\0' '\n'`. Bu fayl jarayon *boshlangandagi*
+nol bayt bilan ajratilgan, shuning uchun `tr '\0' '\n'`. Bu fayl jarayon *boshlangandagi*
 muhitni koʻrsatadi, keyingi oʻzgarishlarni emas. Faylni jarayon egasi (va root) oʻqiy oladi (ptrace ruxsati):
 muhitdagi parol ular uchun sir emas. [06-dars · Funksiyalar](../006-functions/) dagi `PORT=9000` misoli ham shu yoʻl.
 
