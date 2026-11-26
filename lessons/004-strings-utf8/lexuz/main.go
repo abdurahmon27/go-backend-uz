@@ -1,5 +1,5 @@
-// lexuz: HTML sahifadagi o/g dan keyingi apostrof turlarini va
-// lotin soʻz ichidagi kirill harflarni sanaydi. Videoda ishlatilmaydi (tarmoq kerak):
+// lexuz: HTML sahifada koʻrinadigan matndagi o/g dan keyingi apostrof turlarini va
+// lotin soʻz ichidagi kirill harflarni sanaydi (tarmoq kerak):
 //
 //	curl -sL https://lex.uz/uz/docs/8548754 | go run ./lexuz
 package main
@@ -20,8 +20,14 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	// <script> ichidagi JavaScript matn emas: uni olib tashlaymiz
-	b = regexp.MustCompile(`(?is)<script.*?</script>`).ReplaceAll(b, nil)
+	// Faqat sahifada koʻrinadigan matn: <head> (meta, title) tashlanadi, <script>/<style> ichidagi
+	// kod ham, teglar ham olib tashlanadi. Menyular va sarlavhalar sanaladi (ular ham koʻrinadi).
+	if i := strings.Index(strings.ToLower(string(b)), "<body"); i >= 0 {
+		b = b[i:]
+	}
+	b = regexp.MustCompile(`(?is)<(script|style|noscript)\b.*?</(script|style|noscript)>`).ReplaceAll(b, nil)
+	b = regexp.MustCompile(`(?s)<!--.*?-->`).ReplaceAll(b, nil)
+	b = regexp.MustCompile(`<[^>]+>`).ReplaceAll(b, []byte("\n"))
 	r := []rune(html.UnescapeString(string(b)))
 	sanoq := map[rune]int{}
 	for i := 1; i < len(r); i++ {
