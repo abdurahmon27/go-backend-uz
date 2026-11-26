@@ -1,108 +1,144 @@
 # 02 · Turlar va overflow: Go rad etadi, `x++` esa jim aylanadi
 
-Video: *Golang o'zbek tilida #2* · Lab: https://haywan.uz/lab/youtube/go#go-1-02 ·
-Oldingi dars: [01 · Go nega bor?](../001-why-go/) · Keyingi dars: [03 · Konstantalar va `iota`](../003-const-iota/) ·
-Avval koʻring: Go 0 darslari ([000-01](../000-01-birinchi-dastur/) … [000-05](../000-05-for/)).
+Video: *Golang oʻzbek tilida #2* · Lab: https://haywan.uz/lab/youtube/go#go-1-02 ·
+Oldingi dars: [01 · Go nega bor?](../001-why-go/) · Keyingi dars: [03 · Konstantalar va `iota`](../003-const-iota/)
 
-Go 0 dan keyin koʻriladigan dars. Hamma natijalar `go1.26.8 linux/amd64`da olingan (2026-11-26).
-Har bir dasturni https://go.dev/play da ham ishga tushirish mumkin: faylni nusxalab qoʻying va **Run** bosing.
+Boshqa tilda (JS/TS, Python, PHP) ishlaydigan, Go'ga yangi dasturchilar uchun. Avval "Go: JS/Python/PHP dasturchilari
+uchun" kursi (GO-X): `go run`, statik turlar, `var` va `:=`, zero value, `error` qiymatlar.
+Hamma natijalar shu kompyuterda olingan (2026-11-26): `go1.26.8 linux/amd64`, Node v24.10.0, Python 3.13.15, tsc 5.9.3.
+Go dasturlarini https://go.dev/play da ham ishga tushirish mumkin.
 
-**Bitta gʻoya:** son turi katakning kattaligini ham aytadi. `int8` katagiga faqat −128 … 127 sigʻadi. Sigʻmaydigan son
-oʻzgaruvchisiz, faqat sonlardan chiqsa, Go dasturni tarjima qilmaydi; hisobda oʻzgaruvchi qatnashsa, son mashina
-hisoblagichi kabi jim aylanadi (127 dan keyin −128). Qiymat berilmagan katakda doim shu turning nol qiymati turadi.
+**Bitta gʻoya:** Go'da butun sonning chegarasini siz tanlagan tur belgilaydi (`int8` = −128 … 127). Oʻzgaruvchidagi
+qiymat chegaradan oʻtsa, two's complement boʻyicha jim aylanadi (Python'da chegara yoʻq, JS'da aniqlik yoʻqoladi).
+Konstanta ifoda esa aniq hisoblanadi; yakuniy qiymat turga sigʻmasa, Go uni kompilyatsiya paytida rad etadi.
 
 | Papka | Nima | Natija |
 |---|---|---|
+| `hook/` | `var id int64 = math.MaxInt64; id++` (+ Python va Node bilan solishtirish) | `-9223372036854775808` |
+| `hook/id.js` | frontend 64 bitlik ID'ni JSON'dan son qilib oʻqiydi | `1234567890123456800` |
+| `jsonid/` | Go: `json:"id,string"` — ID JSON'da string boʻlib ketadi | `{"id":"1234567890123456789"}` |
+| `eslash/` | takrorlash: `var layk int; layk + 1` (JS'da `NaN`) | `1` |
+| `sizes/` | butun son turlari: hajm va chegaralar | `int8 1 bayt: -128 ... 127` … |
 | `aylanish/` | `var x int8 = 127; x++` | `-128` |
-| `sigmaydi/` | `var x int8 = 128` — ataylab tarjima boʻlmaydi | `cannot use 128 (untyped int constant) as int8 value in variable declaration (overflows)` |
-| `sinov/` | oʻrtadagi sinov: `var a int8 = 100; a = a + 50` | `-106` |
-| `nol/` | zero value: `int8`, `bool`, `string` | `0 false []` |
+| `binary/` | bitlar: two's complement | `127 = 01111111`, `-128 = 10000000` |
+| `sigmaydi/` | `var x int8 = 128` — ataylab kompilyatsiya boʻlmaydi | `cannot use 128 (untyped int constant) as int8 value … (overflows)` |
+| `const64/` | `var id int64 = math.MaxInt64 + 1` — ataylab kompilyatsiya boʻlmaydi | `cannot use math.MaxInt64 + 1 (untyped int constant 9223372036854775808) as int64 value … (overflows)` |
+| `ifoda/` | oʻrtadagi sinov: `var a int8 = 100 + 50 - 60` (oraliqda 150) | `90` |
+| `sinov/` | oʻzgaruvchi bilan: `var a int8 = 100; a = a + 50` | `-106` |
 | `layk/` | xato: `int8` bilan 200 ta layk | `-56` |
 | `layk-int/` | tuzatilgan: `int` | `200` |
-| `constover/` | Chuqurroq: `int8(127) + 1` — ataylab tarjima boʻlmaydi | `int8(127) + 1 (constant 128 of type int8) overflows int8` |
-| `binary/` | Chuqurroq: bitlar | `127 = 01111111`, `-128 = 10000000`, `-1 = 11111111` |
+| `convert/` | Chuqurroq: konversiya `int8(big)` | `44`, `-56` |
 | `uyga/` | uy vazifasi: boshlangʻich fayllar va `javob/` | |
-
-Qolgan papkalar (`sizes/`, `mix/`, `zero/`, `wrap/`, `lt/`, `convert/`, `boeing/`, `bug/`, `fix/`, `homework/`)
-darsning birinchi versiyasidan qoldi, ular pastdagi **Ilova**da.
 
 ## Videodagi buyruqlar
 ```bash
-go run aylanish/main.go    # -128
-go run sigmaydi/main.go    # sigmaydi/main.go:6:15: cannot use 128 (untyped int constant) as int8 value in variable declaration (overflows)
-go run sinov/main.go       # -106
-go run nol/main.go         # 0 false []
-go run layk/main.go        # -56
-go run layk-int/main.go    # 200
-go run constover/main.go   # constover/main.go:6:14: int8(127) + 1 (constant 128 of type int8) overflows int8
-go run binary/main.go      #  127 = 01111111 / -128 = 10000000 / -1 = 11111111
+python3 -c 'print(9223372036854775807 + 1)'   # 9223372036854775808  (Python int: chegara yoʻq)
+node -p '9223372036854775807 + 1'             # 9223372036854776000  (JS number = float64, yaxlitlandi)
+go run hook/main.go                           # -9223372036854775808 (Go int64: aylandi)
+node -p 'let layk; layk + 1'                  # NaN
+go run eslash/main.go                         # 1  (zero value)
+go run sizes/main.go
+go run aylanish/main.go                       # -128
+node -p 'const a = new Int8Array([127]); a[0]++; a[0]'   # -128 (JS ham 8 bitda aylanadi)
+go run binary/main.go                         #  127 = 01111111 / -128 = 10000000 / -1 = 11111111
+go run sigmaydi/main.go                       # sigmaydi/main.go:6:15: cannot use 128 (untyped int constant) as int8 value in variable declaration (overflows)
+go run const64/main.go                        # const64/main.go:10:17: cannot use math.MaxInt64 + 1 (untyped int constant 9223372036854775808) as int64 value in variable declaration (overflows)
+go run ifoda/main.go                          # 90
+go run layk/main.go                           # -56
+go run layk-int/main.go                       # 200
+node hook/id.js                               # {"id":1234567890123456789} / 1234567890123456800
+go run jsonid/main.go                         # {"id":"1234567890123456789"}
+go run convert/main.go                        # 44 / -56
+node -p 'new Int8Array([300])[0]'             # 44
 ```
+`sigmaydi/` va `const64/` ataylab kompilyatsiya boʻlmaydi, shuning uchun `go vet ./...` bu ikki papkada xato beradi.
+
+TypeScript tekshiruvi (`tsc 5.9.3`, `strict: true`): `const id: number = 9223372036854775807 + 1` xatosiz kompilyatsiya
+boʻladi — TS son chegarasini tekshirmaydi, hamma son `number`, qiymat esa ishlash paytida yaxlitlanadi.
+JS'da aniq katta butun son kerak boʻlsa — `BigInt`: `9223372036854775807n + 1n` → `9223372036854775808n`.
 
 ## Dars matni (qisqa)
 
-**Hook.** Mashinaning kilometr hisoblagichida hamma raqamlar 9. Yana bir kilometrdan keyin hamma gʻildirakcha aylanadi
-va nollar chiqadi, hech qanday ogohlantirishsiz. Go'dagi baʼzi sonlar ham shunday aylanadi, faqat minusga.
+**Hook.** Bir xil son, bir xil `+ 1`: Python `9223372036854775808` (aniq), Node `9223372036854776000` (yaxlitlandi),
+Go `int64` oʻzgaruvchida `-9223372036854775808` (manfiy, xatosiz).
 
-**Katak.** Memory rasmidagi qiymat turadigan toʻrtburchak — *katak*. Oddiy `int` juda katta katak (bu kompyuterda
-64 bit; Go qoidasi boʻyicha 32 yoki 64 bit boʻlishi mumkin — ikkalasida ham `int8` dan juda katta). `int8` esa kichik:
-eng kichigi −128, eng kattasi 127 (256 ta son: yarmi manfiy, yarmi 0 va musbat). `:=` oddiy `int` tanlaydi, shuning
-uchun `int8` katakni `var` bilan yaratamiz: `var x int8 = 127` — "x yorligʻi, turi `int8`, qiymati 127".
+**Takrorlash (GO-X).** JS'da `let layk; layk + 1` → `NaN`. Go'da `undefined` yoʻq: `var layk int` → zero value `0`,
+`layk + 1` → `1`.
 
-**Aylanish.** `x++` dan keyin `x` = −128. Sonlarni soat yuzi kabi doira boʻylab tasavvur qiling: 127 dan keyin eng
-kichik son keladi. Bu *overflow* (toʻlib ketish). [Go qoidasi](https://go.dev/ref/spec#Integer_overflow):
-oʻzgaruvchidagi overflow runtime panic bermaydi, natija aniq belgilangan; `go run` xato ham, ogohlantirish ham bermaydi.
+**Chegaralar.** Python `int` — [cheklanmagan aniqlik](https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex).
+JS `number` — float64, butun son faqat 2⁵³ gacha aniq ([`Number.MAX_SAFE_INTEGER`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER) = 9007199254740991;
+`2**53 + 1` → `9007199254740992`). Go — tur nomidagi raqam bitlar soni: `int8`, `int16`, `int32`, `int64`; `int` bu
+kompyuterda 64 bit ([spec](https://go.dev/ref/spec#Numeric_types): 32 yoki 64). `:=` butun son literal uchun doim `int`
+tanlaydi, shuning uchun `int8` kerak boʻlsa `var x int8 = 127`.
 
-**Rad etish.** `var x int8 = 128` tarjima boʻlmaydi: oʻngdagi 128 — oʻzgaruvchisiz yozilgan son (konstanta), Go uni
-tarjima paytida tekshiradi ([Constants](https://go.dev/ref/spec#Constants): "It is an error if the constant value
-cannot be represented as a value of the respective type"). `a = a + 50` da esa 50 ham kodda yozilgan, lekin hisobda
-`a` oʻzgaruvchisi qatnashadi — natija dastur ishlayotganda chiqadi va jim aylanadi (`-106`: 100 dan 127 gacha 27 qadam,
-keyin yana 23 qadam: −128, −127, …, −106).
+**Aylanish va bitlar.** `x++` dan keyin `-128`: eng kattasidan keyin eng kichigi. `0111 1111 + 1 = 1000 0000`; eng chap
+bitning vazni −128 (*two's complement*), shuning uchun `1000 0000` = −128, `1111 1111` = −1. Bu *overflow*.
+[Go spec](https://go.dev/ref/spec#Integer_overflow): signed overflow qonuniy, natija aniq belgilangan, runtime panic
+yoʻq. JS'dagi `Int8Array` ham xuddi shunday aylanadi (`127` → `++` → `-128`).
 
-Uchinchi jim yoʻl (videoda yoʻq): oʻzgaruvchidan **konversiya**. `big := 300; int8(big)` → `44`, `int8(200)` → `-56`:
-butun sonlar orasidagi konversiya pastki 8 bitni oladi va [hech qanday belgi bermaydi](https://go.dev/ref/spec#Conversions)
-(`convert/`).
+**Rad etish.** `var x int8 = 128`: `128` konstanta, qiymati kompilyatsiya paytida maʼlum, Go uni `int8` ga sigʻishini
+tekshiradi ([Constants](https://go.dev/ref/spec#Constants): "It is an error if the constant value cannot be represented
+as a value of the respective type"). Konstanta ifodalar [aniq hisoblanadi](https://go.dev/ref/spec#Constant_expressions)
+("intermediate values … may require precision significantly larger than supported by any predeclared type"): xato
+faqat yakuniy qiymat turga qoʻyilganda va sigʻmaganda chiqadi. Shuning uchun `var a int8 = 100 + 50 - 60` → `90`
+(`ifoda/`), `var id int64 = math.MaxInt64 + 1` esa rad etiladi (`const64/`), `const big = 1 << 100` ham qonuniy
+(turi yoʻq konstanta, keyingi darsda). Ifodada oʻzgaruvchi qatnashsa (`x++`, `a + 50`), natija ishlash paytida chiqadi
+va jim aylanadi: `100 + 50 = 150 → 150 − 256 = −106` (`sinov/`).
 
-**Nol qiymat (zero value).** `var y int8` → `0`, `var tayyor bool` → `false`, `var ism string` → `""` (boʻsh matn;
-koʻrinishi uchun `"["+ism+"]"` deb chiqardik → `[]`). [Go qoidasi](https://go.dev/ref/spec#The_zero_value): qiymat
-berilmagan oʻzgaruvchi hech qachon tasodifiy axlat saqlamaydi.
+**Koʻp uchraydigan xato.** "Joyni tejash" uchun layk hisoblagichiga `int8`: 200 ta layk → `-56`. Xato ham, log ham yoʻq.
+Tuzatish: `int`. [A Tour of Go](https://go.dev/tour/basics/11): *"use int unless you have a specific reason to use a
+sized or unsigned integer type"*.
 
-**Koʻp uchraydigan xato.** "Joyni tejash" uchun layk hisoblagichiga `int8`: 200 ta layk → `-56` (128-laykda −128 ga
-aylanadi, qolgan 72 ta uni −56 ga olib keladi). Xato chiqmaydi — bug. Tuzatish: `int`.
-[A Tour of Go](https://go.dev/tour/basics/11): *"use int unless you have a specific reason to use a sized or unsigned
-integer type"*.
+**Frontend.** Backend `int64` ID yuborsa, JS uni JSON'dan son qilib oʻqiganda oxirgi raqamlar oʻzgaradi
+(`node hook/id.js` → `1234567890123456800`). [X API hujjati](https://docs.x.com/fundamentals/x-ids): *"In JavaScript,
+integers are limited to 53 bits. This causes precision loss with large IDs"*, *"Always use string IDs in your code"*
+(2010-yildan beri `id_str`, [eʼlon](https://groups.google.com/g/twitter-api-announce/c/ahbvo3VTIYI)). Go'da:
+`json:"id,string"` tegi `int64` ni JSON'da string qilib yozadi (`jsonid/`; structlar keyingi darslarda). Frontend
+uni string yoki `BigInt` qilib saqlaydi.
 
-**Hayotda: Boeing 787.** FAA majburiy koʻrsatmasi AD 2015-09-07: generator boshqaruv bloklaridagi (GCU) dasturiy
+**Hayotda: Boeing 787.** FAA majburiy koʻrsatmasi AD 2015-09-07 (faqat 787 modeli): generator boshqaruv bloklaridagi (GCU) dasturiy
 hisoblagich 248 kun uzluksiz tok ostida turganda toʻlib qoladi; toʻrtta asosiy GCU bir vaqtda yoqilgan boʻlsa, samolyot
 barcha AC elektr quvvatini yoʻqotishi va "loss of control of the airplane"ga olib kelishi mumkin edi. Vaqtinchalik
-choralar: quvvatni "at intervals not to exceed 120 days" oʻchirib-yoqish. Keyinroq AD 2018-20-15 yangi GCU dasturini
-talab qildi. FAA hisoblagich turini aytmagan: `boeing/` dagi `int32`, sekundiga 100 marta degan hisob (2³¹ / 100 s =
-248.55 kun) — bizning farazimiz.
+chora: quvvatni "at intervals not to exceed 120 days" oʻchirib-yoqish. AD 2018-20-15 yangi GCU dasturini talab qildi.
+FAA hisoblagich turini aytmagan.
 
-**Chuqurroq (ixtiyoriy).** 1 bit = 1 chiroqcha (0/1); `int8` = 8 bit. `127 = 0111 1111`, `+1` → `1000 0000`. Eng chap
-bitning vazni −128 (two's complement), shuning uchun `1000 0000` = −128, `1111 1111` = −128 + 127 = −1.
-`int8(127) + 1` ham tarjima boʻlmaydi: hamma son konstanta (`constover/`, keyingi darsda batafsil).
+**Chuqurroq: konversiya.** `big := 300; int8(big)` → `44`: butun sonlar orasidagi konversiya pastki 8 bitni oladi va
+[hech qanday belgi bermaydi](https://go.dev/ref/spec#Conversions) (`300 = 1 0010 1100` → `0010 1100` = 44). JS'da
+`new Int8Array([300])[0]` ham `44`. Bazadan `int64` oʻqib `int32` ga aylantiradigan kodda ham shunday. `float` → `int` sigʻmasa natija implementatsiyaga bogʻliq.
 
 ## Uy vazifasi
-- 🟢 **Oson** (`uyga/oson/main.go`, videodagi `layk` dasturi): `200` ni avval `127` ga, keyin `128` ga almashtiring.
-  Har safar ishga tushirishdan oldin natijani taxmin qiling.
-- 🟡 **Oʻrta** (`uyga/orta/main.go`): `int16` (−32768 … 32767) qaysi qadamda manfiy boʻladi? Sikl ichida `if son < 0`
-  bilan `i` va `son` ni chiqaring va `break` bilan chiqing.
-- Qiyinroq vazifalar (2038-yil muammosi, `int64` qoʻshishda overflow'ni aniqlash, `abs(int8(-128))`):
-  [homework/](homework/).
+- 🟢 **Oson** (`uyga/oson/main.go`, videodagi `jsonid`): postda `AuthorID int64` ham bor. Uni frontend buzmaydigan qilib
+  yuboring. Tekshirish: `go run ./uyga/oson | node uyga/check.js` — `author_id` aniq `9007199254740993` boʻlib kelishi kerak
+  (hozir `number 9007199254740992`).
+- ➕ **Qoʻshimcha** (`uyga/int16/main.go`): `int16` (−32768 … 32767) qaysi qadamda manfiy boʻladi? Sikl ichida
+  `if son < 0` bilan `i` va `son` ni chiqaring va `break` bilan chiqing.
+- 🟡 **Oʻrta** (`uyga/orta/main.go`): `safeAdd(a, b int64) (int64, error)` — yigʻindi `int64` ga sigʻmasa, natija oʻrniga
+  `ErrOverflow` qaytarsin. `main` dagi toʻrtta chaqiruv `kutilgan:` izohidagidek chiqishi kerak.
+- Qiyinroq vazifalar (2038-yil muammosi, `abs(int8(-128))`): [homework/](homework/).
 
 <details><summary>Javoblar</summary>
 
-🟢 `i <= 127` → `127` (hali sigʻadi), `i <= 128` → `-128` (128-laykda doira boshiga). [`uyga/javob/oson`](uyga/javob/oson/main.go)
+🟢 [`uyga/javob/oson`](uyga/javob/oson/main.go): `` AuthorID int64 `json:"author_id,string"` `` →
+`{"id":"1234567890123456789","author_id":"9007199254740993"}`, `check.js`: `author_id string 9007199254740993`.
 
-🟡 [`uyga/javob/orta`](uyga/javob/orta/main.go) → `32768 -32768`: 32768-qadamda `int16` 32767 dan −32768 ga aylanadi.
+➕ [`uyga/javob/int16`](uyga/javob/int16/main.go) → `32768 -32768`: 32768-qadamda `int16` 32767 dan −32768 ga aylanadi.
+
+🟡 [`uyga/javob/orta`](uyga/javob/orta/main.go) → `5 <nil>`, `0 int64 overflow`, `0 int64 overflow`, `-1 <nil>`.
+Overflow faqat ishorasi bir xil ikki son qoʻshilganda boʻladi: musbat + musbat manfiy chiqsa yoki manfiy + manfiy
+musbat (yoki 0) chiqsa. Go'da `a + b` panic bermaydi, shuning uchun avval qoʻshib, keyin ishorani tekshirish xavfsiz.
 </details>
 
 ## Manbalar
-- Go qoidalari (spec): [Integer overflow](https://go.dev/ref/spec#Integer_overflow), [Constants](https://go.dev/ref/spec#Constants),
-  [The zero value](https://go.dev/ref/spec#The_zero_value), [Numeric types](https://go.dev/ref/spec#Numeric_types),
-  [Conversions](https://go.dev/ref/spec#Conversions)
+- Go spec: [Integer overflow](https://go.dev/ref/spec#Integer_overflow), [Constants](https://go.dev/ref/spec#Constants),
+  [Constant expressions](https://go.dev/ref/spec#Constant_expressions), [Numeric types](https://go.dev/ref/spec#Numeric_types),
+  [The zero value](https://go.dev/ref/spec#The_zero_value), [Conversions](https://go.dev/ref/spec#Conversions)
 - A Tour of Go, Basic types: https://go.dev/tour/basics/11
-- FAA AD 2015-09-07, Boeing 787 (Federal Register, 2015-05-01): https://www.govinfo.gov/content/pkg/FR-2015-05-01/html/2015-10066.htm ·
+- ECMAScript ToInt8 (`Int8Array`): https://tc39.es/ecma262/#sec-toint8
+- encoding/json (`,string`): https://pkg.go.dev/encoding/json#Marshal
+- Python, Numeric types: https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex
+- MDN, `Number.MAX_SAFE_INTEGER`: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER
+- X API, X IDs: https://docs.x.com/fundamentals/x-ids · Twitter API eʼloni (2010-10-19): https://groups.google.com/g/twitter-api-announce/c/ahbvo3VTIYI
+- FAA AD 2015-09-07, Boeing 787: https://www.govinfo.gov/content/pkg/FR-2015-05-01/html/2015-10066.htm ·
   AD 2018-20-15: https://www.govinfo.gov/content/pkg/FR-2018-10-16/html/2018-22152.htm
 - CMU 15-213, *Bits, Bytes & Integers*: https://www.cs.cmu.edu/~213/lectures/02-bits-bytes-ints.pdf
 
@@ -110,7 +146,7 @@ bitning vazni −128 (two's complement), shuning uchun `1000 0000` = −128, `11
 
 ## Ilova: darsning birinchi versiyasi (2026-11-25)
 
-Video 2026-11-26 da qayta yozildi (Go 0 mavsumidan keyin, noldan boshlovchilar uchun). Birinchi versiyaning matni va
+Video 2026-11-26 da dasturchilar uchun qayta yozildi. Birinchi versiyaning matni va
 dasturlari shu yerda qoldi: oʻlchamlar jadvali, `int` va `int64` aralashtirish, `x < x+1`, konversiya savoli,
 Ariane 5, Boeing hisobi va `uint` ombor bug'i.
 

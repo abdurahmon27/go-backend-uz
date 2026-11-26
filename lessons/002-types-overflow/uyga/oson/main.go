@@ -1,11 +1,18 @@
 package main
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
+
+// Vazifa: AuthorID ham frontend'da (JavaScript) buzilmasin.
+// Tekshirish: go run ./uyga/oson | node uyga/check.js
+type Post struct {
+	ID       int64 `json:"id,string"`
+	AuthorID int64 `json:"author_id"`
+}
 
 func main() {
-	var layk int8
-	for i := 1; i <= 200; i++ {
-		layk++
-	}
-	fmt.Println(layk)
+	b, _ := json.Marshal(Post{ID: 1234567890123456789, AuthorID: 9007199254740993})
+	fmt.Println(string(b))
 }

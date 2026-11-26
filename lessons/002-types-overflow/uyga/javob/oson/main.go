@@ -1,13 +1,17 @@
 package main
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
-// Javob: i <= 127 boʻlsa 127 chiqadi (hali sigʻadi),
-// i <= 128 boʻlsa -128 chiqadi (128-laykda son doira boshiga aylanadi).
+// Javob: AuthorID ga ham ",string" qo'shamiz.
+type Post struct {
+	ID       int64 `json:"id,string"`
+	AuthorID int64 `json:"author_id,string"`
+}
+
 func main() {
-	var layk int8
-	for i := 1; i <= 128; i++ {
-		layk++
-	}
-	fmt.Println(layk)
+	b, _ := json.Marshal(Post{ID: 1234567890123456789, AuthorID: 9007199254740993})
+	fmt.Println(string(b))
 }
