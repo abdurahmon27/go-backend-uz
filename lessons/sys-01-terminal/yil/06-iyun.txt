@@ -1,0 +1,30 @@
+Aziz: kompyuterni yangiladi
+TODO Dilnoza: aksiya sahifasini tuzatish
+Bobur: kompyuterni yangiladi
+Dilnoza: narxlarni yangiladi
+Bobur: menyu matnini oʻqidi
+TODO Bobur: sharhlar sahifasiga rasm tayyorlash
+Aziz: zaxira nusxa oldi
+Dilnoza: jadvalni toʻldirdi
+Bobur: hisobotni topshirdi
+Bobur: menyu matnini oʻqidi
+Dilnoza: pochtani tekshirdi
+Bobur: hisobotni topshirdi
+Bobur: mijozga javob yozdi
+TODO Malika: vakansiya sahifasi matnini yozish
+Malika: menyu matnini oʻqidi
+Dilnoza: narxlarni yangiladi
+Bobur: menyu matnini oʻqidi
+Dilnoza: yangi rasmlar yukladi
+TODO Dilnoza: katalog sahifasiga tugma qoʻshish
+Malika: zaxira nusxa oldi
+Aziz: yangi rasmlar yukladi
+Aziz: narxlarni yangiladi
+Malika: parolni yangiladi
+Malika: uchrashuvda qatnashdi
+Malika: parolni yangiladi
+TODO Bobur: obuna sahifasini tuzatish
+Malika: saytni tekshirdi
+TODO Aziz: galereya sahifasini tuzatish
+Malika: zaxira nusxa oldi
+TODO Malika: sozlamalar sahifasiga tugma qoʻshish
