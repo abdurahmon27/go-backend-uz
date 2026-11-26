@@ -36,6 +36,9 @@ GB-1.07'dagi bozor juda katta narxni qabul qiladi (`./_video/run.sh 00-gb107 bas
 ```
 bozor ishga tushdi
 versiya: 0.1.0
+ 0 false
+olma -8446744073709551616 true 40 1.5
+olma 39
 olma, 1 dona   -84467440737095516.-16
 QQS            -912720851596686.-13
 yetkazish          15000.00
@@ -103,6 +106,7 @@ Tuzatilgandan keyin (`_video/04-tuzat`, `main.go` bilan bir xil): `go test` → 
 $ go build && ./bozor add olma 100000000000000000 1
 bozor ishga tushdi
 versiya: 0.1.0
+ 0 false
 xato: narx 10000000 soʻmdan oshmasin, keldi 100000000000000000
 ```
 

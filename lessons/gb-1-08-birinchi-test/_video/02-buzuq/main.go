@@ -11,11 +11,6 @@ const vatPercent = 12      // QQS, foizda
 const deliverySom = 15_000 // yetkazib berish, soʻmda (QQS qoʻshilmaydi)
 const maxFree = 2          // bitta buyurtmada koʻpi bilan shuncha dona bepul
 
-// Buyurtma. Nom va narx endi buyruq qatoridan keladi (main ichida).
-var active = true // sotuvda
-var stock = 40    // omborda, dona
-var sold int      // buyurtmada, dona; buyruq qatoridan
-
 // parsePrice soʻmdagi narx matnini tiyinga oʻgiradi.
 func parsePrice(s string) (int64, error) {
 	som, err := strconv.Atoi(s)
@@ -44,22 +39,31 @@ func main() {
 	fmt.Println("bozor ishga tushdi")
 	fmt.Println("versiya: 0.1.0")
 
+	var name string
+	var price int64
+	var active bool
+	fmt.Println(name, price, active)
+
 	if len(os.Args) != 5 || os.Args[1] != "add" {
 		fmt.Fprintln(os.Stderr, "foydalanish: bozor add NOM NARX MIQDOR")
 		os.Exit(1)
 	}
-	name := os.Args[2]
-	price, err := parsePrice(os.Args[3])
+	name = os.Args[2]
+	price, err := parsePrice(os.Args[3]) // tiyinda
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "xato:", err)
 		os.Exit(1)
 	}
-	sold, err = parseSold(os.Args[4])
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "xato:", err)
-		os.Exit(1)
-	}
+	active = true
+	stock := 40
+	weight := 1.5
+	fmt.Println(name, price, active, stock, weight)
 
+	sold, err := parseSold(os.Args[4])
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "xato:", err)
+		os.Exit(1)
+	}
 	if name == "" {
 		fmt.Println("xato: mahsulot nomi boʻsh")
 		return
@@ -72,13 +76,12 @@ func main() {
 		fmt.Printf("xato: narx notoʻgʻri: %d tiyin\n", price)
 		return
 	}
-	if sold > stock {
-		fmt.Printf("xato: omborda %d dona bor, %d soʻraldi\n", stock, sold)
+	if left := stock - sold; left < 0 {
+		fmt.Printf("xato: omborda %d dona yetmaydi\n", -left)
 		return
 	}
-	if left := stock - sold; left < 5 {
-		fmt.Printf("diqqat: omborda %d dona qoladi\n", left)
-	}
+	stock = stock - sold
+	fmt.Println(name, stock)
 
 	var subtotal int64
 	free := 0
