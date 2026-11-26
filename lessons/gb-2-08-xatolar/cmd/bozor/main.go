@@ -1,0 +1,40 @@
+// bozor dasturi: mahsulot sotadi va xatoni turiga qarab tushuntiradi.
+package main
+
+import (
+	"errors"
+	"fmt"
+
+	"github.com/abdurahmon27/bozor/internal/store"
+)
+
+func main() {
+	var st store.Store
+	st.Add("olma", 1_200_000, 40)
+	st.Add("non", 400_000, 100)
+
+	err := st.Sell(9, 1)
+	if errors.Is(err, store.ErrNotFound) {
+		fmt.Println("bunday mahsulot yoʻq")
+	} else if err != nil {
+		fmt.Println("xato:", err)
+	}
+
+	err = st.Sell(1, 41)
+	if err != nil {
+		err = fmt.Errorf("buyurtma 7: %w", err)
+	}
+	var se *store.StockError
+	if errors.As(err, &se) {
+		fmt.Printf("%s: faqat %d dona qoldi\n", se.Name, se.Stock)
+	} else if err != nil {
+		fmt.Println("xato:", err)
+	}
+}
+
+// message xatoni (err nil emas) foydalanuvchiga koʻrsatiladigan matnga aylantiradi.
+// Xatoni matnga aylantirish bitta joyda: keyinroq server ham shunday funksiyadan foydalanadi.
+// VAZIFA (2-qadam): hozir u har qanday xatoga «xato: …» qaytaradi (TASK.md).
+func message(err error) string {
+	return "xato: " + err.Error()
+}
