@@ -1,0 +1,8 @@
+hammasi 16 18.9
+oqim 16 2.5
+hammasi 64 66.9
+oqim 64 2.4
+hammasi 256 259.2
+oqim 256 2.5
+hammasi 1024 1028.1
+oqim 1024 2.4
