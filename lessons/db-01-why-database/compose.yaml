@@ -1,0 +1,21 @@
+name: ombor
+
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER:?.env faylida DB_USER yoʻq}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?.env faylida DB_PASSWORD yoʻq}
+      POSTGRES_DB: ${DB_NAME:?.env faylida DB_NAME yoʻq}
+    volumes:
+      - pgdata:/var/lib/postgresql
+    ports:
+      - "127.0.0.1:5440:5432" # Go jarayonlari xostda ishlaydi; port faqat shu kompyuterga ochiq
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "${DB_USER}", "-d", "${DB_NAME}"]
+      start_period: 30s
+      start_interval: 1s
+      interval: 10s
+
+volumes:
+  pgdata:

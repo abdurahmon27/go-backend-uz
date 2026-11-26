@@ -1,0 +1,6 @@
+# sirlar faqat sizning kompyuteringizda qoladi (GIT-1.02)
+.env*
+!.env.example
+# demo natijalari
+bin/
+buyurtmalar.json*
