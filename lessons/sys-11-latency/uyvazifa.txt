@@ -1,0 +1,61 @@
+# Uy vazifasi xom natijalari. Uchta oʻlchov, har xil yuklamada (shu kuni mashinada render navbati ham ishlagan).
+# 1-oʻlchov: 2026-11-26 09:56, load 6.8 (natija sessiya jurnalidan koʻchirildi)
+$ go run ./uyvazifa guruh
+ 1 ta yozuvga 1 fsync: bitta yozuvga 1.804ms
+10 ta yozuvga 1 fsync: bitta yozuvga 155µs
+$ go run ./uyvazifa unix
+tcp  round trip: mediana 8.983µs, p90 20.182µs
+unix round trip: mediana 6.536µs, p90 7.027µs
+$ go run ./uyvazifa parallel
+ 1 goroutine: mediana  121µs, p90  519µs,   4343 o'qish/s
+ 4 goroutine: mediana  147µs, p90  412µs,  20440 o'qish/s
+32 goroutine: mediana  318µs, p90  984µs,  50372 o'qish/s
+
+# 2-oʻlchov: 2026-11-26 10:42, load 7.4 (kun.uz: olcha ning IPv4/isitishdan oldingi versiyasi)
+$ go run ./uyvazifa guruh
+ 1 ta yozuvga 1 fsync: bitta yozuvga 3.469ms
+10 ta yozuvga 1 fsync: bitta yozuvga 656µs
+$ go run ./uyvazifa unix
+tcp  round trip: mediana 6.897µs, p90 9.519µs
+unix round trip: mediana 2.884µs, p90 3.224µs
+$ go run ./uyvazifa parallel
+ 1 goroutine: mediana  412µs, p90  900µs,   1766 o'qish/s
+ 4 goroutine: mediana  209µs, p90 1.438ms,   7978 o'qish/s
+32 goroutine: mediana  370µs, p90  674µs,  74837 o'qish/s
+$ go run ./olcha -host kun.uz internet
+o'lchov                 marta   odatda   oraliq
+internet: borib-kelish     30    116ms   94.7ms … 173ms
+sahifa so'rovi             10    586ms   474ms … 647ms
+  manzil topish            10   8.31ms   6.90ms … 17.5ms
+  ulanish                  10    117ms   99.8ms … 150ms
+  shifrlash                10    286ms   229ms … 370ms
+  javob kutish             10    133ms   117ms … 163ms
+# 2b-oʻlchov: (10:42, load 5.5, boshqa jarayonlar diskdan foydalanyapti: /proc/pressure/io some avg10=6.3)
+$ go run ./uyvazifa guruh
+ 1 ta yozuvga 1 fsync: bitta yozuvga 2.512ms
+10 ta yozuvga 1 fsync: bitta yozuvga 132µs
+$ go run ./uyvazifa parallel
+ 1 goroutine: mediana  135µs, p90  148µs,   7075 o'qish/s
+ 4 goroutine: mediana  175µs, p90  232µs,  21927 o'qish/s
+32 goroutine: mediana  362µs, p90  744µs,  72226 o'qish/s
+
+# 3-oʻlchov:
+# 2026-11-26 11:01, go1.26.8, i5-12450H, HP SSD EX900, load 1.96
+$ go run ./uyvazifa guruh
+ 1 ta yozuvga 1 fsync: bitta yozuvga 2.035ms
+10 ta yozuvga 1 fsync: bitta yozuvga 183µs
+$ go run ./uyvazifa unix
+tcp  round trip: mediana 44.834µs, p90 61.302µs
+unix round trip: mediana 16.823µs, p90 20.589µs
+$ go run ./uyvazifa parallel
+ 1 goroutine: mediana  156µs, p90  172µs,   6288 o'qish/s
+ 4 goroutine: mediana  193µs, p90  258µs,  19374 o'qish/s
+32 goroutine: mediana  346µs, p90  719µs,  64327 o'qish/s
+$ go run ./olcha -host kun.uz internet
+o'lchov                 marta   odatda   oraliq
+internet: borib-kelish     30    113ms   95.6ms … 130ms
+sahifa so'rovi             10    480ms   440ms … 536ms
+  manzil topish            10   10.5ms   5.79ms … 15.1ms
+  ulanish                  10    105ms   101ms … 122ms
+  shifrlash                10    256ms   216ms … 274ms
+  javob kutish             10    117ms   105ms … 132ms

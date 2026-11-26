@@ -1,0 +1,95 @@
+# tur 1 10:55:37 load 2.30
+BenchmarkVaqt     	15918488	        76.16 ns/op
+BenchmarkVaqt     	15097671	        76.12 ns/op
+BenchmarkMutex    	72628629	        18.54 ns/op
+BenchmarkMutex    	62388470	        23.01 ns/op
+BenchmarkMegabayt 	    7989	    282875 ns/op
+BenchmarkMegabayt 	    4938	    216558 ns/op
+o'lchov                 marta   odatda   oraliq
+SSD'dan 4 KiB            5000    136µs   134µs … 150µs
+nusxadan 4 KiB           5000    923ns   797ns … 1.10µs
+4 KiB yozish             2000   1.35µs   1.20µs … 3.22µs
+4 KiB yozish + fsync      300   1.40ms   1.28ms … 1.89ms
+Wi-Fi: borib-kelish       100   4.86ms   2.95ms … 13.3ms
+internet: borib-kelish     30    126ms   114ms … 149ms
+sahifa so'rovi             10    547ms   528ms … 609ms
+  manzil topish            10   6.28ms   4.53ms … 7.60ms
+  ulanish                  10    116ms   105ms … 129ms
+  shifrlash                10    147ms   138ms … 179ms
+  javob kutish             10    263ms   252ms … 292ms
+# tur 2 10:56:14 load 2.62
+BenchmarkVaqt     	24429969	        44.16 ns/op
+BenchmarkVaqt     	30030662	        38.84 ns/op
+BenchmarkMutex    	65309942	        24.41 ns/op
+BenchmarkMutex    	38140820	        35.18 ns/op
+BenchmarkMegabayt 	   12890	     97849 ns/op
+BenchmarkMegabayt 	    5654	    200756 ns/op
+o'lchov                 marta   odatda   oraliq
+SSD'dan 4 KiB            5000    135µs   132µs … 149µs
+nusxadan 4 KiB           5000    568ns   432ns … 798ns
+4 KiB yozish             2000   6.22µs   1.22µs … 14.4µs
+4 KiB yozish + fsync      300   1.36ms   1.22ms … 1.95ms
+Wi-Fi: borib-kelish       100   4.18ms   2.93ms … 13.7ms
+internet: borib-kelish     30    121ms   108ms … 143ms
+sahifa so'rovi             10    548ms   519ms … 615ms
+  manzil topish            10   6.86ms   4.91ms … 11.7ms
+  ulanish                  10    122ms   109ms … 127ms
+  shifrlash                10    150ms   139ms … 175ms
+  javob kutish             10    262ms   244ms … 296ms
+# tur 3 10:56:48 load 2.23
+BenchmarkVaqt     	15154324	        76.52 ns/op
+BenchmarkVaqt     	28605216	        41.60 ns/op
+BenchmarkMutex    	74586051	        18.57 ns/op
+BenchmarkMutex    	55197753	        22.84 ns/op
+BenchmarkMegabayt 	    8534	    205901 ns/op
+BenchmarkMegabayt 	    5941	    170851 ns/op
+o'lchov                 marta   odatda   oraliq
+SSD'dan 4 KiB            5000    141µs   136µs … 155µs
+nusxadan 4 KiB           5000   1.25µs   1.13µs … 1.45µs
+4 KiB yozish             2000   2.00µs   1.91µs … 2.58µs
+4 KiB yozish + fsync      300   1.58ms   1.35ms … 2.31ms
+Wi-Fi: borib-kelish       100   5.00ms   3.10ms … 44.6ms
+internet: borib-kelish     30    124ms   105ms … 144ms
+sahifa so'rovi             10    565ms   545ms … 631ms
+  manzil topish            10   7.15ms   5.30ms … 31.4ms
+  ulanish                  10    123ms   112ms … 129ms
+  shifrlash                10    146ms   141ms … 170ms
+  javob kutish             10    268ms   250ms … 341ms
+# tur 4 10:57:24 load 1.91
+BenchmarkVaqt     	47034848	        25.55 ns/op
+BenchmarkVaqt     	47303271	        25.44 ns/op
+BenchmarkMutex    	100000000	        11.53 ns/op
+BenchmarkMutex    	100000000	        11.46 ns/op
+BenchmarkMegabayt 	   17560	     69119 ns/op
+BenchmarkMegabayt 	   17336	     68575 ns/op
+o'lchov                 marta   odatda   oraliq
+SSD'dan 4 KiB            5000    145µs   138µs … 159µs
+nusxadan 4 KiB           5000    605ns   458ns … 796ns
+4 KiB yozish             2000    670ns   567ns … 1.52µs
+4 KiB yozish + fsync      300   1.41ms   1.27ms … 1.97ms
+Wi-Fi: borib-kelish       100   4.99ms   3.05ms … 14.5ms
+internet: borib-kelish     30    122ms   108ms … 138ms
+sahifa so'rovi             10    598ms   532ms … 675ms
+  manzil topish            10   8.81ms   5.54ms … 17.2ms
+  ulanish                  10    119ms   106ms … 140ms
+  shifrlash                10    153ms   137ms … 169ms
+  javob kutish             10    299ms   248ms … 372ms
+# tur 5 10:57:58 load 1.16
+BenchmarkVaqt     	46811782	        25.80 ns/op
+BenchmarkVaqt     	47501371	        25.59 ns/op
+BenchmarkMutex    	100000000	        11.52 ns/op
+BenchmarkMutex    	100000000	        11.40 ns/op
+BenchmarkMegabayt 	   16825	     71513 ns/op
+BenchmarkMegabayt 	   17278	     69709 ns/op
+o'lchov                 marta   odatda   oraliq
+SSD'dan 4 KiB            5000    146µs   137µs … 160µs
+nusxadan 4 KiB           5000    492ns   359ns … 673ns
+4 KiB yozish             2000    732ns   612ns … 989ns
+4 KiB yozish + fsync      300   1.29ms   1.22ms … 1.67ms
+Wi-Fi: borib-kelish       100   4.89ms   3.04ms … 14.4ms
+internet: borib-kelish     30    128ms   115ms … 145ms
+sahifa so'rovi             10    555ms   522ms … 621ms
+  manzil topish            10   13.2ms   6.68ms … 24.5ms
+  ulanish                  10    121ms   105ms … 162ms
+  shifrlash                10    154ms   137ms … 174ms
+  javob kutish             10    261ms   237ms … 273ms
