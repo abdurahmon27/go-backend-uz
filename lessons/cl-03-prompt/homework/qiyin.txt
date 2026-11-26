@@ -1,0 +1,90 @@
+<kod fayl="bozor/main.go">
+package main
+
+import (
+	"errors"
+	"fmt"
+)
+
+var ErrTopilmadi = errors.New("buyurtma topilmadi")
+
+var buyurtmalar = map[string]string{"1": "olma, 2 kg"}
+
+func topish(id string) (string, error) {
+	b, ok := buyurtmalar[id]
+	if !ok {
+		return "", fmt.Errorf("topish %s: %w", id, ErrTopilmadi)
+	}
+	return b, nil
+}
+
+// holat: handler shu kodni HTTP javobga yozadi
+func holat(err error) int {
+	if err == nil {
+		return 200
+	}
+	if errors.Is(err, ErrTopilmadi) {
+		return 404
+	}
+	return 500
+}
+
+func main() {
+	for _, id := range []string{"1", "42"} {
+		_, err := topish(id)
+		fmt.Printf("GET /buyurtma/%s → %d %v\n", id, holat(err), err)
+	}
+}
+</kod>
+
+<misollar>
+<misol fayl="kabisa_test.go">
+package kabisa
+
+import "testing"
+
+func TestJadval(t *testing.T) {
+	jadval := []struct {
+		nom  string
+		yil  int
+		want bool
+	}{
+		{"oddiy", 2026, false},
+		{"4 ga", 2024, true},
+		{"100 ga", 1900, false},
+		{"400 ga", 2000, true},
+	}
+	for _, tc := range jadval {
+		t.Run(tc.nom, func(t *testing.T) {
+			if got := kabisa(tc.yil); got != tc.want {
+				t.Errorf("kabisa(%d) = %v, kutilgan %v", tc.yil, got, tc.want)
+			}
+		})
+	}
+}
+</misol>
+<misol fayl="tekshir_test.go">
+package main
+
+import "testing"
+
+func TestLuhn(t *testing.T) {
+	for s, want := range map[string]bool{
+		"4111 1111 1111 1111": true,  // mashhur test karta raqami
+		"4111 1111 1111 1112": false, // oxirgi raqam oʻzgardi
+		"2026112510140712":    false,
+	} {
+		if luhn(s) != want {
+			t.Errorf("luhn(%q) = %v, kutilgan %v", s, !want, want)
+		}
+	}
+}
+
+</misol>
+</misollar>
+
+<vazifa>
+holat funksiyasi uchun table test yoz: nil, o'ralgan ErrTopilmadi va boshqa xato holatlari.
+Javobda faqat main_test.go fayli bo'lsin, bitta Go kod blokida.
+Kursimizdagi testlar <misollar> dagidek yoziladi.
+</vazifa>

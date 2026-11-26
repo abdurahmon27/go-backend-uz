@@ -1,0 +1,3 @@
+Sabab: `topish` xatoni `%w` bilan o'raydi, shuning uchun `err == ErrTopilmadi` taqqoslashi false bo'ladi (o'ralgan xato boshqa qiymat), `errors.Is` esa o'rovni ochib tekshiradi.
+Tuzatish: `if errors.Is(err, ErrTopilmadi) {`
+Tekshirish: `go run ./bozor`

@@ -1,0 +1,93 @@
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+	"testing"
+)
+
+func TestHolat(t *testing.T) {
+	boshqaXato := errors.New("boshqa xato")
+
+	tests := []struct {
+		nom  string
+		err  error
+		want int
+	}{
+		{
+			nom:  "nil xato 200 qaytaradi",
+			err:  nil,
+			want: 200,
+		},
+		{
+			nom:  "to'g'ridan-to'g'ri ErrTopilmadi 404 qaytaradi",
+			err:  ErrTopilmadi,
+			want: 404,
+		},
+		{
+			nom:  "bir marta o'ralgan ErrTopilmadi 404 qaytaradi",
+			err:  fmt.Errorf("topish 42: %w", ErrTopilmadi),
+			want: 404,
+		},
+		{
+			nom:  "ikki marta o'ralgan ErrTopilmadi 404 qaytaradi",
+			err:  fmt.Errorf("handler: %w", fmt.Errorf("topish 42: %w", ErrTopilmadi)),
+			want: 404,
+		},
+		{
+			nom:  "errors.Join ichidagi ErrTopilmadi 404 qaytaradi",
+			err:  errors.Join(boshqaXato, ErrTopilmadi),
+			want: 404,
+		},
+		{
+			nom:  "noma'lum xato 500 qaytaradi",
+			err:  boshqaXato,
+			want: 500,
+		},
+		{
+			nom:  "o'ralgan noma'lum xato 500 qaytaradi",
+			err:  fmt.Errorf("baza: %w", boshqaXato),
+			want: 500,
+		},
+		{
+			nom:  "%w siz o'ralgan ErrTopilmadi 500 qaytaradi",
+			err:  fmt.Errorf("topish 42: %v", ErrTopilmadi),
+			want: 500,
+		},
+		{
+			nom:  "matni bir xil, lekin boshqa xato 500 qaytaradi",
+			err:  errors.New("buyurtma topilmadi"),
+			want: 500,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.nom, func(t *testing.T) {
+			if got := holat(tt.err); got != tt.want {
+				t.Errorf("holat(%v) = %d, kutilgan %d", tt.err, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTopishHolat(t *testing.T) {
+	tests := []struct {
+		nom  string
+		id   string
+		want int
+	}{
+		{"mavjud buyurtma", "1", 200},
+		{"mavjud bo'lmagan buyurtma", "42", 404},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.nom, func(t *testing.T) {
+			_, err := topish(tt.id)
+			if got := holat(err); got != tt.want {
+				t.Errorf("holat(topish(%q)) = %d, kutilgan %d (err: %v)", tt.id, got, tt.want, err)
+			}
+		})
+	}
+}
+```

@@ -1,0 +1,3 @@
+Sabab: `topish` xatoni `%w` bilan o'rab qaytaradi, shuning uchun `err == ErrTopilmadi` taqqoslashi false bo'ladi (err endi o'ralgan xato, `ErrTopilmadi` o'zi emas).
+Tuzatish: `if errors.Is(err, ErrTopilmadi) {`
+Tekshirish: `go run ./bozor`

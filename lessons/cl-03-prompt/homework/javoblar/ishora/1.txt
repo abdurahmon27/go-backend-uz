@@ -1,0 +1,3 @@
+Sabab: `topish` xatoni `%w` bilan o'rab qaytaradi, shuning uchun `holat` dagi `err == ErrTopilmadi` solishtirishi false bo'ladi (o'ralgan xato bilan asl xato endi teng emas).
+Ishora: `holat` funksiyasidagi `==` solishtirishga qarang va standart kutubxonadagi `errors` paketida o'ralgan xatolar zanjirini tekshiradigan funksiyalarni o'qing.
+Tekshirish: `go run ./bozor`

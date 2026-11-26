@@ -1,0 +1,29 @@
+## Sabab
+
+`holat` ichidagi bu qator:
+
+```go
+if err == ErrTopilmadi {
+```
+
+`==` ikki error qiymatini **to'g'ridan-to'g'ri** solishtiradi. Lekin `topish` `ErrTopilmadi`ni o'zini qaytarmaydi:
+
+```go
+return "", fmt.Errorf("topish %s: %w", id, ErrTopilmadi)
+```
+
+`fmt.Errorf` `%w` bilan **yangi** error obyekti (`*fmt.wrapError`) yaratadi. U ichida `ErrTopilmadi`ni saqlaydi va oldiga `"topish 42: "` matnini qo'shadi. Shuning uchun `holat`ga kelgan `err` va `ErrTopilmadi` ikki xil qiymat, `==` esa `false` qaytaradi. Natijada kod oxirgi `return 500`ga tushadi.
+
+Chiqishdagi matn (`topish 42: buyurtma topilmadi`) chalg'itishi mumkin. Matn o'xshash ko'rinadi, lekin `==` matnni emas, error qiymatining o'zini solishtiradi.
+
+## Qanday tuzatish kerak
+
+`%w` aynan shuning uchun bor: u o'ralgan errorni keyin topish imkonini beradi. Buning uchun `errors` paketida `==` o'rniga ishlatiladigan funksiya bor: **`errors.Is`**. U errorni `Unwrap` orqali zanjir bo'ylab ichkariga qarab tekshiradi va biror joyda target topilsa `true` qaytaradi.
+
+`errors.Is(err, target)` imzosini [pkg.go.dev/errors#Is](https://pkg.go.dev/errors#Is) sahifasida ko'rib chiqing va `holat` ichidagi shartni o'zingiz almashtiring.
+
+## Eslab qolish uchun qoida
+
+Agar error `%w` bilan o'ralgan bo'lishi mumkin bo'lsa, sentinel errorlarni (`ErrTopilmadi` kabi) `==` bilan emas, `errors.Is` bilan tekshiring. Muayyan turdagi errorni olish kerak bo'lsa, `errors.As` ishlatiladi.
+
+Tuzatgach, `go run ./bozor` ni qayta ishga tushiring. `42` uchun `404` chiqishi kerak. Natija chiqmasa, menga yuboring, birga ko'ramiz.

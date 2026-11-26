@@ -1,0 +1,3 @@
+Sabab: `topish` xatoni `%w` bilan o'rab qaytaradi, `holat` esa `err == ErrTopilmadi` bilan to'g'ridan-to'g'ri solishtiradi, o'ralgan xato esa `ErrTopilmadi`ning o'ziga teng emas, shuning uchun shart bajarilmay 500 qaytadi.
+Ishora: `holat` funksiyasidagi `err == ErrTopilmadi` qatoriga qarang va `errors` paketining hujjatlarini (ayniqsa `errors.Is` va `Unwrap` zanjiri haqidagi qismini) o'qing.
+Tekshirish: `go doc errors.Is`

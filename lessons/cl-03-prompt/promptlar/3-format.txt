@@ -1,0 +1,52 @@
+Men Go'ni o'rganyapman va bozor degan onlayn do'kon backend'ini yozyapman. Go 1.26.8.
+Mavjud bo'lmagan buyurtma uchun 404 qaytishi kerak, lekin 500 qaytyapti.
+Xatoni o'zim tuzatib, sababini tushunmoqchiman.
+
+bozor/main.go:
+package main
+
+import (
+	"errors"
+	"fmt"
+)
+
+var ErrTopilmadi = errors.New("buyurtma topilmadi")
+
+var buyurtmalar = map[string]string{"1": "olma, 2 kg"}
+
+func topish(id string) (string, error) {
+	b, ok := buyurtmalar[id]
+	if !ok {
+		return "", fmt.Errorf("topish %s: %w", id, ErrTopilmadi)
+	}
+	return b, nil
+}
+
+// holat: handler shu kodni HTTP javobga yozadi
+func holat(err error) int {
+	if err == nil {
+		return 200
+	}
+	if err == ErrTopilmadi {
+		return 404
+	}
+	return 500
+}
+
+func main() {
+	for _, id := range []string{"1", "42"} {
+		_, err := topish(id)
+		fmt.Printf("GET /buyurtma/%s → %d %v\n", id, holat(err), err)
+	}
+}
+
+go run ./bozor natijasi:
+GET /buyurtma/1 → 200 <nil>
+GET /buyurtma/42 → 500 topish 42: buyurtma topilmadi
+
+Nega 404 emas?
+
+Javobni terminalda o'qiyman, shuning uchun o'zbekcha, aynan uch qator yoz, boshqa hech narsa qo'shma:
+Sabab: <bitta gap>
+Tuzatish: <o'zgaradigan bitta Go qatori>
+Tekshirish: <bitta buyruq>

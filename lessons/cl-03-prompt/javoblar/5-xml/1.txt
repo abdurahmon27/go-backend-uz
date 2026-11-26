@@ -1,0 +1,3 @@
+Sabab: topish xatoni `%w` bilan o'raydi, shuning uchun `err == ErrTopilmadi` o'ralgan xatoni ErrTopilmadi'ga teng deb topmaydi (false qaytadi) va 500 ga tushadi.
+Tuzatish: `if errors.Is(err, ErrTopilmadi) {`
+Tekshirish: `go run ./bozor`

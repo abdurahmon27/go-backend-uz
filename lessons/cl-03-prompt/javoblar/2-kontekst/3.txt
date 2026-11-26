@@ -1,0 +1,27 @@
+Sababi `holat` funksiyasidagi bu taqqoslash:
+
+```go
+if err == ErrTopilmadi {
+```
+
+`==` ikkita error qiymatini aynan bir xil obyekt ekanligi bo'yicha solishtiradi. Lekin `topish` xatoni o'rab qaytaradi:
+
+```go
+return "", fmt.Errorf("topish %s: %w", id, ErrTopilmadi)
+```
+
+`%w` bilan `fmt.Errorf` yangi xato obyektini yaratadi (`*fmt.wrapError`). Uning ichida `"topish 42: ..."` matni va asl `ErrTopilmadi` havolasi saqlanadi. Shuning uchun `holat` ga kelgan `err` bu o'rovchi obyekt bo'ladi, `ErrTopilmadi` esa uning ichidagi xato. `err == ErrTopilmadi` false bo'ladi, shart o'tmaydi va kod oxiridagi `return 500` ga tushadi.
+
+Chiqishdagi `topish 42: buyurtma topilmadi` matni ham shuni ko'rsatadi: bu `ErrTopilmadi` ning o'zi emas, uni o'rab olgan xato.
+
+## Qanday tuzatish kerak
+
+Go `errors` paketida o'rov zanjirini ichiga qarab tekshiradigan funksiya bor: **`errors.Is`**. U `err` dan boshlab `Unwrap()` orqali zanjir bo'ylab yuradi va har bir bosqichda maqsadli xatoga tenglikni tekshiradi. `errors` paketi sizda allaqachon import qilingan, shuning uchun `holat` ichidagi `==` ni `errors.Is` bilan almashtirishingiz kifoya. Argumentlar tartibi: avval tekshiriladigan xato, keyin maqsad.
+
+## Yodda tutish uchun
+
+- `%w` bilan o'ralgan xatolarni `==` bilan emas, har doim `errors.Is` bilan solishtiring.
+- Agar xato qiymat emas, maxsus tur (struct) bo'lsa, `errors.As` ishlatiladi.
+- `%v` bilan o'ralsa zanjir uziladi: `errors.Is` ham ichidagi xatoni topa olmaydi. 404 ishlashi uchun `%w` kerak, siz buni to'g'ri qilgansiz.
+
+Tuzatgach `go run ./bozor` ni qayta ishga tushiring: `42` uchun `404` chiqishi kerak. Qiziq bo'lsa, `%w` ni `%v` ga almashtirib ham ko'ring, shunda zanjir uzilishini o'zingiz ko'rasiz.

@@ -1,0 +1,14 @@
+{
+  "sana": "2026-11-26T03:07:36Z",
+  "model": "claude-sonnet-5-5",
+  "prompt": "ishora.txt",
+  "effort": "high",
+  "stop_reason": "end_turn",
+  "duration_ms": 3217,
+  "output_tokens": 220,
+  "input_tokens_jami": 1211,
+  "models": [
+    "claude-haiku-5-5",
+    "claude-sonnet-5-5"
+  ]
+}

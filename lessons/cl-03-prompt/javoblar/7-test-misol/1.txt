@@ -1,0 +1,31 @@
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+	"testing"
+)
+
+func TestHolat(t *testing.T) {
+	jadval := []struct {
+		nom  string
+		err  error
+		want int
+	}{
+		{"nil xato", nil, 200},
+		{"to'g'ridan-to'g'ri ErrTopilmadi", ErrTopilmadi, 404},
+		{"o'ralgan ErrTopilmadi", fmt.Errorf("topish 42: %w", ErrTopilmadi), 404},
+		{"ikki marta o'ralgan ErrTopilmadi", fmt.Errorf("handler: %w", fmt.Errorf("topish 42: %w", ErrTopilmadi)), 404},
+		{"boshqa xato", errors.New("baza ishlamayapti"), 500},
+		{"%w siz o'ralgan ErrTopilmadi", fmt.Errorf("topish 42: %v", ErrTopilmadi), 500},
+	}
+	for _, tc := range jadval {
+		t.Run(tc.nom, func(t *testing.T) {
+			if got := holat(tc.err); got != tc.want {
+				t.Errorf("holat(%v) = %d, kutilgan %d", tc.err, got, tc.want)
+			}
+		})
+	}
+}
+```

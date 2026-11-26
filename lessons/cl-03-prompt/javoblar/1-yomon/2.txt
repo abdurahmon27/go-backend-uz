@@ -1,0 +1,92 @@
+Go'da xato tekshirish ishlamasligining sabablari ko'p. Kodingizni ko'rmasdan aniq javob berolmayman, lekin eng ko'p uchraydigan holatlar bular:
+
+## 1. Nil interfeys tuzoqi (eng ko'p uchraydigani)
+Konkret turdagi nil pointer qaytarsangiz, `err != nil` **true** bo'lib qoladi:
+
+```go
+type MyErr struct{}
+func (*MyErr) Error() string { return "xato" }
+
+func do() error {
+    var e *MyErr = nil
+    return e // error interfeysi nil emas! (tur bor, qiymat nil)
+}
+
+if err := do(); err != nil { // true bo'ladi
+    fmt.Println("xato bor deb o'ylaydi")
+}
+```
+
+**Yechim:** konkret turni emas, to'g'ridan-to'g'ri `nil` qaytaring:
+```go
+return nil
+```
+
+## 2. Xatoni e'tiborsiz qoldirish yoki qayta yozib yuborish
+```go
+result, err := foo()
+result2, err := bar()  // birinchi err tekshirilmay qoldi
+if err != nil { ... }
+```
+Har bir chaqiruvdan keyin darhol tekshiring.
+
+## 3. Shadowing (`:=` bilan o'zgaruvchini yashirish)
+```go
+var err error
+if x {
+    val, err := foo() // yangi err, tashqaridagi o'zgarmaydi
+    _ = val
+}
+return err // hamon nil
+```
+Yechim: `=` ishlating yoki oldindan `var val T` e'lon qiling.
+
+## 4. `==` bilan taqqoslash, o'rash (wrapping) bilan buziladi
+```go
+err := fmt.Errorf("kontekst: %w", io.EOF)
+err == io.EOF            // false
+errors.Is(err, io.EOF)   // true
+```
+- Sentinel xatolar uchun: `errors.Is`
+- Maxsus tur uchun: `errors.As`
+- O'rashda `%v` emas, `%w` ishlating, aks holda zanjir uziladi.
+
+## 5. `errors.As` noto'g'ri ishlatilishi
+```go
+var myErr *MyErr          // target pointer turi mos bo'lishi kerak
+if errors.As(err, &myErr) { ... }  // &myErr — pointerga pointer
+```
+Target `nil` bo'lsa yoki `error`ni implement qilmasa, panic bo'ladi.
+
+## 6. Goroutine'lardagi xatolar yo'qolishi
+Goroutine ichidagi `err` asosiy funksiyaga o'z-o'zidan qaytmaydi. Kanal yoki `errgroup` ishlating:
+```go
+g, ctx := errgroup.WithContext(ctx)
+g.Go(func() error { return work(ctx) })
+if err := g.Wait(); err != nil { ... }
+```
+
+## 7. `defer` ichidagi xato
+```go
+defer f.Close() // xato yo'qoladi
+```
+Named return bilan:
+```go
+func do() (err error) {
+    defer func() {
+        if cerr := f.Close(); err == nil {
+            err = cerr
+        }
+    }()
+    ...
+}
+```
+
+---
+
+**Aniqroq yordam berishim uchun menga yuboring:**
+- Ishlamayotgan kod bo'lagi
+- Siz kutgan natija va haqiqatda nima bo'layotgani
+- Go versiyasi (`go version`)
+
+Agar kod shu papkada bo'lsa, fayl nomini ayting, men o'qib chiqib tahlil qilaman.

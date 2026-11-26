@@ -1,0 +1,80 @@
+Kodingizni ko'rmasdan aniq javob berish qiyin, lekin Go'da xato tekshirish "ishlamayotgandek" tuyulishining eng keng tarqalgan sabablari quyidagilar.
+
+## 1. `err` o'zgaruvchisi shadowing bo'lib qolgan
+```go
+var err error
+if x {
+    result, err := doSomething() // yangi err yaratildi, tashqaridagi o'zgarmadi
+    _ = result
+}
+if err != nil { // doim nil
+    ...
+}
+```
+**Yechim:** `:=` o'rniga `=` ishlating yoki o'zgaruvchilarni oldindan e'lon qiling. `go vet -vettool=$(which shadow)` buni topishga yordam beradi.
+
+## 2. Typed nil muammosi (nil interface tuzoq)
+```go
+func do() error {
+    var e *MyError = nil
+    return e // interface nil EMAS, chunki ichida tip bor
+}
+
+if err := do(); err != nil { // true bo'ladi!
+}
+```
+**Yechim:** xato bo'lmasa to'g'ridan-to'g'ri `return nil` qiling.
+
+## 3. `==` bilan solishtirish, o'rab olingan (wrapped) xatolar
+```go
+err := fmt.Errorf("o'qishda xato: %v", io.EOF) // %v, wrap qilmaydi
+errors.Is(err, io.EOF) // false
+```
+**Yechim:** `%w` ishlating va `errors.Is` / `errors.As` bilan tekshiring:
+```go
+err := fmt.Errorf("o'qishda xato: %w", io.EOF)
+errors.Is(err, io.EOF) // true
+```
+
+## 4. `errors.As` noto'g'ri ishlatilgan
+```go
+var me *MyError
+if errors.As(err, &me) { ... } // &me — pointer to pointer bo'lishi kerak
+```
+Agar `Error()` metodi pointer receiver bilan e'lon qilingan bo'lsa, target ham pointer tipida bo'lishi kerak. Aks holda `errors.As` panic qiladi yoki `false` qaytaradi.
+
+## 5. Xato e'tiborsiz qoldirilgan
+```go
+data, _ := os.ReadFile("fayl.txt") // xato yutib yuborildi
+defer f.Close()                    // Close xatosi tekshirilmagan
+```
+`errcheck` yoki `golangci-lint` bunday joylarni topadi.
+
+## 6. Goroutine ichidagi xatolar yo'qolgan
+```go
+go func() {
+    if err := work(); err != nil {
+        // hech kim bu xatoni olmaydi
+    }
+}()
+```
+**Yechim:** xatoni channel orqali yuboring yoki `errgroup.Group` ishlating.
+
+## 7. Named return va `defer`
+```go
+func f() (err error) {
+    defer func() {
+        err = cleanup() // asl xatoni ustiga yozib yuborishi mumkin
+    }()
+    return doWork()
+}
+```
+
+---
+
+Aniq sababni topish uchun quyidagilarni yuboring:
+- xato tekshirilayotgan kod (funksiya va uni chaqirgan joy),
+- nima kutgansiz va aslida nima bo'lyapti,
+- Go versiyasi (`go version`).
+
+Xohlasangiz, loyiha papkasini o'zim ko'rib chiqaman, fayl yo'lini ayting.

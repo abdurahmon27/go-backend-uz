@@ -1,0 +1,14 @@
+{
+  "sana": "2026-11-26T03:01:22Z",
+  "model": "claude-sonnet-5-5",
+  "prompt": "promptlar/2-kontekst.txt",
+  "effort": "high",
+  "stop_reason": "end_turn",
+  "duration_ms": 13385,
+  "output_tokens": 1184,
+  "input_tokens_jami": 1086,
+  "models": [
+    "claude-haiku-5-5",
+    "claude-sonnet-5-5"
+  ]
+}

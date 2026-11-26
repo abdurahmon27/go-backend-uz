@@ -1,0 +1,33 @@
+## Sababi
+
+`topish` xatoni to'g'ridan-to'g'ri qaytarmaydi, `%w` bilan **o'rab** qaytaradi:
+
+```go
+return "", fmt.Errorf("topish %s: %w", id, ErrTopilmadi)
+```
+
+`fmt.Errorf` `%w` bilan yangi xato qiymati yaratadi (`*fmt.wrapError`). Uning ichida:
+- xabar matni: `"topish 42: buyurtma topilmadi"`
+- o'ralgan xato: `ErrTopilmadi` (`Unwrap()` metodi orqali olinadi)
+
+`holat` ichidagi taqqoslash esa:
+
+```go
+if err == ErrTopilmadi {
+```
+
+Bu ikki interfeys qiymatini **aynan bir xil obyekt ekanligi** bo'yicha solishtiradi. `err` bu `*fmt.wrapError`, `ErrTopilmadi` esa `*errors.errorString`. Ular boshqa-boshqa obyektlar, shuning uchun `==` `false` beradi. Kod `return 500` ga tushadi.
+
+Chiqishdagi `buyurtma topilmadi` matni xato qiymati tengligini emas, faqat o'ralgan xabar chop etilganini ko'rsatadi.
+
+## Qanday tuzatish kerak
+
+Standart kutubxonadagi `errors` paketida o'ralgan xatolar zanjirini ichkariga qarab tekshiradigan funksiya bor: **`errors.Is(err, target)`**. U `err` ni, keyin `err.Unwrap()` ni, keyin uning `Unwrap()` ini va hokazo tekshirib, biror joyda `target` ga teng xato topsa `true` qaytaradi.
+
+`holat` ichidagi `==` taqqoslashni shu funksiya bilan almashtiring. `errors` paketi sizda allaqachon import qilingan.
+
+## Qo'shimcha eslatma
+
+Qoida shunday: xatoni `%w` bilan o'rasangiz (bu yaxshi odat, kontekst qo'shadi), uni tekshirishda `==` emas, doim `errors.Is` ishlating. Agar xatoning ma'lum **turi** bo'yicha tekshirish kerak bo'lsa (masalan, o'zingiz yozgan struct xato), `errors.As` ishlatiladi.
+
+Tuzatgach `go run ./bozor` ni qayta ishga tushiring, `/buyurtma/42` uchun `404` chiqishi kerak. Natija chiqmasa, yozib yuboring, birga ko'ramiz.

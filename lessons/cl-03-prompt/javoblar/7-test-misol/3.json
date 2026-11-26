@@ -1,0 +1,14 @@
+{
+  "sana": "2026-11-26T03:03:06Z",
+  "model": "claude-sonnet-5-5",
+  "prompt": "promptlar/7-test-misol.txt",
+  "effort": "high",
+  "stop_reason": "end_turn",
+  "duration_ms": 4755,
+  "output_tokens": 510,
+  "input_tokens_jami": 1284,
+  "models": [
+    "claude-haiku-5-5",
+    "claude-sonnet-5-5"
+  ]
+}

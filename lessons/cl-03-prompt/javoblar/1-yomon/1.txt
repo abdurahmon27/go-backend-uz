@@ -1,0 +1,88 @@
+Kodingizni ko'rmasdan aniq javob berish qiyin, lekin Go'da xato tekshirish ishlamay qolishining eng ko'p uchraydigan sabablari quyidagilar.
+
+**1. Xato e'tiborsiz qoldirilgan**
+```go
+result, _ := doSomething()   // xato yo'qoladi
+doSomething()                // qaytgan error umuman olinmaydi
+```
+To'g'risi:
+```go
+result, err := doSomething()
+if err != nil {
+    return err
+}
+```
+
+**2. Shadowing (`:=` bilan o'zgaruvchini qayta e'lon qilish)**
+```go
+var err error
+if cond {
+    result, err := doSomething() // yangi, ichki err; tashqi err o'zgarmaydi
+    _ = result
+}
+return err // har doim nil
+```
+Yechim: `:=` o'rniga `=` ishlating.
+
+**3. Nil interfeys tuzog'i**
+```go
+func do() error {
+    var e *MyError = nil
+    return e // error interfeysi nil EMAS, chunki ichida tip bor
+}
+if do() != nil { /* bu yerga kiradi! */ }
+```
+Maxsus xato tipini `error` sifatida qaytarayotganda to'g'ridan-to'g'ri `return nil` yozing.
+
+**4. Xatolarni noto'g'ri solishtirish**
+```go
+if err == ErrNotFound {}              // wrap qilingan xatoda ishlamaydi
+if errors.Is(err, ErrNotFound) {}     // to'g'ri
+var myErr *MyError
+if errors.As(err, &myErr) {}          // tip bo'yicha tekshirish
+```
+Wrap qilganda `%w` ishlating, `%v` emas:
+```go
+return fmt.Errorf("o'qishda xato: %w", err)
+```
+
+**5. Goroutine ichidagi xatolar**
+Goroutine'dagi `return err` tashqariga yetib bormaydi. Kanal yoki `errgroup` ishlating:
+```go
+g, ctx := errgroup.WithContext(ctx)
+g.Go(func() error { return work(ctx) })
+if err := g.Wait(); err != nil { ... }
+```
+
+**6. `defer` ichidagi xatolar**
+```go
+defer f.Close() // Close xatosi yo'qoladi
+```
+Named return bilan olish mumkin:
+```go
+func do() (err error) {
+    defer func() {
+        if cerr := f.Close(); err == nil {
+            err = cerr
+        }
+    }()
+    ...
+}
+```
+
+**7. `panic`/`recover` bilan aralashtirish**
+`recover()` faqat `defer` ichida to'g'ridan-to'g'ri chaqirilganda ishlaydi, va boshqa goroutine'dagi panic'ni ushlay olmaydi.
+
+**Tekshirish uchun foydali vositalar:**
+```bash
+go vet ./...
+staticcheck ./...
+errcheck ./...    # e'tiborsiz qoldirilgan xatolarni topadi
+```
+
+Aniq sababni topish uchun, iltimos, quyidagilarni yuboring:
+- Muammoli kod bo'lagi
+- Kutgan natija va aslida nima bo'layotgani
+- Agar bor bo'lsa, xato xabari yoki chiqish (output)
+
+Xohlasangiz, ish papkasidagi Go fayllarni o'zim ko'rib chiqaman, faqat qaysi fayl ekanini ayting.
