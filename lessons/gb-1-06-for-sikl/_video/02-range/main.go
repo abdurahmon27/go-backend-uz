@@ -3,8 +3,8 @@ package main
 import "fmt"
 
 func main() {
-	qty := 3
-	for i := range qty {
+	sold := 3
+	for i := range sold {
 		fmt.Println(i)
 	}
 }

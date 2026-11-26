@@ -8,7 +8,7 @@ Oldingi dars: [`gb-1-05-qaror-if-switch`](../gb-1-05-qaror-if-switch) · keyingi
 
 **Bu darsdan keyin:** bozor buyurtma summasini sikl bilan hisoblaydi: "har uchinchi dona bepul" aksiyasi har bir
 donaga alohida qoʻllanadi. Vositalar: uch qismli `for` (boshlanish; shart; qadam), `i++` va `+=`, `for i := range
-qty` (Go 1.22+), faqat shartli va cheksiz `for`, `continue` va `break`.
+sold` (Go 1.22+), faqat shartli va cheksiz `for`, `continue` va `break`.
 
 **Bitta gʻoya:** `for` sarlavhasidagi boshlanish bir marta ishlaydi, shart har aylanishdan *oldin* tekshiriladi, qadam
 har aylanishdan *keyin*; `continue` shu aylanishning qolgan qismini tashlab qadamga oʻtadi, `break` esa butun
@@ -48,7 +48,7 @@ Uch qismli `for`, uch dona (`./_video/run.sh 01-sikl`): shart 4 marta tekshirila
 ./main.go:11:24: undefined: i
 ```
 
-`for i := range qty`, `qty := 3` (`./_video/run.sh 02-range`): noldan `qty-1` gacha.
+`for i := range sold`, `sold := 3` (`./_video/run.sh 02-range`): noldan `sold-1` gacha.
 
 ```
 0
@@ -56,7 +56,7 @@ Uch qismli `for`, uch dona (`./_video/run.sh 01-sikl`): shart 4 marta tekshirila
 2
 ```
 
-Ishlatilmagan sanagich (`./_video/run.sh 03-range-xato`) va tuzatish `for range qty` (`04-range-tuzat` → `599700`):
+Ishlatilmagan sanagich (`./_video/run.sh 03-range-xato`) va tuzatish `for range sold` (`04-range-tuzat` → `599700`):
 
 ```
 # github.com/abdurahmon27/bozor
@@ -77,7 +77,7 @@ Faqat shartli `for`: 50 000 soʻmga nechta 1 999 soʻmlik choy sigʻadi (`./_vid
 399800
 ```
 
-Sikl ichidagi `switch`'da `break` faqat `switch`'dan chiqadi (`08-switch-break`, `qty := 4`): `3` ham chiqadi.
+Sikl ichidagi `switch`'da `break` faqat `switch`'dan chiqadi (`08-switch-break`, `sold := 4`): `3` ham chiqadi.
 
 ```
 1
@@ -89,6 +89,8 @@ Sikl ichidagi `switch`'da `break` faqat `switch`'dan chiqadi (`08-switch-break`,
 Bozor (`go run .`):
 
 ```
+bozor ishga tushdi
+versiya: 0.1.0
 choy, 7 dona        9995.00
 QQS                 1199.40
 yetkazish          15000.00

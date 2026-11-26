@@ -4,10 +4,10 @@ import "fmt"
 
 func main() {
 	var price int64 = 199_900 // tiyinda
-	qty := 3
+	sold := 3
 
 	var subtotal int64
-	for range qty {
+	for range sold {
 		subtotal += price
 	}
 	fmt.Println(subtotal)

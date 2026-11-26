@@ -10,9 +10,11 @@ berilgandan keyin qolgan hamma dona pullik. Chegarani nomli konstanta qiling:
 const maxFree = 2 // bitta buyurtmada koʻpi bilan shuncha dona bepul
 ```
 
-Kutilgan natija (`qty = 12` boʻlsa: 3- va 6-dona bepul, 9- va 12-dona endi pullik):
+Kutilgan natija (`sold = 12` boʻlsa: 3- va 6-dona bepul, 9- va 12-dona endi pullik):
 
 ```
+bozor ishga tushdi
+versiya: 0.1.0
 choy, 12 dona      19990.00
 QQS                 2398.80
 yetkazish          15000.00
@@ -29,7 +31,7 @@ go test
 ```
 
 `ok` chiqsa, vazifa bajarildi. Hozir test `FAIL` beradi va qaysi buyurtmada nima kutilganini koʻrsatadi
-(`kerak:` va `hozir:` qatorlari). `main_test.go` faylini oʻzgartirmang: u `name`, `price`, `qty`, `stock` ni
+(`kerak:` va `hozir:` qatorlari). `main_test.go` faylini oʻzgartirmang: u `name`, `price`, `active`, `stock`, `sold` ni
 almashtirib, `main()` ni bir necha marta ishga tushiradi (test yozishni GB-1.08'da ochamiz).
 
 **Maslahatlar**
