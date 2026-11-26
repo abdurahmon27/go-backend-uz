@@ -75,7 +75,7 @@ Batafsil (compiler bosqichlari, `go tool nm`, `objdump`, `ldd`, stack tekshiruvi
 - 🟢 **Oson:** `dunyo` oʻrniga ismingiz → `go build main.go` → `./main`. Starter: [`uyga/oson/`](uyga/oson/)
 - 🟡 **Oʻrta:** `for` bilan uch marta `Salom!`; build'dan oldin taxmin qiling: fayl qanchaga oʻsadi?
   Starter: [`uyga/orta/`](uyga/orta/)
-- 🔍 **Qiziqish:** boshqa tizim uchun fayl yasang (`GOOS`).
+- 🔍 **Qiziqish:** `main` faylini boshqa papkaga koʻchirib ishga tushiring — ishlaydimi? Qoʻshimcha: boshqa tizim uchun fayl yasang (`GOOS`).
 
 Javoblar: [`uyga/README.md`](uyga/README.md).
 
