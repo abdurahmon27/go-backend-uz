@@ -61,11 +61,11 @@ GOOS=linux GOARCH=arm64 go build -o api-arm . && ./api-arm   # amd64'da: Exec fo
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o api .
 docker build -t api-go . && (cd node && docker build -t api-node .)
 docker images --format 'table {{.Repository}}:{{.Tag}}\t{{.Size}}' --filter reference=api-go --filter reference=api-node
-docker run -d --rm --name api-go -p 3000:3000 api-go >/dev/null && curl -s localhost:3000/health
+docker run -d --rm --name api-go -p 3000:3000 api-go >/dev/null && sleep 1 && curl -s localhost:3000/health
 
 docker build -t tuzoq -f tuzoq/Dockerfile . && docker run --rm tuzoq   # exec /api: no such file or directory
 docker build --target build -t tuzoq-build -f tuzoq/Dockerfile . && docker run --rm tuzoq-build ldd /api
-docker build -t tuzoq-ok -f tuzoq/Dockerfile.ok . && docker run -d --rm --name tuzoq-ok -p 3001:3000 tuzoq-ok >/dev/null && curl -s localhost:3001/health   # CGO_ENABLED=0 → ishlaydi
+docker build -t tuzoq-ok -f tuzoq/Dockerfile.ok . && docker run -d --rm --name tuzoq-ok -p 3001:3000 tuzoq-ok >/dev/null && sleep 1 && curl -s localhost:3001/health   # CGO_ENABLED=0 → ishlaydi
 
 go version -m api                         # go1.26.8, GOOS, GOARCH, CGO_ENABLED, vcs.revision, vcs.modified
 ```
