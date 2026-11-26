@@ -1,0 +1,112 @@
+goos: linux
+goarch: amd64
+pkg: github.com/abdurahmon27/go-backend-uz/lessons/dsa-a01-cache/uyvazifa
+cpu: 12th Gen Intel(R) Core(TM) i5-12450H
+BenchmarkQadam/k=1         	     139	   8649657 ns/op
+BenchmarkQadam/k=1         	     138	   8733417 ns/op
+BenchmarkQadam/k=1         	     139	   8672977 ns/op
+BenchmarkQadam/k=1         	     135	   8779357 ns/op
+BenchmarkQadam/k=1         	     135	   8796231 ns/op
+BenchmarkQadam/k=2         	     175	   6891069 ns/op
+BenchmarkQadam/k=2         	     169	   7124308 ns/op
+BenchmarkQadam/k=2         	     165	   7193350 ns/op
+BenchmarkQadam/k=2         	     168	   7128596 ns/op
+BenchmarkQadam/k=2         	     162	   7533261 ns/op
+BenchmarkQadam/k=4         	     164	   7130343 ns/op
+BenchmarkQadam/k=4         	     182	   6642568 ns/op
+BenchmarkQadam/k=4         	     156	   7659556 ns/op
+BenchmarkQadam/k=4         	     160	   7374762 ns/op
+BenchmarkQadam/k=4         	     166	   7203287 ns/op
+BenchmarkQadam/k=8         	     175	   6931475 ns/op
+BenchmarkQadam/k=8         	     171	   7141258 ns/op
+BenchmarkQadam/k=8         	     168	   7246961 ns/op
+BenchmarkQadam/k=8         	     160	   7528749 ns/op
+BenchmarkQadam/k=8         	     156	   7605245 ns/op
+BenchmarkQadam/k=16        	     175	   6567766 ns/op
+BenchmarkQadam/k=16        	     194	   6085394 ns/op
+BenchmarkQadam/k=16        	     188	   6180896 ns/op
+BenchmarkQadam/k=16        	     202	   5854890 ns/op
+BenchmarkQadam/k=16        	     217	   5581128 ns/op
+BenchmarkQadam/k=32        	     367	   3242257 ns/op
+BenchmarkQadam/k=32        	     370	   3167403 ns/op
+BenchmarkQadam/k=32        	     381	   3158747 ns/op
+BenchmarkQadam/k=32        	     370	   3234006 ns/op
+BenchmarkQadam/k=32        	     369	   3304540 ns/op
+BenchmarkInt64             	     150	   7920788 ns/op
+BenchmarkInt64             	     152	   7846958 ns/op
+BenchmarkInt64             	     152	   7788076 ns/op
+BenchmarkInt64             	     148	   7957957 ns/op
+BenchmarkInt64             	     152	   7869211 ns/op
+BenchmarkInt32             	     207	   5628063 ns/op
+BenchmarkInt32             	     208	   5716178 ns/op
+BenchmarkInt32             	     210	   5720992 ns/op
+BenchmarkInt32             	     210	   5718976 ns/op
+BenchmarkInt32             	     213	   5607945 ns/op
+BenchmarkAoS               	      44	  24180701 ns/op
+BenchmarkAoS               	      49	  24341234 ns/op
+BenchmarkAoS               	      46	  24473741 ns/op
+BenchmarkAoS               	      49	  24344487 ns/op
+BenchmarkAoS               	      48	  23993102 ns/op
+BenchmarkSoA               	     147	   8058862 ns/op
+BenchmarkSoA               	     148	   8061250 ns/op
+BenchmarkSoA               	     147	   8096102 ns/op
+BenchmarkSoA               	     150	   7931401 ns/op
+BenchmarkSoA               	     148	   8055012 ns/op
+PASS
+ok  	github.com/abdurahmon27/go-backend-uz/lessons/dsa-a01-cache/uyvazifa	60.207s
+goos: linux
+goarch: amd64
+pkg: github.com/abdurahmon27/go-backend-uz/lessons/dsa-a01-cache/uyvazifa
+cpu: 12th Gen Intel(R) Core(TM) i5-12450H
+BenchmarkQadam/k=1         	     133	   8998727 ns/op
+BenchmarkQadam/k=1         	     129	   9157917 ns/op
+BenchmarkQadam/k=1         	     132	   9085717 ns/op
+BenchmarkQadam/k=1         	     132	   9091391 ns/op
+BenchmarkQadam/k=1         	     132	   9039885 ns/op
+BenchmarkQadam/k=2         	     170	   7118022 ns/op
+BenchmarkQadam/k=2         	     164	   7214202 ns/op
+BenchmarkQadam/k=2         	     168	   7099427 ns/op
+BenchmarkQadam/k=2         	     171	   7170548 ns/op
+BenchmarkQadam/k=2         	     169	   7115958 ns/op
+BenchmarkQadam/k=4         	     188	   6325549 ns/op
+BenchmarkQadam/k=4         	     190	   6215591 ns/op
+BenchmarkQadam/k=4         	     192	   6280988 ns/op
+BenchmarkQadam/k=4         	     189	   6307011 ns/op
+BenchmarkQadam/k=4         	     186	   6437863 ns/op
+BenchmarkQadam/k=8         	     201	   5924093 ns/op
+BenchmarkQadam/k=8         	     201	   5863665 ns/op
+BenchmarkQadam/k=8         	     204	   5856333 ns/op
+BenchmarkQadam/k=8         	     201	   5976873 ns/op
+BenchmarkQadam/k=8         	     200	   5935951 ns/op
+BenchmarkQadam/k=16        	     225	   5245039 ns/op
+BenchmarkQadam/k=16        	     229	   5259373 ns/op
+BenchmarkQadam/k=16        	     226	   5325501 ns/op
+BenchmarkQadam/k=16        	     225	   5326524 ns/op
+BenchmarkQadam/k=16        	     224	   5338159 ns/op
+BenchmarkQadam/k=32        	     372	   3210809 ns/op
+BenchmarkQadam/k=32        	     376	   3170475 ns/op
+BenchmarkQadam/k=32        	     379	   3163707 ns/op
+BenchmarkQadam/k=32        	     364	   3256911 ns/op
+BenchmarkQadam/k=32        	     368	   3188690 ns/op
+BenchmarkInt64             	     147	   8092349 ns/op
+BenchmarkInt64             	     147	   8110640 ns/op
+BenchmarkInt64             	     148	   8076275 ns/op
+BenchmarkInt64             	     148	   7999424 ns/op
+BenchmarkInt64             	     146	   8157576 ns/op
+BenchmarkInt32             	     199	   5979581 ns/op
+BenchmarkInt32             	     199	   6080841 ns/op
+BenchmarkInt32             	     199	   6025470 ns/op
+BenchmarkInt32             	     201	   6002893 ns/op
+BenchmarkInt32             	     189	   6243848 ns/op
+BenchmarkAoS               	      46	  25854672 ns/op
+BenchmarkAoS               	      44	  25050470 ns/op
+BenchmarkAoS               	      50	  24065534 ns/op
+BenchmarkAoS               	      49	  24280862 ns/op
+BenchmarkAoS               	      50	  24377142 ns/op
+BenchmarkSoA               	     142	   8342128 ns/op
+BenchmarkSoA               	     140	   8440949 ns/op
+BenchmarkSoA               	     141	   8402180 ns/op
+BenchmarkSoA               	     134	   8992797 ns/op
+BenchmarkSoA               	     120	   9891513 ns/op
+PASS
+ok  	github.com/abdurahmon27/go-backend-uz/lessons/dsa-a01-cache/uyvazifa	60.410s

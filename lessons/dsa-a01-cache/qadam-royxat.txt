@@ -1,0 +1,76 @@
+goos: linux
+goarch: amd64
+pkg: github.com/abdurahmon27/go-backend-uz/lessons/dsa-a01-cache/kesh
+cpu: 12th Gen Intel(R) Core(TM) i5-12450H
+BenchmarkQadam/n=4096/k=1         	  697197	      1572 ns/op
+BenchmarkQadam/n=4096/k=1         	  741289	      1629 ns/op
+BenchmarkQadam/n=4096/k=1         	  680088	      2409 ns/op
+BenchmarkQadam/n=4096/k=1         	  724096	      1860 ns/op
+BenchmarkQadam/n=4096/k=1         	  739286	      1565 ns/op
+BenchmarkQadam/n=4096/k=1         	  753686	      1729 ns/op
+BenchmarkQadam/n=4096/k=1         	  665260	      1770 ns/op
+BenchmarkQadam/n=4096/k=1         	  890482	      1700 ns/op
+BenchmarkQadam/n=4096/k=1         	  743892	      1765 ns/op
+BenchmarkQadam/n=4096/k=1         	  770638	      1697 ns/op
+BenchmarkQadam/n=4096/k=8         	 5365888	       209.6 ns/op
+BenchmarkQadam/n=4096/k=8         	 5774922	       214.8 ns/op
+BenchmarkQadam/n=4096/k=8         	 5726937	       215.3 ns/op
+BenchmarkQadam/n=4096/k=8         	 5177793	       217.1 ns/op
+BenchmarkQadam/n=4096/k=8         	 5871408	       210.5 ns/op
+BenchmarkQadam/n=4096/k=8         	 5138449	       217.5 ns/op
+BenchmarkQadam/n=4096/k=8         	 5699950	       222.7 ns/op
+BenchmarkQadam/n=4096/k=8         	 4937241	       231.0 ns/op
+BenchmarkQadam/n=4096/k=8         	 5381418	       239.8 ns/op
+BenchmarkQadam/n=4096/k=8         	 4758085	       243.7 ns/op
+BenchmarkQadam/n=16777216/k=1     	     108	  10996695 ns/op
+BenchmarkQadam/n=16777216/k=1     	     100	  10157989 ns/op
+BenchmarkQadam/n=16777216/k=1     	     100	  10579364 ns/op
+BenchmarkQadam/n=16777216/k=1     	     100	  10524537 ns/op
+BenchmarkQadam/n=16777216/k=1     	     100	  10529089 ns/op
+BenchmarkQadam/n=16777216/k=1     	     100	  10151227 ns/op
+BenchmarkQadam/n=16777216/k=1     	     100	  10161473 ns/op
+BenchmarkQadam/n=16777216/k=1     	     100	  10402287 ns/op
+BenchmarkQadam/n=16777216/k=1     	     100	  10225720 ns/op
+BenchmarkQadam/n=16777216/k=1     	     100	  10531257 ns/op
+BenchmarkQadam/n=16777216/k=8     	     127	   8906284 ns/op
+BenchmarkQadam/n=16777216/k=8     	     175	   6792435 ns/op
+BenchmarkQadam/n=16777216/k=8     	     186	   6314459 ns/op
+BenchmarkQadam/n=16777216/k=8     	     188	   6273032 ns/op
+BenchmarkQadam/n=16777216/k=8     	     186	   6338323 ns/op
+BenchmarkQadam/n=16777216/k=8     	     194	   6177714 ns/op
+BenchmarkQadam/n=16777216/k=8     	     190	   6295586 ns/op
+BenchmarkQadam/n=16777216/k=8     	     189	   6348215 ns/op
+BenchmarkQadam/n=16777216/k=8     	     188	   6313357 ns/op
+BenchmarkQadam/n=16777216/k=8     	     189	   6359587 ns/op
+BenchmarkRoyxat/yangi             	     577	   2101186 ns/op	         2.004 ns/el
+BenchmarkRoyxat/yangi             	     525	   2092830 ns/op	         1.996 ns/el
+BenchmarkRoyxat/yangi             	     566	   2305472 ns/op	         2.199 ns/el
+BenchmarkRoyxat/yangi             	     472	   2574285 ns/op	         2.455 ns/el
+BenchmarkRoyxat/yangi             	     471	   2212125 ns/op	         2.110 ns/el
+BenchmarkRoyxat/yangi             	     458	   2336024 ns/op	         2.228 ns/el
+BenchmarkRoyxat/yangi             	     522	   2223572 ns/op	         2.121 ns/el
+BenchmarkRoyxat/yangi             	     542	   2164403 ns/op	         2.064 ns/el
+BenchmarkRoyxat/yangi             	     620	   1915433 ns/op	         1.827 ns/el
+BenchmarkRoyxat/yangi             	     584	   1954373 ns/op	         1.864 ns/el
+BenchmarkRoyxat/sochilgan         	      14	  86687256 ns/op	        82.67 ns/el
+BenchmarkRoyxat/sochilgan         	      13	 101658158 ns/op	        96.95 ns/el
+BenchmarkRoyxat/sochilgan         	      10	 112199381 ns/op	       107.0 ns/el
+BenchmarkRoyxat/sochilgan         	      10	 115908508 ns/op	       110.5 ns/el
+BenchmarkRoyxat/sochilgan         	      12	  84366801 ns/op	        80.46 ns/el
+BenchmarkRoyxat/sochilgan         	      14	  83080265 ns/op	        79.23 ns/el
+BenchmarkRoyxat/sochilgan         	      15	  80919753 ns/op	        77.17 ns/el
+BenchmarkRoyxat/sochilgan         	      13	  82947332 ns/op	        79.10 ns/el
+BenchmarkRoyxat/sochilgan         	       9	 117718715 ns/op	       112.3 ns/el
+BenchmarkRoyxat/sochilgan         	       8	 125776620 ns/op	       119.9 ns/el
+BenchmarkRoyxat/slice             	    2268	    525418 ns/op	         0.5011 ns/el
+BenchmarkRoyxat/slice             	    2433	    431347 ns/op	         0.4114 ns/el
+BenchmarkRoyxat/slice             	    2986	    430609 ns/op	         0.4107 ns/el
+BenchmarkRoyxat/slice             	    2431	    424259 ns/op	         0.4046 ns/el
+BenchmarkRoyxat/slice             	    3133	    424877 ns/op	         0.4052 ns/el
+BenchmarkRoyxat/slice             	    2468	    406335 ns/op	         0.3875 ns/el
+BenchmarkRoyxat/slice             	    3126	    428687 ns/op	         0.4088 ns/el
+BenchmarkRoyxat/slice             	    3114	    409838 ns/op	         0.3909 ns/el
+BenchmarkRoyxat/slice             	    2530	    456711 ns/op	         0.4356 ns/el
+BenchmarkRoyxat/slice             	    2853	    425890 ns/op	         0.4062 ns/el
+PASS
+ok  	github.com/abdurahmon27/go-backend-uz/lessons/dsa-a01-cache/kesh	83.189s
