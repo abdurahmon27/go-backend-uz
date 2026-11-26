@@ -1,0 +1,6 @@
+example.com/log v1.3.0 h1:jtLzF0d3cKr1ihfE0BawA7k/zEgug+2kxGS3dBm4J3M=
+example.com/log v1.3.0/go.mod h1:RUfJNjFPRI6tqrT6oiqycOZSUh5GZuxUqKeqkpkD9gM=
+example.com/tolov v1.0.0 h1:rYWoX0vVDzoRQQ+sK1qIO64mJTqN/njcPAHwxPoY4S0=
+example.com/tolov v1.0.0/go.mod h1:kcSlgulFfEBz0M3NpSlBxsSJAP67xfA2BpWFvGoII7Y=
+example.com/yetkazish v1.0.0 h1:LAHZ1rEGjRCYUuDr8xdpeV3jeQJpGU/6j08zsXJGLEc=
+example.com/yetkazish v1.0.0/go.mod h1:oSJ5l185hvaK3MT8z8jmeGNuMP2W1q4yo4vwTnYfflY=
