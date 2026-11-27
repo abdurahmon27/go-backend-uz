@@ -1,0 +1,181 @@
+### 0. oldingi darslardagi holat: qoʻlda yaratilgan jadvallar (videoda koʻrsatilmaydi)
+CREATE TABLE
+INSERT 0 4
+CREATE TABLE
+CREATE TABLE
+
+### 1. muammo: fayl ikkinchi marta
+$ docker compose exec db psql -f /lab/orders.sql
+psql:/lab/orders.sql:5: ERROR:  relation "orders" already exists
+psql:/lab/orders.sql:12: ERROR:  relation "order_items" already exists
+(chiqish kodi: 0)
+
+### 2. baza tozalanadi
+$ docker compose down -v
+ Container bozor-db-1 Stopping 
+ Container bozor-db-1 Stopped 
+ Container bozor-db-1 Removing 
+ Container bozor-db-1 Removed 
+ Network bozor_default Removing 
+ Volume bozor_pgdata Removing 
+ Volume bozor_pgdata Removed 
+ Network bozor_default Removed 
+(chiqish kodi: 0)
+
+$ docker compose up -d --wait
+ Network bozor_default Creating 
+ Network bozor_default Creating 
+ Volume bozor_pgdata Creating 
+ Volume bozor_pgdata Creating 
+ Volume bozor_pgdata Created 
+ Volume bozor_pgdata Created 
+ Network bozor_default Created 
+ Network bozor_default Created 
+ Container bozor-db-1 Creating 
+ Container bozor-db-1 Created 
+ Container bozor-db-1 Starting 
+ Container bozor-db-1 Started 
+ Container bozor-db-1 Waiting 
+ Container bozor-db-1 Healthy 
+(chiqish kodi: 0)
+
+### 3. goose
+$ goose -version
+goose version: v3.30.2
+(chiqish kodi: 0)
+
+$ ls migrations
+00001_products.sql
+00002_orders.sql
+(chiqish kodi: 0)
+
+$ goose status
+2026/11/27 18:39:51     Applied At                  Migration
+2026/11/27 18:39:51     =======================================
+2026/11/27 18:39:51     Pending                  -- 00001_products.sql
+2026/11/27 18:39:51     Pending                  -- 00002_orders.sql
+(chiqish kodi: 0)
+
+$ goose up
+2026/11/27 18:39:52 OK   00001_products.sql (10.27ms)
+2026/11/27 18:39:52 OK   00002_orders.sql (7.37ms)
+2026/11/27 18:39:52 goose: successfully migrated database to version: 2
+(chiqish kodi: 0)
+
+$ goose status
+2026/11/27 18:39:52     Applied At                  Migration
+2026/11/27 18:39:52     =======================================
+2026/11/27 18:39:52     Fri Nov 27 13:39:52 2026 -- 00001_products.sql
+2026/11/27 18:39:52     Fri Nov 27 13:39:52 2026 -- 00002_orders.sql
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c \dt
+              List of tables
+ Schema |       Name       | Type  | Owner 
+--------+------------------+-------+-------
+ public | goose_db_version | table | bozor
+ public | order_items      | table | bozor
+ public | orders           | table | bozor
+ public | products         | table | bozor
+(4 rows)
+
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c SELECT id, version_id, is_applied FROM goose_db_version ORDER BY id
+ id | version_id | is_applied 
+----+------------+------------
+  1 |          0 | t
+  2 |          1 | t
+  3 |          2 | t
+(3 rows)
+
+(chiqish kodi: 0)
+
+$ goose up
+2026/11/27 18:39:52 goose: no migrations to run. current version: 2
+(chiqish kodi: 0)
+
+### 4. 3-migratsiya: xato
+$ docker compose exec db psql -f /lab/seed.sql
+INSERT 0 4
+INSERT 0 3
+INSERT 0 4
+(chiqish kodi: 0)
+
+$ goose create -s orders_status sql
+2026/11/27 18:39:52 Created new file: migrations/00003_orders_status.sql
+(chiqish kodi: 0)
+
+$ ls migrations
+00001_products.sql
+00002_orders.sql
+00003_orders_status.sql
+(chiqish kodi: 0)
+
+-- +goose Up
+SELECT 'up SQL query';
+
+-- +goose Down
+SELECT 'down SQL query';
+$ goose up
+2026/11/27 18:39:52 goose run: ERROR 00003_orders_status.sql: failed to run SQL migration: failed to execute SQL query "ALTER TABLE orders ADD COLUMN status text NOT NULL;": ERROR: column "status" of relation "orders" contains null values (SQLSTATE 23502)
+(chiqish kodi: 1)
+
+$ goose status
+2026/11/27 18:39:52     Applied At                  Migration
+2026/11/27 18:39:52     =======================================
+2026/11/27 18:39:52     Fri Nov 27 13:39:52 2026 -- 00001_products.sql
+2026/11/27 18:39:52     Fri Nov 27 13:39:52 2026 -- 00002_orders.sql
+2026/11/27 18:39:52     Pending                  -- 00003_orders_status.sql
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c SELECT * FROM orders LIMIT 1
+ id | customer | note 
+----+----------+------
+  1 | Dilnoza  | 
+(1 row)
+
+(chiqish kodi: 0)
+
+### 5. tuzatish
+$ goose up
+2026/11/27 18:39:52 OK   00003_orders_status.sql (7.18ms)
+2026/11/27 18:39:52 goose: successfully migrated database to version: 3
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c SELECT id, customer, status FROM orders
+ id | customer | status 
+----+----------+--------
+  1 | Dilnoza  | yangi
+  2 | Jasur    | yangi
+  3 | Malika   | yangi
+(3 rows)
+
+(chiqish kodi: 0)
+
+### 6. down
+$ goose down
+2026/11/27 18:39:53 OK   00003_orders_status.sql (5.05ms)
+(chiqish kodi: 0)
+
+$ goose status
+2026/11/27 18:39:53     Applied At                  Migration
+2026/11/27 18:39:53     =======================================
+2026/11/27 18:39:53     Fri Nov 27 13:39:52 2026 -- 00001_products.sql
+2026/11/27 18:39:53     Fri Nov 27 13:39:52 2026 -- 00002_orders.sql
+2026/11/27 18:39:53     Pending                  -- 00003_orders_status.sql
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c SELECT * FROM orders LIMIT 1
+ id | customer | note 
+----+----------+------
+  1 | Dilnoza  | 
+(1 row)
+
+(chiqish kodi: 0)
+
+$ goose up
+2026/11/27 18:39:53 OK   00003_orders_status.sql (8.19ms)
+2026/11/27 18:39:53 goose: successfully migrated database to version: 3
+(chiqish kodi: 0)
+
