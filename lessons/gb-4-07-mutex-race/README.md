@@ -37,10 +37,11 @@ Mutex yoki channel? Bu darsda umumiy `map`ni mutex himoyalaydi; channel'lar bila
 | `_video/run.sh` | qadamni videodagidek yangi `bozor/` papkasida ishga tushiradi: `./_video/run.sh 02-race go test` |
 | `_video/race.sh` | `-race` buyruqlari uchun (quyidagi eslatma): `./_video/race.sh 02-race go test -race -count=1 .` |
 
-## `-race` uchun C kompilyator kerak
+## `-race`: Linux va macOS talablari
 
-Race detector `cgo`ni, yaʼni C kompilyatorni talab qiladi (Linux'da odatda `gcc`). C kompilyator yoʻq boʻlsa, Go `cgo`ni oʻzi
-oʻchirib qoʻyadi va `go test -race` shunday deydi (shu mashinada ham shunday):
+Linux'da race detector uchun `cgo` yoqilgan va C kompilyator (odatda `gcc`) oʻrnatilgan boʻlishi kerak. macOS'da Go 1.20'dan beri
+race detector Xcode yoki cgo talab qilmaydi ([Go 1.20 eslatmalari](https://go.dev/doc/go1.20#cgo)); bu dars uchun Xcode oʻrnatish shart emas.
+Linux'da C kompilyator yoʻq boʻlsa, Go `cgo`ni oʻzi oʻchirib qoʻyadi va `go test -race` shunday deydi (shu mashinada ham shunday):
 
 ```
 $ go test -race
@@ -57,7 +58,8 @@ cgo: C compiler "gcc" not found: exec: "gcc": executable file not found in $PATH
 
 Videodagi `-race` natijalari shu sababli Docker'da olingan: gcc bor `golang:1.26.8` image'i, lekin Go oʻzi shu mashinadagi
 `go1.27.4` toolchain (`_video/race.sh`), shuning uchun hisobotdagi fayl yoʻli `/home/dev/bozor/main.go` (konteynerdagi papka):
-sizda oʻz papkangiz yoʻli chiqadi. Sizda `gcc` boʻlsa (`apt install gcc`, `xcode-select --install`), oddiy `go test -race` yetadi.
+sizda oʻz papkangiz yoʻli chiqadi. Linux'da C kompilyator oʻrnating (masalan, `apt install gcc`) va `cgo` yoqilganini tekshiring
+(`go env CGO_ENABLED`: `1`); keyin oddiy `go test -race` yetadi.
 Manzillar (`0x00c0…`) va goroutine raqamlari har ishga tushirishda boshqacha boʻladi; hisobotlar "…" bilan qisqartirilgan.
 `-race` faqat ishga tushgan kodda sodir boʻlgan murojaatlarni topadi, shuning uchun test parallel chaqirishi kerak.
 
@@ -115,6 +117,20 @@ $ go test -race
 ok  	github.com/abdurahmon27/bozor	1.024s
 ```
 
+Bu yerdagi taxminan bir soniyaning asosiy sababi — race runtime chiqishdan oldin kutishi: `GORACE` sozlamasi
+`atexit_sleep_ms` sukut boʻyicha `1000` millisoniya ([hujjat](https://go.dev/doc/articles/race_detector#Options)). Bu vaqt kodning
+200 barobar sekinlashganini bildirmaydi. Kutishni oʻchirib, natijani keshdan olmasdan tekshirish mumkin:
+
+```
+$ GORACE=atexit_sleep_ms=0 go test -race -count=1 .
+ok  	github.com/abdurahmon27/bozor	0.082s
+```
+
+`_video/race.sh 03-mutex` muhitida uch ishga tushirish: `ok` vaqti odatiy `-race` bilan 1,045–1,062 s, kutishsiz
+0,067–0,082 s. Alohida, oldindan yigʻilgan test dasturlarida oʻrtacha wall vaqt kutishsiz race bilan 0,102 s, oddiy rejimda
+0,036 s (taxminan 2,8 barobar; atigi uchta oʻlchov, umumiy benchmark emas). Tafsilotlar yozma darsda; race tekshiruvi
+qoʻshimcha vaqt va xotira sarflaydi, lekin chiqishdagi kutish alohida xarajat.
+
 Klassik xato (`04-nusxa`): `func (s Store) Sell(…)` — qabul qiluvchi nusxa, qulf ham nusxalanadi, himoya yoʻq (`go test` yana
 qulaydi). `go vet` sababini koʻrsatadi:
 
@@ -146,13 +162,13 @@ Qoida: qulfni `yield`dan oldin qoʻyib yuboring, yoki nusxani qulf ichida olib, 
 ```bash
 go test .                # starterda yiqiladi (oʻzbekcha xabar bilan)
 go test ./solution/      # javob: ok
-go test -race .          # gcc boʻlsa: qaysi qator poyga ekanini koʻring
+go test -race .          # Linux: C kompilyator + cgo; macOS: Xcode shart emas
 ```
 
 ## Manbalar
 
 - Go `net/http`: [`Server.Serve`](https://pkg.go.dev/net/http#Server.Serve) (har ulanish uchun alohida goroutine), [`ListenAndServe`](https://pkg.go.dev/net/http#Server.ListenAndServe)
 - Go [`sync.Mutex`](https://pkg.go.dev/sync#Mutex) (nol qiymati — ochiq qulf; nusxalanmaydi), [`sync.WaitGroup.Go`](https://pkg.go.dev/sync#WaitGroup.Go) (Go 1.25'dan; toʻliq GB-7.01'da)
-- [Data Race Detector](https://go.dev/doc/articles/race_detector) (cgo talab qiladi; xotira 5–10×, vaqt 2–20× koʻproq), [Go xotira modeli](https://go.dev/ref/mem)
+- [Data Race Detector](https://go.dev/doc/articles/race_detector) (`atexit_sleep_ms=1000`; Linux: cgo + C kompilyator; xotira 5–10×, vaqt 2–20× koʻproq), [Go xotira modeli](https://go.dev/ref/mem)
 - [Go FAQ: map'lar parallel foydalanish uchun xavfsizmi](https://go.dev/doc/faq#atomic_maps)
 - [`go vet` (copylocks)](https://pkg.go.dev/cmd/vet), [RFC 9110 §15.5.10 — 409 Conflict](https://www.rfc-editor.org/rfc/rfc9110#name-409-conflict)
