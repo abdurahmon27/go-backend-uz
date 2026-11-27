@@ -1,0 +1,220 @@
+
+### up
+$ docker compose up -d --wait
+ Volume bozor_pgdata Creating 
+ Volume bozor_pgdata Creating 
+ Network bozor_default Creating 
+ Network bozor_default Creating 
+ Volume bozor_pgdata Created 
+ Volume bozor_pgdata Created 
+ Network bozor_default Created 
+ Network bozor_default Created 
+ Container bozor-db-1 Creating 
+ Container bozor-db-1 Created 
+ Container bozor-db-1 Starting 
+ Container bozor-db-1 Started 
+ Container bozor-db-1 Waiting 
+ Container bozor-db-1 Healthy 
+[exit 0]
+
+### bozor
+$ docker compose exec db psql -f /lab/bozor.sql
+DROP TABLE
+psql:/lab/bozor.sql:1: NOTICE:  table "order_items" does not exist, skipping
+psql:/lab/bozor.sql:1: NOTICE:  table "orders" does not exist, skipping
+psql:/lab/bozor.sql:1: NOTICE:  table "products" does not exist, skipping
+CREATE TABLE
+INSERT 0 4
+CREATE TABLE
+CREATE TABLE
+INSERT 0 3
+INSERT 0 4
+[exit 0]
+
+### notx
+$ go run .
+0 ERROR: new row for relation "products" violates check constraint "products_stock_check" (SQLSTATE 23514)
+[exit 0]
+
+### holat1
+$ docker compose exec db psql -c SELECT id, customer FROM orders WHERE id > 3 -c SELECT order_id, product_id, quantity FROM order_items WHERE order_id > 3
+ id | customer 
+----+----------
+  4 | Aziza
+(1 row)
+
+ order_id | product_id | quantity 
+----------+------------+----------
+        4 |          1 |        2
+(1 row)
+
+[exit 0]
+
+### holat2
+$ docker compose exec db psql -c SELECT id, name, stock FROM products WHERE id <= 2 ORDER BY id
+ id | name | stock 
+----+------+-------
+  1 | olma |    38
+  2 | non  |     3
+(2 rows)
+
+[exit 0]
+
+### bekor
+$ docker compose exec db psql -t -f /lab/bekor.sql
+BEGIN
+UPDATE 1
+    36
+
+ROLLBACK
+    38
+
+[exit 0]
+
+### bekor-jadval
+$ docker compose exec db psql -f /lab/bekor.sql
+BEGIN
+UPDATE 1
+ stock 
+-------
+    36
+(1 row)
+
+ROLLBACK
+ stock 
+-------
+    38
+(1 row)
+
+[exit 0]
+
+### xato
+$ docker compose exec db psql -f /lab/xato.sql
+BEGIN
+psql:/lab/xato.sql:2: ERROR:  new row for relation "products" violates check constraint "products_stock_check"
+DETAIL:  Failing row contains (2, non, 400000, -2, t).
+ROLLBACK
+psql:/lab/xato.sql:3: ERROR:  current transaction is aborted, commands ignored until end of transaction block
+[exit 0]
+
+### reset
+$ docker compose exec db psql -f /lab/bozor.sql
+DROP TABLE
+CREATE TABLE
+INSERT 0 4
+CREATE TABLE
+CREATE TABLE
+INSERT 0 3
+INSERT 0 4
+[exit 0]
+
+### txfail
+$ go run .
+0 ERROR: new row for relation "products" violates check constraint "products_stock_check" (SQLSTATE 23514)
+[exit 0]
+
+### holat3
+$ docker compose exec db psql -c SELECT id, customer FROM orders WHERE id > 3 -c SELECT order_id, product_id, quantity FROM order_items WHERE order_id > 3
+ id | customer 
+----+----------
+(0 rows)
+
+ order_id | product_id | quantity 
+----------+------------+----------
+(0 rows)
+
+[exit 0]
+
+### holat4
+$ docker compose exec db psql -c SELECT id, name, stock FROM products WHERE id <= 2 ORDER BY id
+ id | name | stock 
+----+------+-------
+  1 | olma |    40
+  2 | non  |     3
+(2 rows)
+
+[exit 0]
+
+### txok
+$ go run .
+5 <nil>
+[exit 0]
+
+### holat5
+$ docker compose exec db psql -c SELECT id, customer FROM orders WHERE id > 3 -c SELECT order_id, product_id, quantity, unit_price FROM order_items WHERE order_id > 3
+ id | customer 
+----+----------
+  5 | Aziza
+(1 row)
+
+ order_id | product_id | quantity | unit_price 
+----------+------------+----------+------------
+        5 |          1 |        2 |    1200000
+        5 |          2 |        1 |     400000
+(2 rows)
+
+[exit 0]
+
+### holat6
+$ docker compose exec db psql -c SELECT id, name, stock FROM products WHERE id <= 2 ORDER BY id
+ id | name | stock 
+----+------+-------
+  1 | olma |    38
+  2 | non  |     2
+(2 rows)
+
+[exit 0]
+
+### reset2
+$ docker compose exec db psql -f /lab/bozor.sql
+DROP TABLE
+CREATE TABLE
+INSERT 0 4
+CREATE TABLE
+CREATE TABLE
+INSERT 0 3
+INSERT 0 4
+[exit 0]
+
+### mistake
+$ go run .
+0 ERROR: insert or update on table "order_items" violates foreign key constraint "order_items_order_id_fkey" (SQLSTATE 23503)
+[exit 0]
+
+### holat7
+$ docker compose exec db psql -c SELECT id, name, stock FROM products WHERE id <= 2 ORDER BY id
+ id | name | stock 
+----+------+-------
+  1 | olma |    40
+  2 | non  |     3
+(2 rows)
+
+[exit 0]
+
+### reset3
+$ docker compose exec db psql -f /lab/bozor.sql
+DROP TABLE
+CREATE TABLE
+INSERT 0 4
+CREATE TABLE
+CREATE TABLE
+INSERT 0 3
+INSERT 0 4
+[exit 0]
+
+### pgerr
+$ go run .
+23514 products_stock_check
+[exit 0]
+
+### down
+$ docker compose down -v
+ Container bozor-db-1 Stopping 
+ Container bozor-db-1 Stopped 
+ Container bozor-db-1 Removing 
+ Container bozor-db-1 Removed 
+ Volume bozor_pgdata Removing 
+ Network bozor_default Removing 
+ Volume bozor_pgdata Removed 
+ Network bozor_default Removed 
+[exit 0]
