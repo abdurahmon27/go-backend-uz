@@ -1,0 +1,102 @@
+### 1 GET /products/1
+> GET /products/1 HTTP/1.1
+> Host: localhost:8765
+> User-Agent: curl/8.22.0
+> Accept: */*
+> 
+< HTTP/1.1 200 OK
+< Content-Type: application/json
+< Date: Fri, 27 Nov 2026 06:37:46 GMT
+< Content-Length: 49
+< 
+{"id":1,"name":"olma","price":1200000,"stock":40}
+
+### 2 nc
+HTTP/1.1 200 OK
+Content-Type: application/json
+Date: Fri, 27 Nov 2026 06:37:46 GMT
+Content-Length: 49
+Connection: close
+
+{"id":1,"name":"olma","price":1200000,"stock":40}
+### 3 GET 99
+> GET /products/99 HTTP/1.1
+> Host: localhost:8765
+> User-Agent: curl/8.22.0
+> Accept: */*
+> 
+< HTTP/1.1 404 Not Found
+< Content-Type: application/json
+< Date: Fri, 27 Nov 2026 06:37:46 GMT
+< Content-Length: 30
+< 
+{"error":"mahsulot topilmadi"}
+
+### 4 POST ok
+> POST /products HTTP/1.1
+> Host: localhost:8765
+> User-Agent: curl/8.22.0
+> Accept: */*
+> Content-Type: application/json
+> Content-Length: 43
+> 
+< HTTP/1.1 201 Created
+< Content-Type: application/json
+< Location: /products/3
+< Date: Fri, 27 Nov 2026 06:37:46 GMT
+< Content-Length: 50
+< 
+{"id":3,"name":"oʻrik","price":3500000,"stock":5}
+
+### 5 POST no -H
+> POST /products HTTP/1.1
+> Host: localhost:8765
+> User-Agent: curl/8.22.0
+> Accept: */*
+> Content-Length: 43
+> Content-Type: application/x-www-form-urlencoded
+> 
+< HTTP/1.1 415 Unsupported Media Type
+< Content-Type: application/json
+< Date: Fri, 27 Nov 2026 06:37:46 GMT
+< Content-Length: 57
+< 
+{"error":"Content-Type application/json boʻlishi kerak"}
+
+### 6 POST fix
+> POST /products HTTP/1.1
+> Host: localhost:8765
+> User-Agent: curl/8.22.0
+> Accept: */*
+> Content-Type: application/json
+> Content-Length: 43
+> 
+< HTTP/1.1 201 Created
+< Content-Type: application/json
+< Location: /products/4
+< Date: Fri, 27 Nov 2026 06:37:46 GMT
+< Content-Length: 50
+< 
+{"id":4,"name":"oʻrik","price":3500000,"stock":5}
+
+### 7 405
+> DELETE /products/1 HTTP/1.1
+> Host: localhost:8765
+> User-Agent: curl/8.22.0
+> Accept: */*
+> 
+< HTTP/1.1 405 Method Not Allowed
+< Allow: GET, HEAD
+< Content-Type: text/plain; charset=utf-8
+< X-Content-Type-Options: nosniff
+< Date: Fri, 27 Nov 2026 06:37:46 GMT
+< Content-Length: 19
+< 
+Method Not Allowed
+
+### 8 nc without Connection: close (timeout 3)
+HTTP/1.1 200 OK
+Content-Type: application/json
+Date: Fri, 27 Nov 2026 06:37:46 GMT
+Content-Length: 49
+exit 124
