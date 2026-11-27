@@ -1,0 +1,225 @@
+
+### up
+$ docker compose up -d --wait
+ Volume bozor_pgdata Creating 
+ Network bozor_default Creating 
+ Volume bozor_pgdata Creating 
+ Network bozor_default Creating 
+ Volume bozor_pgdata Created 
+ Volume bozor_pgdata Created 
+ Network bozor_default Created 
+ Network bozor_default Created 
+ Container bozor-db-1 Creating 
+ Container bozor-db-1 Created 
+ Container bozor-db-1 Starting 
+ Container bozor-db-1 Started 
+ Container bozor-db-1 Waiting 
+ Container bozor-db-1 Healthy 
+[exit 0]
+
+### bozor
+$ docker compose exec db psql -f /lab/bozor.sql
+psql:/lab/bozor.sql:1: NOTICE:  table "coupons" does not exist, skipping
+psql:/lab/bozor.sql:1: NOTICE:  table "order_items" does not exist, skipping
+psql:/lab/bozor.sql:1: NOTICE:  table "orders" does not exist, skipping
+DROP TABLE
+psql:/lab/bozor.sql:1: NOTICE:  table "products" does not exist, skipping
+CREATE TABLE
+INSERT 0 4
+CREATE TABLE
+CREATE TABLE
+INSERT 0 3
+INSERT 0 4
+CREATE TABLE
+INSERT 0 1
+[exit 0]
+
+### qoldiq1
+$ docker compose exec db psql -c UPDATE products SET stock = 1 WHERE id = 4
+UPDATE 1
+[exit 0]
+
+### qoldiq2
+$ docker compose exec db psql -c SELECT name, stock FROM products WHERE id = 4
+ name  | stock 
+-------+-------
+ oʻrik |     1
+(1 row)
+
+[exit 0]
+
+### seans-naive
+UPDATE 1
+stock 
+-------
+     1
+(1 row)
+
+[A] BEGIN;
+BEGIN
+
+[A] SELECT stock FROM products WHERE id = 4;
+ stock 
+-------
+     1
+(1 row)
+
+[B] BEGIN;
+BEGIN
+
+[B] SELECT stock FROM products WHERE id = 4;
+ stock 
+-------
+     1
+(1 row)
+
+[A] UPDATE products SET stock = 0 WHERE id = 4;
+UPDATE 1
+
+[A] COMMIT;
+COMMIT
+
+[B] UPDATE products SET stock = 0 WHERE id = 4;
+UPDATE 1
+
+[B] COMMIT;
+COMMIT
+
+[A] SELECT stock FROM products WHERE id = 4;
+ stock 
+-------
+     0
+(1 row)
+
+oxirgi: stock 
+-------
+     0
+(1 row)
+
+### test-naive
+$ go test
+--- FAIL: TestConcurrentBuyers (0.09s)
+    --- FAIL: TestConcurrentBuyers/Buy (0.09s)
+        store_test.go:172: 1-urinish: 20 xaridor, omborda 5 ta: 20 tasiga "olindi" dedik; kutilgan: 5
+FAIL
+exit status 1
+FAIL	github.com/abdurahmon27/bozor	0.126s
+[exit 1]
+
+### seans-shartli
+UPDATE 1
+stock 
+-------
+     1
+(1 row)
+
+[A] BEGIN;
+BEGIN
+
+[A] UPDATE products SET stock = stock - 1 WHERE id = 4 AND stock >= 1;
+UPDATE 1
+
+[B] UPDATE products SET stock = stock - 1 WHERE id = 4 AND stock >= 1;
+(2 soniya javob yoʻq: kutyapti = True)
+
+[A] COMMIT;
+COMMIT
+
+[B] (kutgan buyruqning javobi)
+UPDATE 0
+
+oxirgi: stock 
+-------
+     0
+(1 row)
+
+### test-shartli
+$ go test
+PASS
+ok  	github.com/abdurahmon27/bozor	0.227s
+[exit 0]
+
+### seans-forupdate
+UPDATE 1
+stock 
+-------
+     1
+(1 row)
+
+[A] BEGIN;
+BEGIN
+
+[B] BEGIN;
+BEGIN
+
+[A] SELECT stock FROM products WHERE id = 4 FOR UPDATE;
+ stock 
+-------
+     1
+(1 row)
+
+[B] SELECT stock FROM products WHERE id = 4 FOR UPDATE;
+(2 soniya javob yoʻq: kutyapti = True)
+
+[A] UPDATE products SET stock = 0 WHERE id = 4;
+UPDATE 1
+
+[A] COMMIT;
+COMMIT
+
+[B] (kutgan buyruqning javobi)
+ stock 
+-------
+     0
+(1 row)
+
+[B] COMMIT;
+COMMIT
+
+oxirgi: stock 
+-------
+     0
+(1 row)
+
+### test-locked
+$ go test
+PASS
+ok  	github.com/abdurahmon27/bozor	0.381s
+[exit 0]
+
+### test-xato
+$ go test
+--- FAIL: TestConcurrentBuyers (0.30s)
+    --- FAIL: TestConcurrentBuyers/BuyLocked (0.12s)
+        store_test.go:172: 1-urinish: 20 xaridor, omborda 5 ta: 20 tasiga "olindi" dedik; kutilgan: 5
+FAIL
+exit status 1
+FAIL	github.com/abdurahmon27/bozor	0.381s
+[exit 1]
+
+### starter
+$ go test
+--- FAIL: TestUseCouponConcurrent (0.06s)
+    coupon_test.go:61: 1-urinish: promo-kod 3 marta, 10 kishi bir vaqtda: 10 tasiga oʻtdi; kutilgan: 3 (TASK.md)
+FAIL
+exit status 1
+FAIL	github.com/abdurahmon27/bozor	0.556s
+[exit 1]
+
+### solution
+$ go test
+PASS
+ok  	github.com/abdurahmon27/bozor	0.654s
+[exit 0]
+
+### down
+$ docker compose down -v
+ Container bozor-db-1 Stopping 
+ Container bozor-db-1 Stopped 
+ Container bozor-db-1 Removing 
+ Container bozor-db-1 Removed 
+ Volume bozor_pgdata Removing 
+ Network bozor_default Removing 
+ Volume bozor_pgdata Removed 
+ Network bozor_default Removed 
+[exit 0]
