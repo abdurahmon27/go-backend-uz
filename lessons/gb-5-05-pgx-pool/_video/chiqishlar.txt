@@ -1,0 +1,152 @@
+
+### up
+$ docker compose up -d --wait
+ Volume bozor_pgdata Creating 
+ Volume bozor_pgdata Creating 
+ Network bozor_default Creating 
+ Network bozor_default Creating 
+ Volume bozor_pgdata Created 
+ Volume bozor_pgdata Created 
+ Network bozor_default Created 
+ Network bozor_default Created 
+ Container bozor-db-1 Creating 
+ Container bozor-db-1 Created 
+ Container bozor-db-1 Starting 
+ Container bozor-db-1 Started 
+ Container bozor-db-1 Waiting 
+ Container bozor-db-1 Healthy 
+[exit 0]
+
+### jadval
+$ docker compose exec db psql -f /lab/products.sql -f /lab/seed.sql -f /lab/orders.sql -f /lab/orders_seed.sql
+DROP TABLE
+psql:/lab/products.sql:1: NOTICE:  table "products" does not exist, skipping
+CREATE TABLE
+INSERT 0 4
+CREATE TABLE
+CREATE TABLE
+INSERT 0 3
+INSERT 0 4
+[exit 0]
+
+### select
+$ docker compose exec db psql -c SELECT id, name, price, stock FROM products WHERE active ORDER BY id
+ id | name  |  price  | stock 
+----+-------+---------+-------
+  1 | olma  | 1200000 |    40
+  2 | non   |  400000 |     3
+  3 | choy  | 2500000 |     8
+  4 | oʻrik | 3500000 |     2
+(4 rows)
+
+[exit 0]
+
+### tidy
+$ go mod tidy
+go: finding module for package github.com/jackc/pgx/v5/pgxpool
+go: found github.com/jackc/pgx/v5/pgxpool in github.com/jackc/pgx/v5 v5.13.0
+[exit 0]
+
+### go.mod
+module github.com/abdurahmon27/bozor
+
+go 1.27
+
+require github.com/jackc/pgx/v5 v5.13.0
+
+require (
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/puddle/v2 v2.2.3 // indirect
+	golang.org/x/sync v0.22.0 // indirect
+	golang.org/x/text v0.41.0 // indirect
+)
+
+### get1
+$ go run .
+1 olma 1200000 40
+[exit 0]
+
+### get99
+$ go run .
+xato: no rows in result set
+exit status 1
+[exit 1]
+
+### get99b
+$ go run .
+xato: mahsulot topilmadi
+exit status 1
+[exit 1]
+
+### list
+$ go run .
+1 olma 1200000 40
+1 olma 1200000 40
+2 non 400000 3
+3 choy 2500000 8
+4 oʻrik 3500000 2
+3600000 <nil>
+0 <nil>
+[exit 0]
+
+### sumbug
+$ go run .
+1 olma 1200000 40
+1 olma 1200000 40
+2 non 400000 3
+3 choy 2500000 8
+4 oʻrik 3500000 2
+3600000 <nil>
+0 can't scan into dest[0] (col: sum): cannot scan NULL into *int64
+[exit 0]
+
+### sumfix
+$ go run .
+1 olma 1200000 40
+1 olma 1200000 40
+2 non 400000 3
+3 choy 2500000 8
+4 oʻrik 3500000 2
+3600000 <nil>
+0 <nil>
+[exit 0]
+
+### slow
+$ go run .
+xato: timeout: context deadline exceeded 2s
+[exit 0]
+
+### leak
+$ export DATABASE_URL='postgres://bozor:bozor-lab@localhost:5475/bozor?pool_max_conns=1'; go run ./leak
+1 olma <nil> 0s
+2  context deadline exceeded 2s
+[exit 0]
+
+### leakfixed
+$ export DATABASE_URL='postgres://bozor:bozor-lab@localhost:5475/bozor?pool_max_conns=1'; go run ./leak
+1 olma <nil> 0s
+2 olma <nil> 0s
+[exit 0]
+
+### lazy
+$ DATABASE_URL=postgres://bozor:bozor-lab@localhost:5499/bozor go run .
+xato: failed to connect to `user=bozor database=bozor`:
+	127.0.0.1:5499 (localhost): dial error: dial tcp 127.0.0.1:5499: connect: connection refused
+	[::1]:5499 (localhost): dial error: dial tcp [::1]:5499: connect: connection refused
+	127.0.0.1:5499 (localhost): dial error: dial tcp 127.0.0.1:5499: connect: connection refused
+	[::1]:5499 (localhost): dial error: dial tcp [::1]:5499: connect: connection refused
+exit status 1
+[exit 1]
+
+### down
+$ docker compose down -v
+ Container bozor-db-1 Stopping 
+ Container bozor-db-1 Stopped 
+ Container bozor-db-1 Removing 
+ Container bozor-db-1 Removed 
+ Volume bozor_pgdata Removing 
+ Network bozor_default Removing 
+ Volume bozor_pgdata Removed 
+ Network bozor_default Removed 
+[exit 0]
