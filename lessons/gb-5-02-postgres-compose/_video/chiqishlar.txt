@@ -1,0 +1,116 @@
+
+$ docker compose up -d
+[+] up 3/3
+ ✔ Network bozor_default Created                                            0.0s
+ ✔ Volume bozor_pgdata   Created                                            0.0s
+ ✔ Container bozor-db-1  Started                                            0.3s
+
+$ docker compose logs db | tail -n 1
+db-1  | 2026-11-27 12:42:38.895 UTC [1] LOG:  database system is ready to accept connections
+
+$ docker compose exec db psql -U bozor -d bozor -c '\dt'
+Did not find any tables.
+
+$ docker compose exec db psql -U bozor -d bozor < bozor.sql
+cannot attach stdin to a TTY-enabled container because stdin is not a terminal
+
+$ docker compose exec -T db psql -U bozor -d bozor < bozor.sql
+CREATE TABLE
+INSERT 0 3
+
+$ docker compose exec db psql -U bozor -d bozor -c '\dt'
+          List of tables
+ Schema |   Name   | Type  | Owner 
+--------+----------+-------+-------
+ public | products | table | bozor
+(1 row)
+
+
+$ docker compose exec db psql -U bozor -d bozor -c '\d products'
+              Table "public.products"
+ Column |  Type   | Collation | Nullable | Default 
+--------+---------+-----------+----------+---------
+ id     | bigint  |           | not null | 
+ name   | text    |           | not null | 
+ price  | bigint  |           | not null | 
+ stock  | integer |           | not null | 
+Indexes:
+    "products_pkey" PRIMARY KEY, btree (id)
+
+
+$ docker compose exec db psql -U bozor -d bozor -c 'SELECT name FROM products'
+ name  
+-------
+ olma
+ non
+ oʻrik
+(3 rows)
+
+
+$ docker compose down
+[+] down 2/2
+ ✔ Container bozor-db-1  Removed                                            0.3s
+ ✔ Network bozor_default Removed                                            0.1s
+
+$ docker compose up -d
+[+] up 2/2
+ ✔ Network bozor_default Created                                            0.1s
+ ✔ Container bozor-db-1  Started                                            0.3s
+
+$ docker compose exec db psql -U bozor -d bozor -c 'SELECT name FROM products'
+ name  
+-------
+ olma
+ non
+ oʻrik
+(3 rows)
+
+
+$ docker compose down -v
+[+] down 3/3
+ ✔ Container bozor-db-1  Removed                                            0.2s
+ ✔ Volume bozor_pgdata   Removed                                            0.0s
+ ✔ Network bozor_default Removed                                            0.1s
+
+$ docker compose up -d
+[+] up 3/3
+ ✔ Network bozor_default Created                                            0.0s
+ ✔ Volume bozor_pgdata   Created                                            0.0s
+ ✔ Container bozor-db-1  Started                                            0.2s
+
+$ docker compose exec db psql -U bozor -d bozor -c '\dt'
+Did not find any tables.
+
+$ docker compose down -v
+[+] down 3/3
+ ✔ Container bozor-db-1  Removed                                            0.3s
+ ✔ Volume bozor_pgdata   Removed                                            0.0s
+ ✔ Network bozor_default Removed                                            0.1s
+
+$ docker compose up -d
+[+] up 2/3
+ ✔ Network bozor_default Created                                            0.1s
+ ✔ Volume bozor_pgdata   Created                                            0.0s
+ ⠦ Container bozor-db-1  Starting                                           0.5s
+Error response from daemon: failed to set up container networking: driver failed programming external connectivity on endpoint bozor-db-1 (923b9304063a4f5236fe5563dc25ebb40fcf44161bf0be42d6c7749efefc12c1): failed to bind host port 127.0.0.1:5432/tcp: address already in use
+
+$ docker compose down -v
+[+] down 3/3
+ ✔ Container bozor-db-1  Removed                                            0.0s
+ ✔ Volume bozor_pgdata   Removed                                            0.0s
+ ✔ Network bozor_default Removed                                            0.1s
+
+$ docker compose up -d
+[+] up 3/3
+ ✔ Network bozor_default Created                                            0.1s
+ ✔ Volume bozor_pgdata   Created                                            0.0s
+ ✔ Container bozor-db-1  Started                                            0.3s
+
+$ psql postgres://bozor:bozor@127.0.0.1:5482/bozor -c '\conninfo'
+You are connected to database "bozor" as user "bozor" on host "127.0.0.1" at port "5482".
+
+$ docker compose down -v
+[+] down 3/3
+ ✔ Container bozor-db-1  Removed                                            0.4s
+ ✔ Network bozor_default Removed                                            0.1s
+ ✔ Volume bozor_pgdata   Removed                                            0.0s

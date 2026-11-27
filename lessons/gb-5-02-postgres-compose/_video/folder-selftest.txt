@@ -1,0 +1,27 @@
+$ gofmt -l . solution && go vet ./... && (cd solution && go vet ./...)
+(no output: clean)
+
+--- starter (docker compose up -d; bozor.sql yuklangan):
+$ go test . ; echo "starter exit $?"
+--- FAIL: TestIkkinchiServis (0.15s)
+    tekshiruv_test.go:74: compose.yaml'da db-test servisi yoʻq: db blokini nusxalab, nomini db-test qiling va TASK.md'dagi 4 narsani oʻzgartiring
+--- FAIL: TestTestBazaIshlayapti (0.12s)
+    tekshiruv_test.go:121: db-test servisiga psql bilan ulanib boʻlmadi (exit status 1): oldin docker compose up -d
+        service "db-test" is not running
+FAIL
+FAIL	github.com/abdurahmon27/bozor	0.600s
+FAIL
+starter exit 1
+
+--- solution:
+CREATE TABLE
+INSERT 0 3
+$ cd solution && go test ./...
+ok  	github.com/abdurahmon27/bozor	1.159s
+solution exit 0
+
+--- temp copy (starter + solution/compose.yaml + solution/*.go):
+CREATE TABLE
+INSERT 0 3
+ok  	github.com/abdurahmon27/bozor	1.846s
+copy exit 0

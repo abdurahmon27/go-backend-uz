@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: bozor
+      POSTGRES_PASSWORD: bozor
+      POSTGRES_DB: bozor
+    ports:
+      - "127.0.0.1:5482:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+
+volumes:
+  pgdata:

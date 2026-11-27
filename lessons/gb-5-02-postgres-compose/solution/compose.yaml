@@ -1,0 +1,27 @@
+name: gb502-solution # papka nomi "solution" boshqa darslarning solution/ papkalari bilan toʻqnashmasligi uchun
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: bozor
+      POSTGRES_PASSWORD: bozor
+      POSTGRES_DB: bozor
+    ports:
+      - "127.0.0.1:5482:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+
+  db-test:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: bozor
+      POSTGRES_PASSWORD: bozor
+      POSTGRES_DB: bozor_test
+    ports:
+      - "127.0.0.1:5483:5432"
+    volumes:
+      - pgtest:/var/lib/postgresql
+
+volumes:
+  pgdata:
+  pgtest:
