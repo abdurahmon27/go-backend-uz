@@ -1,0 +1,6 @@
+-- VAZIFA (TASK.md, 2-qadam): quyidagi SELECT'ni toʻldiring (izohni olib tashlang):
+-- SELECT name, price
+-- FROM products
+-- WHERE ...
+-- ORDER BY ...
+-- LIMIT ...;

@@ -1,0 +1,177 @@
+$ docker compose up -d --wait
+ Network bozor_default Creating 
+ Volume bozor_pgdata Creating 
+ Volume bozor_pgdata Creating 
+ Network bozor_default Creating 
+ Volume bozor_pgdata Created 
+ Volume bozor_pgdata Created 
+ Network bozor_default Created 
+ Network bozor_default Created 
+ Container bozor-db-1 Creating 
+ Container bozor-db-1 Created 
+ Container bozor-db-1 Starting 
+ Container bozor-db-1 Started 
+ Container bozor-db-1 Waiting 
+ Container bozor-db-1 Healthy 
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c \dt
+Did not find any tables.
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -f /lab/products.sql
+CREATE TABLE
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c \dt
+          List of tables
+ Schema |   Name   | Type  | Owner 
+--------+----------+-------+-------
+ public | products | table | bozor
+(1 row)
+
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -f /lab/seed.sql
+INSERT 0 4
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c SELECT * FROM products
+ id | name  |  price  | stock | active 
+----+-------+---------+-------+--------
+  1 | olma  | 1200000 |    40 | t
+  2 | non   |  400000 |     3 | t
+  3 | choy  | 2500000 |     8 | t
+  4 | oʻrik | 3500000 |     2 | t
+(4 rows)
+
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c SELECT name, price FROM products
+ name  |  price  
+-------+---------
+ olma  | 1200000
+ non   |  400000
+ choy  | 2500000
+ oʻrik | 3500000
+(4 rows)
+
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c SELECT name, price FROM products WHERE stock < 5
+ name  |  price  
+-------+---------
+ non   |  400000
+ oʻrik | 3500000
+(2 rows)
+
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c SELECT name, price FROM products WHERE stock < 5 AND price > 1000000
+ name  |  price  
+-------+---------
+ oʻrik | 3500000
+(1 row)
+
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c SELECT name, price FROM products WHERE stock < 5 ORDER BY price DESC
+ name  |  price  
+-------+---------
+ oʻrik | 3500000
+ non   |  400000
+(2 rows)
+
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c SELECT name, price FROM products ORDER BY price DESC LIMIT 2
+ name  |  price  
+-------+---------
+ oʻrik | 3500000
+ choy  | 2500000
+(2 rows)
+
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c SELECT name FROM products WHERE name = "olma"
+ERROR:  column "olma" does not exist
+LINE 1: SELECT name FROM products WHERE name = "olma"
+                                               ^
+(chiqish kodi: 1)
+
+$ docker compose exec db psql -c SELECT name FROM products WHERE name = 'olma'
+ name 
+------
+ olma
+(1 row)
+
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c INSERT INTO products (name, price) VALUES ('sut', 900000) RETURNING id
+ id 
+----
+  5
+(1 row)
+
+INSERT 0 1
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c INSERT INTO products (name, price) VALUES ('', -5) RETURNING *
+ id | name | price | stock | active 
+----+------+-------+-------+--------
+  6 |      |    -5 |       | 
+(1 row)
+
+INSERT 0 1
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -f /lab/products.sql
+DROP TABLE
+CREATE TABLE
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -f /lab/seed.sql
+INSERT 0 4
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c INSERT INTO products (name, price) VALUES ('', -5)
+ERROR:  new row for relation "products" violates check constraint "products_price_check"
+DETAIL:  Failing row contains (5, , -5, 0, t).
+(chiqish kodi: 1)
+
+$ docker compose exec db psql -c INSERT INTO products (name, price) VALUES ('choy', 2600000)
+ERROR:  duplicate key value violates unique constraint "products_name_key"
+DETAIL:  Key (name)=(choy) already exists.
+(chiqish kodi: 1)
+
+$ docker compose exec db psql -c INSERT INTO products (name, price) VALUES (NULL, 900000)
+ERROR:  null value in column "name" of relation "products" violates not-null constraint
+DETAIL:  Failing row contains (7, null, 900000, 0, t).
+(chiqish kodi: 1)
+
+$ docker compose exec db psql -c INSERT INTO products (name, price) VALUES ('sut', 900000) RETURNING id
+ id 
+----
+  8
+(1 row)
+
+INSERT 0 1
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c INSERT INTO products (name, price, stock) VALUES ('qand', 1100000, -1)
+ERROR:  new row for relation "products" violates check constraint "products_stock_check"
+DETAIL:  Failing row contains (9, qand, 1100000, -1, t).
+(chiqish kodi: 1)
+
+$ docker compose exec db psql -c SELECT * FROM products ORDER BY id
+ id | name  |  price  | stock | active 
+----+-------+---------+-------+--------
+  1 | olma  | 1200000 |    40 | t
+  2 | non   |  400000 |     3 | t
+  3 | choy  | 2500000 |     8 | t
+  4 | oʻrik | 3500000 |     2 | t
+  8 | sut   |  900000 |     0 | t
+(5 rows)
+
+(chiqish kodi: 0)
+
