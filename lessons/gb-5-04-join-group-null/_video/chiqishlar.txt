@@ -1,0 +1,182 @@
+$ docker compose up -d --wait
+ Network bozor_default Creating 
+ Volume bozor_pgdata Creating 
+ Volume bozor_pgdata Creating 
+ Network bozor_default Creating 
+ Volume bozor_pgdata Created 
+ Volume bozor_pgdata Created 
+ Network bozor_default Created 
+ Network bozor_default Created 
+ Container bozor-db-1 Creating 
+ Container bozor-db-1 Created 
+ Container bozor-db-1 Starting 
+ Container bozor-db-1 Started 
+ Container bozor-db-1 Waiting 
+ Container bozor-db-1 Healthy 
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -f /lab/products.sql
+CREATE TABLE
+INSERT 0 4
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -f /lab/orders.sql
+CREATE TABLE
+CREATE TABLE
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -f /lab/seed.sql
+INSERT 0 3
+INSERT 0 4
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES (99, 1, 1, 1200000)
+ERROR:  insert or update on table "order_items" violates foreign key constraint "order_items_order_id_fkey"
+DETAIL:  Key (order_id)=(99) is not present in table "orders".
+(chiqish kodi: 1)
+
+$ docker compose exec db psql -c SELECT * FROM orders
+ id | customer |       note        
+----+----------+-------------------
+  1 | Dilnoza  | 
+  2 | Jasur    | ertalab yetkazing
+  3 | Malika   | 
+(3 rows)
+
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c SELECT * FROM order_items
+ id | order_id | product_id | quantity | unit_price 
+----+----------+------------+----------+------------
+  1 |        1 |          1 |        2 |    1200000
+  2 |        1 |          2 |        3 |     400000
+  3 |        2 |          4 |        1 |    3500000
+  4 |        2 |          1 |        1 |    1200000
+(4 rows)
+
+(chiqish kodi: 0)
+
+-- sorov.sql:
+SELECT orders.customer, order_items.quantity
+FROM orders
+JOIN order_items ON order_items.order_id = orders.id;
+$ docker compose exec db psql -f /lab/sorov.sql
+ customer | quantity 
+----------+----------
+ Dilnoza  |        2
+ Dilnoza  |        3
+ Jasur    |        1
+ Jasur    |        1
+(4 rows)
+
+(chiqish kodi: 0)
+
+-- sorov.sql:
+SELECT orders.id, orders.customer,
+       SUM(order_items.quantity * order_items.unit_price) AS jami
+FROM orders
+JOIN order_items ON order_items.order_id = orders.id;
+$ docker compose exec db psql -f /lab/sorov.sql
+psql:/lab/sorov.sql:4: ERROR:  column "orders.id" must appear in the GROUP BY clause or be used in an aggregate function
+LINE 1: SELECT orders.id, orders.customer,
+               ^
+(chiqish kodi: 0)
+
+-- sorov.sql:
+SELECT orders.id, orders.customer,
+       SUM(order_items.quantity * order_items.unit_price) AS jami
+FROM orders
+JOIN order_items ON order_items.order_id = orders.id
+GROUP BY orders.id
+ORDER BY orders.id;
+$ docker compose exec db psql -f /lab/sorov.sql
+ id | customer |  jami   
+----+----------+---------
+  1 | Dilnoza  | 3600000
+  2 | Jasur    | 4700000
+(2 rows)
+
+(chiqish kodi: 0)
+
+-- sorov.sql:
+SELECT orders.customer, order_items.quantity
+FROM orders
+LEFT JOIN order_items ON order_items.order_id = orders.id;
+$ docker compose exec db psql -f /lab/sorov.sql
+ customer | quantity 
+----------+----------
+ Dilnoza  |        2
+ Dilnoza  |        3
+ Jasur    |        1
+ Jasur    |        1
+ Malika   |         
+(5 rows)
+
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c SELECT id, customer FROM orders WHERE note = NULL
+ id | customer 
+----+----------
+(0 rows)
+
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c SELECT id, customer FROM orders WHERE note IS NULL
+ id | customer 
+----+----------
+  1 | Dilnoza
+  3 | Malika
+(2 rows)
+
+(chiqish kodi: 0)
+
+-- sorov.sql:
+SELECT orders.id, orders.customer,
+       SUM(order_items.quantity * order_items.unit_price) AS jami
+FROM orders
+LEFT JOIN order_items ON order_items.order_id = orders.id
+GROUP BY orders.id
+ORDER BY orders.id;
+$ docker compose exec db psql -f /lab/sorov.sql
+ id | customer |  jami   
+----+----------+---------
+  1 | Dilnoza  | 3600000
+  2 | Jasur    | 4700000
+  3 | Malika   |        
+(3 rows)
+
+(chiqish kodi: 0)
+
+-- sorov.sql:
+SELECT orders.id, orders.customer,
+       COALESCE(SUM(order_items.quantity * order_items.unit_price), 0) AS jami
+FROM orders
+LEFT JOIN order_items ON order_items.order_id = orders.id
+GROUP BY orders.id
+ORDER BY orders.id;
+$ docker compose exec db psql -f /lab/sorov.sql
+ id | customer |  jami   
+----+----------+---------
+  1 | Dilnoza  | 3600000
+  2 | Jasur    | 4700000
+  3 | Malika   |       0
+(3 rows)
+
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c SELECT id, customer FROM orders WHERE note <> 'ertalab yetkazing'
+ id | customer 
+----+----------
+(0 rows)
+
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c SELECT id, customer FROM orders WHERE note IS DISTINCT FROM 'ertalab yetkazing'
+ id | customer 
+----+----------
+  1 | Dilnoza
+  3 | Malika
+(2 rows)
+
+(chiqish kodi: 0)
+

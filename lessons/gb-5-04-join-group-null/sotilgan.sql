@@ -1,0 +1,6 @@
+-- VAZIFA (TASK.md, 1-qadam): quyidagi SELECT'ni toʻldiring (izohni olib tashlang):
+-- SELECT products.name, ... AS sotilgan
+-- FROM products
+-- ... JOIN order_items ON ...
+-- GROUP BY ...
+-- ORDER BY ...;

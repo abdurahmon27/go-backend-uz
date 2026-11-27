@@ -1,0 +1,5 @@
+-- VAZIFA (TASK.md, 2-qadam): quyidagi SELECT'ni toʻldiring (izohni olib tashlang):
+-- SELECT id, customer
+-- FROM orders
+-- WHERE ...
+-- ORDER BY ...;
