@@ -1,0 +1,166 @@
+# GB-4.05 videodagi buyruqlarning toʻliq chiqishi (go1.27.4 linux/amd64, CGO_ENABLED=0, curl 8.22.0, 2026-11-27).
+# curl -s faqat progress satrini yashiradi (terminalda u baribir koʻrinmaydi). Date har safar boshqacha.
+# Vaqtinchalik papka yoʻli (…/bozor) «…/bozor» bilan, modul keshi yoʻli $GOMODCACHE bilan almashtirilgan.
+
+## 01-route (birinchi terminal: ./_video/run.sh 01-route go run .)
+### curl -si -X POST http://localhost:8765/products
+HTTP/1.1 405 Method Not Allowed
+Allow: GET, HEAD
+Content-Type: text/plain; charset=utf-8
+X-Content-Type-Options: nosniff
+Date: Fri, 27 Nov 2026 11:29:30 GMT
+Content-Length: 19
+
+Method Not Allowed
+
+### curl -si http://localhost:8765/narsalar
+HTTP/1.1 404 Not Found
+Content-Type: text/plain; charset=utf-8
+X-Content-Type-Options: nosniff
+Date: Fri, 27 Nov 2026 11:29:30 GMT
+Content-Length: 19
+
+404 page not found
+
+### curl -si http://localhost:8765/products/3
+HTTP/1.1 200 OK
+Content-Type: application/json
+Date: Fri, 27 Nov 2026 11:29:30 GMT
+Content-Length: 51
+
+{"id":3,"name":"oʻrik","price":3500000,"stock":5}
+
+### curl -si http://localhost:8765/products/99
+HTTP/1.1 404 Not Found
+Content-Type: text/plain; charset=utf-8
+X-Content-Type-Options: nosniff
+Date: Fri, 27 Nov 2026 11:29:30 GMT
+Content-Length: 19
+
+mahsulot topilmadi
+
+### curl -si http://localhost:8765/products/abc
+HTTP/1.1 400 Bad Request
+Content-Type: text/plain; charset=utf-8
+X-Content-Type-Options: nosniff
+Date: Fri, 27 Nov 2026 11:29:30 GMT
+Content-Length: 29
+
+id butun son boʻlishi kerak
+
+### curl -si http://localhost:8765/products/3/
+HTTP/1.1 404 Not Found
+Content-Type: text/plain; charset=utf-8
+X-Content-Type-Options: nosniff
+Date: Fri, 27 Nov 2026 11:29:30 GMT
+Content-Length: 19
+
+404 page not found
+
+### curl -sI http://localhost:8765/products/3
+HTTP/1.1 200 OK
+Content-Type: application/json
+Date: Fri, 27 Nov 2026 11:29:30 GMT
+Content-Length: 51
+
+
+(server stopped)
+bozor API: http://localhost:8765
+signal: interrupt
+(chiqish kodi: 1)
+
+## 02-test-direct: go test
+--- FAIL: TestProduct (0.00s)
+    handler_test.go:14: status 400, kutilgan 200: id butun son boʻlishi kerak
+FAIL
+exit status 1
+FAIL	github.com/abdurahmon27/bozor	0.002s
+(chiqish kodi: 1)
+
+## 03-test-mux: go test -v
+=== RUN   TestProduct
+--- PASS: TestProduct (0.00s)
+PASS
+ok  	github.com/abdurahmon27/bozor	0.002s
+(chiqish kodi: 0)
+
+## 04-catchall
+### curl -si http://localhost:8765/produkts/3
+HTTP/1.1 200 OK
+Date: Fri, 27 Nov 2026 11:29:33 GMT
+Content-Length: 10
+Content-Type: text/plain; charset=utf-8
+
+bozor API
+
+### curl -si http://localhost:8765/products/3
+HTTP/1.1 200 OK
+Content-Type: application/json
+Date: Fri, 27 Nov 2026 11:29:33 GMT
+Content-Length: 51
+
+{"id":3,"name":"oʻrik","price":3500000,"stock":5}
+
+### curl -si -X POST http://localhost:8765/products/3
+HTTP/1.1 200 OK
+Date: Fri, 27 Nov 2026 11:29:33 GMT
+Content-Length: 10
+Content-Type: text/plain; charset=utf-8
+
+bozor API
+
+(server stopped)
+bozor API: http://localhost:8765
+signal: interrupt
+(chiqish kodi: 1)
+
+## 05-exact
+### curl -si http://localhost:8765/produkts/3
+HTTP/1.1 404 Not Found
+Content-Type: text/plain; charset=utf-8
+X-Content-Type-Options: nosniff
+Date: Fri, 27 Nov 2026 11:29:34 GMT
+Content-Length: 19
+
+404 page not found
+
+### curl -si -X POST http://localhost:8765/products/3
+HTTP/1.1 405 Method Not Allowed
+Allow: GET, HEAD
+Content-Type: text/plain; charset=utf-8
+X-Content-Type-Options: nosniff
+Date: Fri, 27 Nov 2026 11:29:34 GMT
+Content-Length: 19
+
+Method Not Allowed
+
+### curl -si http://localhost:8765/
+HTTP/1.1 200 OK
+Date: Fri, 27 Nov 2026 11:29:34 GMT
+Content-Length: 10
+Content-Type: text/plain; charset=utf-8
+
+bozor API
+
+(server stopped)
+bozor API: http://localhost:8765
+signal: interrupt
+(chiqish kodi: 1)
+
+## 06-conflict: go run .
+panic: pattern "GET /products/{name}" (registered at …/bozor/main.go:82) conflicts with pattern "GET /products/{id}" (registered at …/bozor/main.go:81):
+	GET /products/{name} matches the same requests as GET /products/{id}
+
+goroutine 1 [running]:
+net/http.(*ServeMux).register(...)
+	$GOMODCACHE/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:2981
+net/http.(*ServeMux).HandleFunc(0x10101a3c9479768?, {0x6f75d0?, 0x75a3c961e2e8?}, 0x70?)
+	$GOMODCACHE/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:2955 +0x5e
+main.newMux()
+	…/bozor/main.go:82 +0xb0
+main.newServer(...)
+	…/bozor/main.go:90
+main.main()
+	…/bozor/main.go:96 +0x18
+exit status 2
+(chiqish kodi: 1)
