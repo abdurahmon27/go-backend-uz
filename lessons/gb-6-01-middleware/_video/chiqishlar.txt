@@ -1,0 +1,217 @@
+go version go1.27.4 linux/amd64
+curl 8.22.0 (x86_64-pc-linux-gnu) libcurl/8.22.0 GnuTLS/3.8.13 zlib/1.3.2 brotli/1.2.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.5 libssh2/1.11.1 nghttp2/1.69.0 ngtcp2/1.22.1 nghttp3/1.15.0 mit-krb5/1.22.2
+=== v0: middleware yoʻq, 13-mahsulotda panic
+$ curl -i localhost:8765/products/13
+curl: (52) Empty reply from server
+ [exit 52]
+$ curl -s localhost:8765/products/1
+{"id":1,"name":"olma","price":1200000,"stock":40}
+ [exit 0]
+--- server log:
+bozor API: http://localhost:8765
+2026/11/27 21:45:08 http: panic serving [::1]:55184: sinov: 13-mahsulotda bug
+goroutine 8 [running]:
+net/http.(*conn).serve.func1()
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:1963 +0xbb
+panic({0x9d53f8?, 0x719b40?})
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/runtime/panic.go:859 +0x125
+main.(*api).getProduct(0x254f65b82048, {0xa17198, 0x254f65b6c000}, 0x420f09?)
+	/…/bozor/cmd/api/handlers.go:57 +0x11c
+net/http.HandlerFunc.ServeHTTP(0x254f65bc8000?, {0xa17198?, 0x254f65b6c000?}, 0x623b9a?)
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:2362 +0x29
+net/http.(*ServeMux).ServeHTTP(0x482b99?, {0xa17198, 0x254f65b6c000}, 0x254f65b64000)
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:2927 +0x1cf
+net/http.serverHandler.ServeHTTP({0x254f65b32280?}, {0xa17198?, 0x254f65b6c000?}, 0x1?)
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:3440 +0x8e
+net/http.(*conn).serve(0x254f65b5e120, {0xa175a8, 0x254f65bac570})
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:2161 +0x6dc
+created by net/http.(*Server).Serve in goroutine 1
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:3608 +0x4fd
+
+=== v1: logRequests (status yoʻq)
+$ curl -s localhost:8765/products/1
+{"id":1,"name":"olma","price":1200000,"stock":40}
+ [exit 0]
+$ curl -s localhost:8765/products/99
+{"error":{"code":"not_found","message":"mahsulot 99: mahsulot topilmadi"}}
+ [exit 0]
+--- server log:
+bozor API: http://localhost:8765
+2026/11/27 21:45:09 GET "/products/1" 17.938µs
+2026/11/27 21:45:09 GET "/products/99" 157.936µs
+
+=== v2: statusRecorder, status: http.StatusOK
+$ curl -s localhost:8765/products/99
+{"error":{"code":"not_found","message":"mahsulot 99: mahsulot topilmadi"}}
+ [exit 0]
+$ curl -s localhost:8765/health
+ok
+ [exit 0]
+$ curl -s localhost:8765/narsalar
+404 page not found
+ [exit 0]
+--- server log:
+bozor API: http://localhost:8765
+2026/11/27 21:45:09 GET "/products/99" 404 162.28µs
+2026/11/27 21:45:09 GET "/health" 200 11.725µs
+2026/11/27 21:45:09 GET "/narsalar" 404 10.352µs
+
+=== v3: status boshlangʻich qiymatsiz
+$ curl -s localhost:8765/health
+ok
+ [exit 0]
+$ curl -s localhost:8765/products/99
+{"error":{"code":"not_found","message":"mahsulot 99: mahsulot topilmadi"}}
+ [exit 0]
+--- server log:
+bozor API: http://localhost:8765
+2026/11/27 21:45:09 GET "/health" 0 13.35µs
+2026/11/27 21:45:09 GET "/products/99" 404 140.397µs
+
+=== v4: notoʻgʻri tartib recoverPanic(logRequests(mux)), panic
+$ curl -i localhost:8765/products/13
+HTTP/1.1 500 Internal Server Error
+Content-Type: application/json
+Date: Fri, 27 Nov 2026 16:45:10 GMT
+Content-Length: 53
+
+{"error":{"code":"internal","message":"ichki xato"}}
+ [exit 0]
+--- server log:
+bozor API: http://localhost:8765
+2026/11/27 21:45:10 panic: sinov: 13-mahsulotda bug
+goroutine 5 [running]:
+runtime/debug.Stack()
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/runtime/debug/stack.go:26 +0x5e
+main.recoverPanic.func1.1()
+	/…/bozor/cmd/api/middleware.go:41 +0x46
+panic({0x9d6db0?, 0x71ab60?})
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/runtime/panic.go:859 +0x125
+main.(*api).getProduct(0x28208440a0b8, {0xa18c20, 0x2820842a8018}, 0x71cb80f0f4e0?)
+	/…/bozor/cmd/api/handlers.go:57 +0x11c
+net/http.HandlerFunc.ServeHTTP(0x2820844220c0?, {0xa18c20?, 0x2820842a8018?}, 0x71cb80f0c420?)
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:2362 +0x29
+net/http.(*ServeMux).ServeHTTP(0x18?, {0xa18c20, 0x2820842a8018}, 0x282084354000)
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:2927 +0x1cf
+main.logRequests.func1({0xa18cb0, 0x282084362000}, 0x282084354000)
+	/…/bozor/cmd/api/middleware.go:32 +0xd2
+net/http.HandlerFunc.ServeHTTP(0x282084457a58?, {0xa18cb0?, 0x282084362000?}, 0x282084457ab8?)
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:2362 +0x29
+main.recoverPanic.func1({0xa18cb0?, 0x282084362000?}, 0x9e5f00?)
+	/…/bozor/cmd/api/middleware.go:45 +0x63
+net/http.HandlerFunc.ServeHTTP(0x482b99?, {0xa18cb0?, 0x282084362000?}, 0x282084457af0?)
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:2362 +0x29
+net/http.serverHandler.ServeHTTP({0x282084352000?}, {0xa18cb0?, 0x282084362000?}, 0x1?)
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:3440 +0x8e
+net/http.(*conn).serve(0x28208434e000, {0xa190c0, 0x2820844173b0})
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:2161 +0x6dc
+created by net/http.(*Server).Serve in goroutine 1
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:3608 +0x4fd
+
+=== v5: yakuniy zanjir (starter), panic
+$ curl -i localhost:8765/products/13
+HTTP/1.1 500 Internal Server Error
+Content-Type: application/json
+X-Request-Id: ZNTHHUQNT2T72EFC7GLZFXVT5N
+Date: Fri, 27 Nov 2026 16:45:10 GMT
+Content-Length: 53
+
+{"error":{"code":"internal","message":"ichki xato"}}
+ [exit 0]
+--- server log:
+bozor API: http://localhost:8765
+2026/11/27 21:45:10 ZNTHHUQNT2T72EFC7GLZFXVT5N panic: sinov: 13-mahsulotda bug
+goroutine 9 [running]:
+runtime/debug.Stack()
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/runtime/debug/stack.go:26 +0x5e
+main.recoverPanic.func1.1()
+	/…/bozor/cmd/api/middleware.go:89 +0xbb
+panic({0x9d74e8?, 0x71ab70?})
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/runtime/panic.go:859 +0x125
+main.(*api).getProduct(0x2782e138a0e0, {0xa193f8, 0x2782e13983d8}, 0x0?)
+	/…/bozor/cmd/api/handlers.go:57 +0x11c
+net/http.HandlerFunc.ServeHTTP(0x2782e14480c0?, {0xa193f8?, 0x2782e13983d8?}, 0x7342cd90a420?)
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:2362 +0x29
+net/http.(*ServeMux).ServeHTTP(0x18?, {0xa193f8, 0x2782e13983d8}, 0x2782e146c3c0)
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:2927 +0x1cf
+main.recoverPanic.func1({0xa19428, 0x2782e13983c0}, 0x2782e146c3c0)
+	/…/bozor/cmd/api/middleware.go:96 +0xcd
+net/http.HandlerFunc.ServeHTTP(0x18?, {0xa19428?, 0x2782e13983c0?}, 0x6fc153?)
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:2362 +0x29
+main.logRequests.func1({0xa194b8, 0x2782e14885a0}, 0x2782e146c3c0)
+	/…/bozor/cmd/api/middleware.go:63 +0xd2
+net/http.HandlerFunc.ServeHTTP(0x2782e1445620?, {0xa194b8?, 0x2782e14885a0?}, 0x2782e13a4300?)
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:2362 +0x29
+main.requestID.func1({0xa194b8, 0x2782e14885a0}, 0x2782e146c3c0)
+	/…/bozor/cmd/api/middleware.go:32 +0x87
+net/http.HandlerFunc.ServeHTTP(0x482b99?, {0xa194b8?, 0x2782e14885a0?}, 0x2782e1475af0?)
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:2362 +0x29
+net/http.serverHandler.ServeHTTP({0x2782e143a4c0?}, {0xa194b8?, 0x2782e14885a0?}, 0x1?)
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:3440 +0x8e
+net/http.(*conn).serve(0x2782e1466360, {0xa198c8, 0x2782e14453b0})
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:2161 +0x6dc
+created by net/http.(*Server).Serve in goroutine 1
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:3608 +0x4fd
+2026/11/27 21:45:10 ZNTHHUQNT2T72EFC7GLZFXVT5N GET "/products/13" 500 225.507µs
+
+=== v6: yakuniy zanjir (starter), panic qatori olib tashlangan
+$ curl -i localhost:8765/products/1
+HTTP/1.1 200 OK
+Content-Type: application/json
+X-Request-Id: PSMRYC7RDXZLVANB6OJ3JP6DSW
+Date: Fri, 27 Nov 2026 16:45:11 GMT
+Content-Length: 50
+
+{"id":1,"name":"olma","price":1200000,"stock":40}
+ [exit 0]
+$ curl -s localhost:8765/products/99
+{"error":{"code":"not_found","message":"mahsulot 99: mahsulot topilmadi"}}
+ [exit 0]
+$ curl -s localhost:8765/products/1%0A2026/11/27%2021:00:00%20soxta-qator
+404 page not found
+ [exit 0]
+--- server log:
+bozor API: http://localhost:8765
+2026/11/27 21:45:11 PSMRYC7RDXZLVANB6OJ3JP6DSW GET "/products/1" 200 21.958µs
+2026/11/27 21:45:11 5ZHAFJ6SILKQMS3XPT7K3LV6V7 GET "/products/99" 404 169.268µs
+2026/11/27 21:45:11 322Q3G3WU6NE5N3RTLIGUN66TC GET "/products/1\n2026/11/27 21:00:00 soxta-qator" 404 33.138µs
+
+=== v7: yakuniy middleware.go, yoʻl %s bilan (log injection)
+$ curl -s localhost:8765/products/1%0A2026/11/27%2021:00:00%20soxta-qator
+404 page not found
+ [exit 0]
+--- server log:
+bozor API: http://localhost:8765
+2026/11/27 21:45:11 6ETS6UDWEJUSLDW2LUE74Q3I3H GET /products/1
+2026/11/27 21:00:00 soxta-qator 404 13.918µs
+
+=== testlar
+--- FAIL: TestVazifaRequireJSON (0.00s)
+    tekshiruv_test.go:33: requireJSON: POST, Content-Type "" → status 204 (soʻrov next'ga oʻtib ketdi), kutilgan 415 (http.StatusUnsupportedMediaType). requireJSON hali yozilmagan boʻlishi mumkin: TASK.md, 1-qadam
+--- FAIL: TestVazifaZanjir (0.00s)
+    tekshiruv_test.go:57: newHandler: POST /products, Content-Type text/plain → 201, kutilgan 415: requireJSON'ni newHandler zanjiriga qoʻshing (TASK.md, 1-qadam)
+FAIL
+FAIL	github.com/abdurahmon27/bozor/cmd/api	0.003s
+ok  	github.com/abdurahmon27/bozor/cmd/bozor	(cached)
+ok  	github.com/abdurahmon27/bozor/internal/store	(cached)
+FAIL
+starter exit 1
+ok  	github.com/abdurahmon27/bozor/cmd/api	0.004s
+ok  	github.com/abdurahmon27/bozor/cmd/bozor	(cached)
+ok  	github.com/abdurahmon27/bozor/internal/store	(cached)
+rc 0
+
+=== testlar (qayta: tekshiruv xabari yangilangandan keyin)
+--- FAIL: TestVazifaRequireJSON (0.00s)
+    tekshiruv_test.go:33: requireJSON: POST, Content-Type "" → status 204 (soʻrov next'ga oʻtib ketdi), kutilgan 415 (http.StatusUnsupportedMediaType). requireJSON hali yozilmagan boʻlishi mumkin: TASK.md, 1-qadam
+--- FAIL: TestVazifaZanjir (0.00s)
+    tekshiruv_test.go:57: newHandler: POST /products, Content-Type text/plain → 201, kutilgan 415: requireJSON'ni ulang — newHandler zanjiriga yoki newMux'dagi POST route'larga (TASK.md, 1-qadam)
+FAIL
+FAIL	github.com/abdurahmon27/bozor/cmd/api	0.004s
+ok  	github.com/abdurahmon27/bozor/cmd/bozor	0.035s
+ok  	github.com/abdurahmon27/bozor/internal/store	0.210s
+FAIL
+starter exit 1
+ok  	github.com/abdurahmon27/bozor/cmd/api	0.003s
+ok  	github.com/abdurahmon27/bozor/cmd/bozor	0.029s
+ok  	github.com/abdurahmon27/bozor/internal/store	0.210s
