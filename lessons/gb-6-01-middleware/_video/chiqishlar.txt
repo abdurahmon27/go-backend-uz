@@ -112,54 +112,54 @@ created by net/http.(*Server).Serve in goroutine 1
 $ curl -i localhost:8765/products/13
 HTTP/1.1 500 Internal Server Error
 Content-Type: application/json
-X-Request-Id: ZNTHHUQNT2T72EFC7GLZFXVT5N
-Date: Fri, 27 Nov 2026 16:45:10 GMT
+X-Request-Id: MAOQBQTEGOUTSSQMUITMOFMQJG
+Date: Fri, 27 Nov 2026 17:10:53 GMT
 Content-Length: 53
 
 {"error":{"code":"internal","message":"ichki xato"}}
  [exit 0]
 --- server log:
 bozor API: http://localhost:8765
-2026/11/27 21:45:10 ZNTHHUQNT2T72EFC7GLZFXVT5N panic: sinov: 13-mahsulotda bug
-goroutine 9 [running]:
+2026/11/27 22:10:53 MAOQBQTEGOUTSSQMUITMOFMQJG panic: sinov: 13-mahsulotda bug
+goroutine 5 [running]:
 runtime/debug.Stack()
 	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/runtime/debug/stack.go:26 +0x5e
 main.recoverPanic.func1.1()
-	/…/bozor/cmd/api/middleware.go:89 +0xbb
-panic({0x9d74e8?, 0x71ab70?})
+	/…/bozor/cmd/api/middleware.go:107 +0xbb
+panic({0x9d7518?, 0x71ab70?})
 	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/runtime/panic.go:859 +0x125
-main.(*api).getProduct(0x2782e138a0e0, {0xa193f8, 0x2782e13983d8}, 0x0?)
+main.(*api).getProduct(0x3f41522020c0, {0xa19430, 0x3f4152122018}, 0x0?)
 	/…/bozor/cmd/api/handlers.go:57 +0x11c
-net/http.HandlerFunc.ServeHTTP(0x2782e14480c0?, {0xa193f8?, 0x2782e13983d8?}, 0x7342cd90a420?)
+net/http.HandlerFunc.ServeHTTP(0x3f41522360c0?, {0xa19430?, 0x3f4152122018?}, 0x7ee2390d7420?)
 	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:2362 +0x29
-net/http.(*ServeMux).ServeHTTP(0x18?, {0xa193f8, 0x2782e13983d8}, 0x2782e146c3c0)
+net/http.(*ServeMux).ServeHTTP(0x18?, {0xa19430, 0x3f4152122018}, 0x3f41521cc140)
 	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:2927 +0x1cf
-main.recoverPanic.func1({0xa19428, 0x2782e13983c0}, 0x2782e146c3c0)
-	/…/bozor/cmd/api/middleware.go:96 +0xcd
-net/http.HandlerFunc.ServeHTTP(0x18?, {0xa19428?, 0x2782e13983c0?}, 0x6fc153?)
+main.recoverPanic.func1({0xa19460, 0x3f41521b00c0}, 0x3f41521cc140)
+	/…/bozor/cmd/api/middleware.go:114 +0xcd
+net/http.HandlerFunc.ServeHTTP(0x20?, {0xa19460?, 0x3f41521b00c0?}, 0x6fc153?)
 	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:2362 +0x29
-main.logRequests.func1({0xa194b8, 0x2782e14885a0}, 0x2782e146c3c0)
-	/…/bozor/cmd/api/middleware.go:63 +0xd2
-net/http.HandlerFunc.ServeHTTP(0x2782e1445620?, {0xa194b8?, 0x2782e14885a0?}, 0x2782e13a4300?)
+main.logRequests.func1({0xa194f0, 0x3f41521de000}, 0x3f41521cc140)
+	/…/bozor/cmd/api/middleware.go:81 +0xd2
+net/http.HandlerFunc.ServeHTTP(0x3f41521c41b0?, {0xa194f0?, 0x3f41521de000?}, 0x3f415213e1a0?)
 	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:2362 +0x29
-main.requestID.func1({0xa194b8, 0x2782e14885a0}, 0x2782e146c3c0)
+main.requestID.func1({0xa194f0, 0x3f41521de000}, 0x3f41521cc140)
 	/…/bozor/cmd/api/middleware.go:32 +0x87
-net/http.HandlerFunc.ServeHTTP(0x482b99?, {0xa194b8?, 0x2782e14885a0?}, 0x2782e1475af0?)
+net/http.HandlerFunc.ServeHTTP(0x482b99?, {0xa194f0?, 0x3f41521de000?}, 0x3f415226baf0?)
 	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:2362 +0x29
-net/http.serverHandler.ServeHTTP({0x2782e143a4c0?}, {0xa194b8?, 0x2782e14885a0?}, 0x1?)
+net/http.serverHandler.ServeHTTP({0x3f41521c8100?}, {0xa194f0?, 0x3f41521de000?}, 0x1?)
 	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:3440 +0x8e
-net/http.(*conn).serve(0x2782e1466360, {0xa198c8, 0x2782e14453b0})
+net/http.(*conn).serve(0x3f41521d0000, {0xa19900, 0x3f41522293b0})
 	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:2161 +0x6dc
 created by net/http.(*Server).Serve in goroutine 1
 	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/net/http/server.go:3608 +0x4fd
-2026/11/27 21:45:10 ZNTHHUQNT2T72EFC7GLZFXVT5N GET "/products/13" 500 225.507µs
+2026/11/27 22:10:53 MAOQBQTEGOUTSSQMUITMOFMQJG GET "/products/13" 500 303.086µs
 
 === v6: yakuniy zanjir (starter), panic qatori olib tashlangan
 $ curl -i localhost:8765/products/1
 HTTP/1.1 200 OK
 Content-Type: application/json
-X-Request-Id: PSMRYC7RDXZLVANB6OJ3JP6DSW
-Date: Fri, 27 Nov 2026 16:45:11 GMT
+X-Request-Id: TOG3DHVMPSVVGQKIEMJ7SH5NYN
+Date: Fri, 27 Nov 2026 17:10:53 GMT
 Content-Length: 50
 
 {"id":1,"name":"olma","price":1200000,"stock":40}
@@ -172,9 +172,9 @@ $ curl -s localhost:8765/products/1%0A2026/11/27%2021:00:00%20soxta-qator
  [exit 0]
 --- server log:
 bozor API: http://localhost:8765
-2026/11/27 21:45:11 PSMRYC7RDXZLVANB6OJ3JP6DSW GET "/products/1" 200 21.958µs
-2026/11/27 21:45:11 5ZHAFJ6SILKQMS3XPT7K3LV6V7 GET "/products/99" 404 169.268µs
-2026/11/27 21:45:11 322Q3G3WU6NE5N3RTLIGUN66TC GET "/products/1\n2026/11/27 21:00:00 soxta-qator" 404 33.138µs
+2026/11/27 22:10:53 TOG3DHVMPSVVGQKIEMJ7SH5NYN GET "/products/1" 200 20.825µs
+2026/11/27 22:10:53 ZH5GLJUOI4QK2OMJXM5QWATGP2 GET "/products/99" 404 157.748µs
+2026/11/27 22:10:53 XRXTRRQ7JCM7YONKYJUTOS3B4P GET "/products/1\n2026/11/27 21:00:00 soxta-qator" 404 33.162µs
 
 === v7: yakuniy middleware.go, yoʻl %s bilan (log injection)
 $ curl -s localhost:8765/products/1%0A2026/11/27%2021:00:00%20soxta-qator
@@ -182,8 +182,8 @@ $ curl -s localhost:8765/products/1%0A2026/11/27%2021:00:00%20soxta-qator
  [exit 0]
 --- server log:
 bozor API: http://localhost:8765
-2026/11/27 21:45:11 6ETS6UDWEJUSLDW2LUE74Q3I3H GET /products/1
-2026/11/27 21:00:00 soxta-qator 404 13.918µs
+2026/11/27 22:10:54 V66GVMVEMUTD6H3B7K2UJLCTEX GET /products/1
+2026/11/27 21:00:00 soxta-qator 404 20.629µs
 
 === testlar
 --- FAIL: TestVazifaRequireJSON (0.00s)

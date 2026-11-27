@@ -55,9 +55,9 @@ func newHandler(st *store.Store) http.Handler {
   `requestID` chaqiriladi. **Soʻrov** esa tashqaridan kiradi: avval `requestID` qaytargan funksiya, javob ichkaridan qaytadi.
 - `logRequests` log qatorini `next.ServeHTTP`dan **keyin** yozadi. Panic shu chaqiruvdan uchib oʻtsa, bu qator bajarilmaydi —
   shuning uchun `recoverPanic` `logRequests`ning **ichida** turadi.
-- `statusRecorder` — `http.ResponseWriter`ni **embedding** bilan oʻraydi: `Header` va `Write` ichki writer'niki, `WriteHeader`ni
+- Videodagi `statusRecorder` — `http.ResponseWriter`ni **embedding** bilan oʻraydi: `Header` va `Write` ichki writer'niki, `WriteHeader`ni
   oʻzimiz yozdik. `status` `http.StatusOK`dan boshlanadi: `WriteHeader` chaqirmay `Write` qilgan handler (masalan
-  `healthHandler`) uchun javob 200, `Write` esa bizning `WriteHeader`imizdan oʻtmaydi — boshlangʻich qiymatsiz logda `0` chiqadi.
+  `healthHandler`) uchun javob 200. Videodagi variantda `Write` ichki writer'ga oʻtadi — boshlangʻich qiymatsiz logda `0` chiqadi.
 - `requestID` — `crypto/rand.Text()` (Go 1.24+; kamida 128 bit tasodif, 26 belgili base32 matn) → javobning `X-Request-Id`
   sarlavhasi. `logRequests` va `recoverPanic` ID'ni `w.Header().Get("X-Request-Id")` bilan oʻqiydi (sarlavhalar bitta map,
   `statusRecorder`ning `Header()`i ham embedding orqali oʻsha map). Mijoz yuborgan `X-Request-Id`ga ishonmaymiz. Handler
@@ -80,8 +80,14 @@ func newHandler(st *store.Store) http.Handler {
   `http.NewResponseController(w)` (Flush, deadline'lar) oʻralgan writer orqali ham ishlashi uchun
   (`go doc net/http.NewResponseController`). Oʻralgan writer'ga `w.(http.Flusher)` kabi tekshiruv esa endi `false` beradi:
   shuning uchun `ResponseController` ishlating.
-- `statusRecorder` `WriteHeader`ning ortiqcha (ikkinchi) chaqiruvini ham yozib qoʻyadi; bizning handler'lar uni bir marta
-  chaqiradi, aks holda net/http logda `superfluous response.WriteHeader call` deydi (GB-4.03).
+- **Videodagi `statusRecorder` soddaroq:** har `WriteHeader`da `status`ni almashtiradi, `Write` esa ichki writer'ga oʻtadi.
+  Papkadagi variant birinchi yakuniy statusni saqlaydi: aniq `WriteHeader` yoki `Write`ning yashirin 200'i.
+  Qayta tekshiruv (`go1.27.4`, `CGO_ENABLED=0`): `WriteHeader(201); WriteHeader(500)` — mijozga 201, eski recorder'da 500;
+  `Write([]byte("ok\n")); WriteHeader(500)` — mijozga 200, eski recorder'da 500. Tuzatilganda log ham mos ravishda 201 va 200.
+  Ikkinchi `WriteHeader` ichki writer'ga yetib boradi: net/http odatdagi `superfluous response.WriteHeader call`
+  ogohlantirishini saqlaydi. `Write` ichki writer'ning Content-Type aniqlashini ham saqlaydi.
+  `TestLogRequestsFirstStatus` ikkala yoʻlni tekshiradi. `_video/v2-status`, `v3-nol`, `v4-tartib` — videodagi tarixiy variantlar;
+  yakuniy `v7-s` esa papkadagi kod bilan bir xil, faqat yoʻl `%s` orqali yoziladi.
 - Javobda (`solution/`) `requireJSON` zanjirda emas, `newMux`da faqat `POST /products` va `POST /orders`ni oʻraydi: zanjir
   boshida tursa, `POST /health` yoki yoʻq yoʻlga ham 405/404 oʻrniga 415 berardi.
 - Yoʻl logga `%q` bilan yoziladi: `%0A` (URL'dagi yangi qator) `r.URL.Path`da haqiqiy yangi qatorga ochiladi; `%s` bilan
@@ -92,7 +98,8 @@ func newHandler(st *store.Store) http.Handler {
 Hammasi `_video/run.sh` dan (`./run.sh > chiqishlar.txt 2>&1`): har variant papkaning nusxasida `cmd/api/middleware.go`ni
 `_video/vN-…/middleware.go` bilan almashtiradi, kerak boʻlsa `getProduct`ga vaqtincha panic qatorlarini qoʻshadi, serverni
 `:8765`da ishga tushirib curl bilan soʻraydi va toʻxtatadi. Toʻliq chiqishlar: [`_video/chiqishlar.txt`](_video/chiqishlar.txt).
-Stack'larda `…` — videoda qisqartirilgan qatorlar.
+Stack'larda `…` — videoda qisqartirilgan qatorlar. Quyidagi sonlar videodan iqtibos; `chiqishlar.txt`dagi v5–v7
+statusRecorder tuzatilgandan keyin qayta yozilgan (2026-11-27).
 
 Vaqtincha panic (`getProduct`, `pathID`dan keyin; videoning oxirida olib tashlanadi):
 

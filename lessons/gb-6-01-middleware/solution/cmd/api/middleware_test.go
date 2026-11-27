@@ -4,8 +4,11 @@ package main
 
 import (
 	"bytes"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
@@ -124,4 +127,47 @@ func TestPanicAfterWrite(t *testing.T) {
 		}
 	}()
 	send(recoverPanic(half), "GET", "/products", "")
+}
+
+// net/http birinchi yakuniy statusni yuboradi: keyingi WriteHeader log'ni ham oʻzgartirmasin.
+func TestLogRequestsFirstStatus(t *testing.T) {
+	tests := []struct {
+		name    string
+		handler http.HandlerFunc
+		want    int
+	}{
+		{"explicit", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusCreated)
+			w.WriteHeader(http.StatusInternalServerError)
+		}, http.StatusCreated},
+		{"implicit", func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("ok\n"))
+			w.WriteHeader(http.StatusInternalServerError)
+		}, http.StatusOK},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			buf := captureLog(t)
+			srv := httptest.NewServer(logRequests(tc.handler))
+			defer srv.Close()
+			rec, err := http.Get(srv.URL + "/health")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer rec.Body.Close()
+			if _, err := io.ReadAll(rec.Body); err != nil {
+				t.Fatal(err)
+			}
+			if rec.StatusCode != tc.want {
+				t.Fatalf("mijoz statusi: %d, kutilgan %d", rec.StatusCode, tc.want)
+			}
+			want := fmt.Sprintf("GET %q %d ", "/health", tc.want)
+			if !strings.Contains(buf.String(), want) {
+				t.Errorf("mijoz %d oldi, log ham shu statusni saqlasin: %q", tc.want, buf)
+			}
+			if tc.name == "implicit" && rec.Header.Get("Content-Type") != "text/plain; charset=utf-8" {
+				t.Errorf("Write Content-Type'ni oʻzi aniqlashi kerak: %q", rec.Header)
+			}
+		})
+	}
 }

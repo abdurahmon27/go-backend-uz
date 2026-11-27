@@ -36,16 +36,34 @@ func requestID(next http.Handler) http.Handler {
 }
 
 // statusRecorder — ResponseWriter'ni oʻrab, handler yozgan status kodni eslab qoladi.
-// http.ResponseWriter maydon nomisiz (embedding): Header va Write ichkaridagi writer'niki,
-// WriteHeader'ni esa oʻzimiz qayta yozdik.
+// http.ResponseWriter maydon nomisiz (embedding): Header ichkaridagi writer'niki.
+// Birinchi yakuniy status esda qoladi: WriteHeader orqali yoki Write'dagi yashirin 200.
 type statusRecorder struct {
 	http.ResponseWriter
-	status int
+	status      int
+	wroteHeader bool
 }
 
 func (rec *statusRecorder) WriteHeader(code int) {
-	rec.status = code
+	if rec.wroteHeader {
+		// net/http ortiqcha WriteHeader haqida oʻzi ogohlantiradi; status oʻzgarmaydi.
+		rec.ResponseWriter.WriteHeader(code)
+		return
+	}
 	rec.ResponseWriter.WriteHeader(code)
+	if code >= 100 && code < 200 && code != http.StatusSwitchingProtocols {
+		return // 1xx vaqtinchalik javob; yakuniy status hali keladi.
+	}
+	rec.status = code
+	rec.wroteHeader = true
+}
+
+func (rec *statusRecorder) Write(b []byte) (int, error) {
+	if !rec.wroteHeader {
+		rec.status = http.StatusOK
+		rec.wroteHeader = true
+	}
+	return rec.ResponseWriter.Write(b) // ichki Write 200 va Content-Type'ni oʻzi tanlaydi.
 }
 
 // Unwrap ichkaridagi asl writer'ni qaytaradi: http.ResponseController (Flush va boshqalar)
@@ -56,7 +74,7 @@ func (rec *statusRecorder) Unwrap() http.ResponseWriter {
 
 // logRequests har soʻrovdan keyin bitta qator yozadi: ID, metod, yoʻl, status, vaqt.
 // status 200'dan boshlanadi: handler WriteHeader'ni chaqirmay Write qilsa, javob 200 boʻladi (GB-4.03),
-// Write esa bizning WriteHeader'imizdan oʻtmaydi.
+// Write birinchi yashirin 200'ni ham eslab qoladi (videodagi soddaroq variantdan farqi).
 // Yoʻl %q bilan: mijoz yoʻlga yangi qator (%0A) yashirib, log'ga soxta qator qoʻsha olmaydi.
 func logRequests(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
