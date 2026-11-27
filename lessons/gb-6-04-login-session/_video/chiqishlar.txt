@@ -1,0 +1,165 @@
+
+### 1. baza va migratsiyalar
+$ goose up
+OK   00001_products.sql (4.57ms)
+OK   00002_orders.sql (8.43ms)
+OK   00003_orders_status.sql (2.12ms)
+OK   00004_users.sql (4.58ms)
+OK   00005_sessions.sql (5.14ms)
+goose: successfully migrated database to version: 5
+$ docker compose exec -T db psql -f /lab/seed.sql
+TRUNCATE TABLE
+INSERT 0 2
+$ go run ./cmd/api
+bozor API: http://localhost:8765
+
+### 2. cookie'siz /me
+$ curl -s -i localhost:8765/me
+HTTP/1.1 401 Unauthorized
+Content-Type: application/problem+json
+Www-Authenticate: Cookie realm="bozor"
+X-Request-Id: RKK6WX5KJUHTMHT3OTFRONNRQQ
+Date: Fri, 27 Nov 2026 17:34:05 GMT
+Content-Length: 131
+
+{"type":"about:blank","title":"Unauthorized","status":401,"detail":"avval login qiling","request_id":"RKK6WX5KJUHTMHT3OTFRONNRQQ"}
+
+### 3. notoʻgʻri parol va yoʻq email
+$ curl -s localhost:8765/login -H "Content-Type: application/json" -d '{"email":"dilnoza@bozor.test","password":"tarvuz-osmon-qalam-ariq-28"}'
+{"type":"about:blank","title":"Unauthorized","status":401,"detail":"email yoki parol notoʻgʻri","request_id":"PRCW5K7GMTSUNQHHIEW52EJTOX"}
+$ curl -s localhost:8765/login -H "Content-Type: application/json" -d '{"email":"yoq@bozor.test","password":"tarvuz-osmon-qalam-ariq-27"}'
+{"type":"about:blank","title":"Unauthorized","status":401,"detail":"email yoki parol notoʻgʻri","request_id":"Q3KFT5KVRWYCAYXSDAAL47REEK"}
+
+### 3b. javob vaqti: notoʻgʻri parol va yoʻq email (dummyHash bilan), 5 tadan
+{"email":"dilnoza@bozor.test","password":"tarvuz-osmon-qalam-ariq-28"}
+0.025003s 0.024849s 0.024917s 0.026241s 0.025908s 
+{"email":"yoq@bozor.test","password":"tarvuz-osmon-qalam-ariq-27"}
+0.025845s 0.026323s 0.031000s 0.025842s 0.025122s 
+
+### 4. login: telefon (jar.txt) va noutbuk (cookie saqlanmaydi)
+$ curl -s -i -c jar.txt localhost:8765/login -H "Content-Type: application/json" -d '{"email":"dilnoza@bozor.test","password":"tarvuz-osmon-qalam-ariq-27"}'
+HTTP/1.1 200 OK
+Cache-Control: no-store
+Content-Type: application/json
+Set-Cookie: session=MrYRxQh-6_Oah9BsQ_0-d3QbB_ZWOsMXko-YxfruN88; Path=/; Expires=Sat, 28 Nov 2026 17:34:05 GMT; HttpOnly; Secure; SameSite=Lax
+X-Request-Id: FDQVQ6KE4IAF6CUFULDUC2XOLV
+Date: Fri, 27 Nov 2026 17:34:05 GMT
+Content-Length: 38
+
+{"id":1,"email":"dilnoza@bozor.test"}
+
+$ curl -s localhost:8765/login -H "Content-Type: application/json" -d '{"email":"dilnoza@bozor.test","password":"tarvuz-osmon-qalam-ariq-27"}'
+{"id":1,"email":"dilnoza@bozor.test"}
+$ docker compose exec -T db psql -c "SELECT encode(token_hash, 'hex') AS token_hash, user_id, expires_at FROM sessions"
+                            token_hash                            | user_id |          expires_at           
+------------------------------------------------------------------+---------+-------------------------------
+ 65f384e24f4858c7387680bf412f3a550d2db4873249a4ca2fc33d7a01d70249 |       1 | 2026-11-28 17:34:05.440928+00
+ bbff80b15ffcc4a175e43ead82346468029c3f6fc780277b977e50aed24d3db0 |       1 | 2026-11-28 17:34:05.475103+00
+(2 rows)
+
+$ grep session jar.txt | cut -f7
+MrYRxQh-6_Oah9BsQ_0-d3QbB_ZWOsMXko-YxfruN88
+
+### 5. cookie bilan /me, keyin server qayta ishga tushadi
+$ curl -s -b jar.txt localhost:8765/me
+{"id":1,"email":"dilnoza@bozor.test"}
+$ go run ./cmd/api   (qayta)
+2026/11/27 22:34:05 B27RXG7YFKCJLA5DUXTVGBNCLA GET "/health" 200 12.058µs
+$ curl -s -b jar.txt localhost:8765/me
+{"id":1,"email":"dilnoza@bozor.test"}
+
+### 6. bazadagi hash'ni cookie qilib yuborish (baza sizib chiqdi)
+$ curl -s -b session=65f384e24f4858c7387680bf412f3a550d2db4873249a4ca2fc33d7a01d70249 localhost:8765/me
+{"type":"about:blank","title":"Unauthorized","status":401,"detail":"avval login qiling","request_id":"LMRNJHJLPFMI632U4PTZWOSMRT"}
+
+### 7. klassik xato: muddat tekshirilmaydi (_video/stages/store-muddatsiz.go)
+$ docker compose exec -T db psql -c "UPDATE sessions SET expires_at = now() - interval '1 minute'"
+UPDATE 2
+$ curl -s -b jar.txt localhost:8765/me
+{"id":1,"email":"dilnoza@bozor.test"}
+
+### 8. tuzatish: shart qaytdi, server qayta ishga tushdi
+$ curl -s -b jar.txt localhost:8765/me
+{"type":"about:blank","title":"Unauthorized","status":401,"detail":"avval login qiling","request_id":"USAJPGROBYCYYJRD5AI62AJQNT"}
+
+### 9. logout
+$ curl -s -c jar.txt localhost:8765/login -H "Content-Type: application/json" -d '{"email":"dilnoza@bozor.test","password":"tarvuz-osmon-qalam-ariq-27"}'
+{"id":1,"email":"dilnoza@bozor.test"}
+$ cp jar.txt eski.txt
+$ curl -s -i -X POST -b jar.txt -c jar.txt localhost:8765/logout
+HTTP/1.1 204 No Content
+Set-Cookie: session=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax
+X-Request-Id: 7F6DX223GNAAG7NAVZHFN7J65L
+Date: Fri, 27 Nov 2026 17:34:07 GMT
+
+$ curl -s -b eski.txt localhost:8765/me
+{"type":"about:blank","title":"Unauthorized","status":401,"detail":"avval login qiling","request_id":"6JMPDTCMLHVZPD7P4PL2VWGPQP"}
+$ docker compose exec -T db psql -c "SELECT count(*) FROM sessions WHERE expires_at > now()"
+ count 
+-------
+     0
+(1 row)
+
+
+### 10. server log'i
+bozor API: http://localhost:8765
+2026/11/27 22:34:05 GVICQMGYC5Q3YZ5E74BM3PEQXG GET "/health" 200 8.207µs
+2026/11/27 22:34:05 RKK6WX5KJUHTMHT3OTFRONNRQQ xato 401: "http: named cookie not present"
+2026/11/27 22:34:05 RKK6WX5KJUHTMHT3OTFRONNRQQ GET "/me" 401 124.494µs
+2026/11/27 22:34:05 PRCW5K7GMTSUNQHHIEW52EJTOX xato 401: "email yoki parol notoʻgʻri: foydalanuvchi 1"
+2026/11/27 22:34:05 PRCW5K7GMTSUNQHHIEW52EJTOX POST "/login" 401 43.693812ms
+2026/11/27 22:34:05 Q3KFT5KVRWYCAYXSDAAL47REEK xato 401: "email yoki parol notoʻgʻri: email \"yoq@bozor.test\": foydalanuvchi topilmadi"
+2026/11/27 22:34:05 Q3KFT5KVRWYCAYXSDAAL47REEK POST "/login" 401 23.275716ms
+2026/11/27 22:34:05 QWGMUJFVR4Q7EBKVHJOHHBW45Q xato 401: "email yoki parol notoʻgʻri: foydalanuvchi 1"
+2026/11/27 22:34:05 QWGMUJFVR4Q7EBKVHJOHHBW45Q POST "/login" 401 24.523962ms
+2026/11/27 22:34:05 MEV4PVILSYE6JZ6EZ5JUI7ZER5 xato 401: "email yoki parol notoʻgʻri: foydalanuvchi 1"
+2026/11/27 22:34:05 MEV4PVILSYE6JZ6EZ5JUI7ZER5 POST "/login" 401 24.402005ms
+2026/11/27 22:34:05 I4IT4RESOY55XFTSXFNRYPRWMG xato 401: "email yoki parol notoʻgʻri: foydalanuvchi 1"
+2026/11/27 22:34:05 I4IT4RESOY55XFTSXFNRYPRWMG POST "/login" 401 24.463155ms
+2026/11/27 22:34:05 2K5FTGNJJDAJIX7YQSDJBADGKP xato 401: "email yoki parol notoʻgʻri: foydalanuvchi 1"
+2026/11/27 22:34:05 2K5FTGNJJDAJIX7YQSDJBADGKP POST "/login" 401 25.744489ms
+2026/11/27 22:34:05 2OIOPDJPHLLH7HLVCOI4B2FYNU xato 401: "email yoki parol notoʻgʻri: foydalanuvchi 1"
+2026/11/27 22:34:05 2OIOPDJPHLLH7HLVCOI4B2FYNU POST "/login" 401 25.420663ms
+2026/11/27 22:34:05 QZTUF45HBEOIHKLZCH3ZB6Y3EO xato 401: "email yoki parol notoʻgʻri: email \"yoq@bozor.test\": foydalanuvchi topilmadi"
+2026/11/27 22:34:05 QZTUF45HBEOIHKLZCH3ZB6Y3EO POST "/login" 401 25.431091ms
+2026/11/27 22:34:05 MIWTUPQYCUD7WPPY3D32GZJA4C xato 401: "email yoki parol notoʻgʻri: email \"yoq@bozor.test\": foydalanuvchi topilmadi"
+2026/11/27 22:34:05 MIWTUPQYCUD7WPPY3D32GZJA4C POST "/login" 401 25.859021ms
+2026/11/27 22:34:05 FAM6MXEM6C52PMB7EP4VL62V43 xato 401: "email yoki parol notoʻgʻri: email \"yoq@bozor.test\": foydalanuvchi topilmadi"
+2026/11/27 22:34:05 FAM6MXEM6C52PMB7EP4VL62V43 POST "/login" 401 30.671835ms
+2026/11/27 22:34:05 PTTE5UYITR4VYCUVRHYEM6N4AT xato 401: "email yoki parol notoʻgʻri: email \"yoq@bozor.test\": foydalanuvchi topilmadi"
+2026/11/27 22:34:05 PTTE5UYITR4VYCUVRHYEM6N4AT POST "/login" 401 25.48029ms
+2026/11/27 22:34:05 IX6J2YKRHUBAFWOSSBO3B3OWWG xato 401: "email yoki parol notoʻgʻri: email \"yoq@bozor.test\": foydalanuvchi topilmadi"
+2026/11/27 22:34:05 IX6J2YKRHUBAFWOSSBO3B3OWWG POST "/login" 401 24.729971ms
+2026/11/27 22:34:05 FDQVQ6KE4IAF6CUFULDUC2XOLV POST "/login" 200 28.889704ms
+2026/11/27 22:34:05 JFLOZO5LQD2D2NTMJZ7IZ3ILB7 POST "/login" 200 25.990344ms
+2026/11/27 22:34:05 HG243KYDB25NAZPLDXDUDT7EXY GET "/me" 200 1.634959ms
+bozor API: http://localhost:8765
+2026/11/27 22:34:05 B27RXG7YFKCJLA5DUXTVGBNCLA GET "/health" 200 12.058µs
+2026/11/27 22:34:05 DS3BJZ4EH7YA4VX76CNFEGAJKK GET "/me" 200 2.98068ms
+2026/11/27 22:34:05 LMRNJHJLPFMI632U4PTZWOSMRT xato 401: "session yoʻq yoki muddati oʻtgan"
+2026/11/27 22:34:05 LMRNJHJLPFMI632U4PTZWOSMRT GET "/me" 401 567.832µs
+bozor API: http://localhost:8765
+2026/11/27 22:34:06 6HQL326JQ27MNWGOJCIZSSYQVQ GET "/health" 200 14.652µs
+2026/11/27 22:34:06 HHFBY5NPYZ5Y4UBXR4JZJVV7Y5 GET "/me" 200 3.190903ms
+bozor API: http://localhost:8765
+2026/11/27 22:34:06 6BOSMIOX5YU744R5ETRQG2GVJA GET "/health" 200 13.517µs
+2026/11/27 22:34:06 USAJPGROBYCYYJRD5AI62AJQNT xato 401: "session yoʻq yoki muddati oʻtgan"
+2026/11/27 22:34:06 USAJPGROBYCYYJRD5AI62AJQNT GET "/me" 401 2.504647ms
+2026/11/27 22:34:07 LC2U4KD7RK52EKQ2RMCX5MO62D POST "/login" 200 40.292612ms
+2026/11/27 22:34:07 7F6DX223GNAAG7NAVZHFN7J65L POST "/logout" 204 1.341447ms
+2026/11/27 22:34:07 6JMPDTCMLHVZPD7P4PL2VWGPQP xato 401: "session yoʻq yoki muddati oʻtgan"
+2026/11/27 22:34:07 6JMPDTCMLHVZPD7P4PL2VWGPQP GET "/me" 401 640.271µs
+
+### 11. testlar (vazifadan oldin)
+$ go test ./...
+--- FAIL: TestLogoutAll (0.14s)
+    tekshiruv_test.go:18: POST /logout-all: status 404, kutilgan 204 (TASK.md, 2-qadam): {"type":"about:blank","title":"Not Found","status":404,"detail":"bunday yoʻl yoʻq","request_id":"7BOGGUXSVLPH22VTMAL6YRPK6I"}
+FAIL
+FAIL	github.com/abdurahmon27/bozor/cmd/api	1.175s
+ok  	github.com/abdurahmon27/bozor/internal/password	0.266s
+--- FAIL: TestDeleteUserSessions (0.07s)
+    tekshiruv_test.go:27: DeleteUserSessions(1): DeleteUserSessions hali yozilmagan (TASK.md, 1-qadam)
+FAIL
+FAIL	github.com/abdurahmon27/bozor/internal/store	0.338s
+FAIL
+(8765 boʻsh, konteyner va volume oʻchirildi)
