@@ -1,0 +1,194 @@
+### 1. papka
+$ ls migrations
+00001_products.sql
+00002_orders.sql
+00003_orders_status.sql
+(chiqish kodi: 0)
+
+$ ls cmd/api internal/pgtest internal/store
+cmd/api:
+api_test.go
+handlers.go
+json.go
+main.go
+
+internal/pgtest:
+pgtest.go
+
+internal/store:
+store.go
+store_test.go
+(chiqish kodi: 0)
+
+### 2. baza, migratsiya, seed
+$ docker compose up -d --wait
+ Network bozor_default Creating 
+ Network bozor_default Creating 
+ Volume bozor_pgdata Creating 
+ Volume bozor_pgdata Creating 
+ Volume bozor_pgdata Created 
+ Volume bozor_pgdata Created 
+ Network bozor_default Created 
+ Network bozor_default Created 
+ Container bozor-db-1 Creating 
+ Container bozor-db-1 Created 
+ Container bozor-db-1 Starting 
+ Container bozor-db-1 Started 
+ Container bozor-db-1 Waiting 
+ Container bozor-db-1 Healthy 
+(chiqish kodi: 0)
+
+$ goose up
+2026/11/27 21:27:37 OK   00001_products.sql (5.1ms)
+2026/11/27 21:27:37 OK   00002_orders.sql (9.27ms)
+2026/11/27 21:27:37 OK   00003_orders_status.sql (2.33ms)
+2026/11/27 21:27:37 goose: successfully migrated database to version: 3
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -f /lab/seed.sql
+TRUNCATE TABLE
+INSERT 0 4
+INSERT 0 3
+INSERT 0 4
+(chiqish kodi: 0)
+
+### 3. server
+$ go run ./cmd/api
+bozor API: http://localhost:8765
+
+$ curl -i localhost:8765/orders -d {"customer":"Aziza","items":[{"product_id":1,"quantity":2},{"product_id":3,"quantity":1}]}
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+  0      0   0      0   0      0      0      0                              0100    263 100    173 100     90  19889  10347                              0100    263 100    173 100     90  18843   9802                              0100    263 100    173 100     90  18049   9389                              0
+HTTP/1.1 201 Created
+Content-Type: application/json
+Location: /orders/4
+Date: Fri, 27 Nov 2026 16:27:38 GMT
+Content-Length: 173
+
+{"id":4,"customer":"Aziza","status":"yangi","items":[{"product_id":1,"quantity":2,"unit_price":1200000},{"product_id":3,"quantity":1,"unit_price":2500000}],"total":4900000}
+(chiqish kodi: 0)
+
+$ curl -i localhost:8765/orders -d {"customer":"Jasur","items":[{"product_id":1,"quantity":2},{"product_id":4,"quantity":5}]}
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+  0      0   0      0   0      0      0      0                              0100    173 100     83 100     90  25499  27649                              0100    173 100     83 100     90  22092  23955                              0100    173 100     83 100     90  19908  21587                              0
+HTTP/1.1 409 Conflict
+Content-Type: application/json
+Date: Fri, 27 Nov 2026 16:27:38 GMT
+Content-Length: 83
+
+{"error":{"code":"insufficient_stock","message":"oʻrik: qoldiq 2, soʻralgan 5"}}
+(chiqish kodi: 0)
+
+$ curl -s localhost:8765/products/1
+{"id":1,"name":"olma","price":1200000,"stock":38}
+(chiqish kodi: 0)
+
+$ curl -i localhost:8765/orders -d {"customer":"Jasur","items":[{"product_id":1,"quantity":0}]}
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+  0      0   0      0   0      0      0      0                              0100    191 100    131 100     60  81977  37546                              0100    191 100    131 100     60  64310  29455                              0100    191 100    131 100     60  53688  24590                              0
+HTTP/1.1 422 Unprocessable Entity
+Content-Type: application/json
+Date: Fri, 27 Nov 2026 16:27:38 GMT
+Content-Length: 131
+
+{"error":{"code":"validation_failed","message":"qiymatlar notoʻgʻri","fields":{"items[0].quantity":"1 dan 100 gacha boʻlsin"}}}
+(chiqish kodi: 0)
+
+$ docker compose exec db psql -c SELECT id, customer, status FROM orders WHERE id > 3
+ id | customer | status 
+----+----------+--------
+  4 | Aziza    | yangi
+(1 row)
+
+(chiqish kodi: 0)
+
+$ curl -s localhost:8765/orders/4
+404 page not found
+(chiqish kodi: 0)
+
+server log:
+bozor API: http://localhost:8765
+
+### 4. testlar (final)
+$ go test ./...
+?   	github.com/abdurahmon27/bozor	[no test files]
+ok  	github.com/abdurahmon27/bozor/cmd/api	0.883s
+?   	github.com/abdurahmon27/bozor/internal/pgtest	[no test files]
+ok  	github.com/abdurahmon27/bozor/internal/store	0.505s
+(chiqish kodi: 0)
+
+### 5. xato: hamma test bitta public sxemada (_video/stages/pgtest-shared.go)
+$ go test -count=5 ./internal/store
+ok  	github.com/abdurahmon27/bozor/internal/store	2.134s
+(chiqish kodi: 0)
+
+$ go test -count=5 ./...
+?   	github.com/abdurahmon27/bozor	[no test files]
+--- FAIL: TestRoutes (3.52s)
+    --- FAIL: TestRoutes/katalog (2.02s)
+        api_test.go:55: seed.sql bajarilmadi: ERROR: deadlock detected (SQLSTATE 40P01)
+    --- FAIL: TestRoutes/bitta (0.04s)
+        api_test.go:55: migratsiya qoʻllanmadi: failed to list migrations: ERROR: relation "goose_db_version" does not exist (SQLSTATE 42P01)
+    --- FAIL: TestRoutes/yoq_id (0.02s)
+        api_test.go:55: migratsiya qoʻllanmadi: failed to list migrations: ERROR: relation "goose_db_version" does not exist (SQLSTATE 42P01)
+FAIL
+FAIL	github.com/abdurahmon27/bozor/cmd/api	6.423s
+?   	github.com/abdurahmon27/bozor/internal/pgtest	[no test files]
+--- FAIL: TestOppositeCarts (1.09s)
+    store_test.go:155: kutilmagan xato (deadlock?): ERROR: deadlock detected (SQLSTATE 40P01)
+    store_test.go:155: kutilmagan xato (deadlock?): ERROR: deadlock detected (SQLSTATE 40P01)
+    store_test.go:155: kutilmagan xato (deadlock?): ERROR: deadlock detected (SQLSTATE 40P01)
+    store_test.go:161: mahsulot 1 qoldigʻi oʻqilmadi: ERROR: relation "products" does not exist (SQLSTATE 42P01)
+--- FAIL: TestEmptyCart (0.03s)
+    store_test.go:167: migratsiya qoʻllanmadi: failed to list migrations: ERROR: relation "goose_db_version" does not exist (SQLSTATE 42P01)
+FAIL
+FAIL	github.com/abdurahmon27/bozor/internal/store	2.945s
+FAIL
+(chiqish kodi: 1)
+
+$ go test -count=5 ./...
+?   	github.com/abdurahmon27/bozor	[no test files]
+ok  	github.com/abdurahmon27/bozor/cmd/api	4.458s
+?   	github.com/abdurahmon27/bozor/internal/pgtest	[no test files]
+ok  	github.com/abdurahmon27/bozor/internal/store	2.777s
+(chiqish kodi: 0)
+
+### 6. vazifa: starter (tekshiruv_test.go bilan)
+$ go test ./...
+?   	github.com/abdurahmon27/bozor	[no test files]
+--- FAIL: TestGetOrder (0.20s)
+    --- FAIL: TestGetOrder/bor (0.05s)
+        tekshiruv_test.go:25: GET /orders/1: status 404, kutilgan 200 (TASK.md, 2–3-qadam): 404 page not found
+    --- FAIL: TestGetOrder/qatorsiz (0.05s)
+        tekshiruv_test.go:25: GET /orders/3: status 404, kutilgan 200 (TASK.md, 2–3-qadam): 404 page not found
+    --- FAIL: TestGetOrder/yoq (0.05s)
+        tekshiruv_test.go:28: GET /orders/99: body'da
+              "code":"not_found"
+            yoʻq:
+              404 page not found
+    --- FAIL: TestGetOrder/son_emas (0.05s)
+        tekshiruv_test.go:25: GET /orders/abc: status 404, kutilgan 400 (TASK.md, 2–3-qadam): 404 page not found
+--- FAIL: TestOrderLocation (0.05s)
+    tekshiruv_test.go:44: GET /orders/4: status 404, body 404 page not found
+        
+        kutilgan: 200 va POST javobi: {"id":4,"customer":"Aziza","status":"yangi","items":[{"product_id":3,"quantity":2,"unit_price":2500000}],"total":5000000}
+         (TASK.md, 2-qadam)
+FAIL
+FAIL	github.com/abdurahmon27/bozor/cmd/api	1.227s
+?   	github.com/abdurahmon27/bozor/internal/pgtest	[no test files]
+--- FAIL: TestOrder (0.06s)
+    tekshiruv_test.go:17: Order(1) = Order hali yozilmagan (TASK.md, 1-qadam); kutilgan: seed.sql'dagi Dilnoza buyurtmasi (TASK.md, 1-qadam)
+--- FAIL: TestOrderWithoutItems (0.05s)
+    tekshiruv_test.go:37: Order(3) = Order hali yozilmagan (TASK.md, 1-qadam); kutilgan: Malikaning qatorsiz buyurtmasi (TASK.md, 1-qadam)
+--- FAIL: TestOrderNotFound (0.06s)
+    tekshiruv_test.go:47: Order(99) = Order hali yozilmagan (TASK.md, 1-qadam); kutilgan: ErrOrderNotFound (TASK.md, 1-qadam)
+--- FAIL: TestOrderRoundTrip (0.07s)
+    tekshiruv_test.go:60: Order(4) = Order hali yozilmagan (TASK.md, 1-qadam); kutilgan: hozir yozilgan buyurtma (TASK.md, 1-qadam)
+FAIL
+FAIL	github.com/abdurahmon27/bozor/internal/store	0.847s
+FAIL
+(chiqish kodi: 1)
+

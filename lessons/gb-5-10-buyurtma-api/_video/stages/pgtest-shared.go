@@ -1,0 +1,69 @@
+// Package pgtest — testlar uchun haqiqiy Postgres (mock emas). Har test oʻz boʻsh sxemasini oladi:
+// migratsiyalar (goose) va seed.sql shu sxemaga qoʻllanadi, test tugagach sxema oʻchiriladi.
+// Shuning uchun testlar bir-biriga xalaqit bermaydi, `go test ./...` paketlarni parallel
+// ishga tushirganda ham (GB-5.10 videosidagi xato), va sizning public sxemangizga tegmaydi.
+package pgtest
+
+import (
+	"context"
+	"os"
+	"testing"
+	"time"
+
+	"github.com/abdurahmon27/bozor"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
+)
+
+// LabURL — shu papkadagi compose.yaml koʻtaradigan Postgres. Boshqa manzil uchun DATABASE_URL qoʻying.
+const LabURL = "postgres://bozor:bozor-lab@localhost:5510/bozor"
+
+// New bu test uchun yangi sxema yaratadi, unga migratsiyalar va seed.sql'ni qoʻllaydi va shu sxemaga
+// ulangan pool qaytaradi. Postgres ishlamasa test aniq xabar bilan yiqiladi (oʻtkazib yuborilmaydi).
+func New(t *testing.T) *pgxpool.Pool {
+	t.Helper()
+	url := os.Getenv("DATABASE_URL")
+	if url == "" {
+		url = LabURL
+	}
+	cfg, err := pgxpool.ParseConfig(url)
+	if err != nil {
+		t.Fatalf("DATABASE_URL notoʻgʻri: %v", err)
+	}
+	cfg.MaxConns = max(cfg.MaxConns, 4) // URL'da pool_max_conns=1 qolgan boʻlsa ham parallel test toʻxtab qolmasin (GB-5.07)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	admin, err := pgxpool.NewWithConfig(ctx, cfg)
+	if err == nil {
+		err = admin.Ping(ctx)
+	}
+	if err != nil {
+		t.Fatalf("Postgres'ga ulanib boʻlmadi (%s:%d): avval shu papkada `docker compose up -d --wait` ishga tushiring.\n%v",
+			cfg.ConnConfig.Host, cfg.ConnConfig.Port, err)
+	}
+	// XATO VERSIYA: hamma test bitta public sxemada
+	// (GB-5.10 videosi) Har test sxemani tozalab qaytadan quradi; boshqa paketning testi shu payt
+	// shu jadvallarda ishlayotgan boʻlishi mumkin.
+	if _, err := admin.Exec(ctx, "DROP SCHEMA public CASCADE; CREATE SCHEMA public"); err != nil {
+		t.Fatalf("sxema tozalanmadi: %v", err)
+	}
+	t.Cleanup(admin.Close)
+	pool := admin
+
+	db := stdlib.OpenDBFromPool(pool) // goose database/sql bilan ishlaydi: pool ustidan *sql.DB
+	defer db.Close()
+	provider, err := bozor.NewProvider(db)
+	if err != nil {
+		t.Fatalf("goose: %v", err)
+	}
+	if _, err := provider.Up(ctx); err != nil {
+		t.Fatalf("migratsiya qoʻllanmadi: %v", err)
+	}
+	// Oddiy protokol: bitta matnda bir nechta SQL buyrugʻi boʻlishi mumkin (GB-5.07 testlari).
+	if _, err := pool.Exec(ctx, bozor.SeedSQL, pgx.QueryExecModeSimpleProtocol); err != nil {
+		t.Fatalf("seed.sql bajarilmadi: %v", err)
+	}
+	return pool
+}
