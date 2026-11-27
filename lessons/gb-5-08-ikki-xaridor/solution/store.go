@@ -42,7 +42,7 @@ func (s *Store) Buy(ctx context.Context, id int64, qty int) error {
 }
 
 // BuyLocked ham sotadi, lekin boshqacha: avval qatorni FOR UPDATE bilan qulflaydi, qoldiqni Go'da tekshiradi,
-// keyin yozadi. Qulf transaction tugaguncha turadi, shuning uchun boshqa xaridor shu qatorni oʻqiy olmaydi.
+// keyin yozadi. Qulf transaction tugaguncha turadi, shuning uchun boshqa xaridorning FOR UPDATE'i yoki UPDATE'i shu qatorni kutadi (oddiy SELECT kutmaydi).
 func (s *Store) BuyLocked(ctx context.Context, id int64, qty int) error {
 	if qty <= 0 {
 		return ErrInvalidQuantity

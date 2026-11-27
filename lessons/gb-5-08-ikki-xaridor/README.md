@@ -80,7 +80,7 @@ Bosqich fayllarini `store.go` o'rniga qo'yib sinasangiz, `store_test.go`dagi `{"
   `PlaceOrder` (`stock = stock - $1`) shu xatoni `ErrNotEnoughStock`ga aylantiradi, ya'ni ortiqcha sotmaydi; bu dars esa xatoga
   yetkazmasdan qoidani o'zi tekshiradi (shartli `UPDATE` yoki `FOR UPDATE`). `CHECK` baribir kerak: u ilova xatosiga qarshi oxirgi himoya.
 - **Optimistik lock** (`version` ustuni; bozor.sql'da bu ustun yo'q, bu misol): `UPDATE ... SET stock = $1, version = version + 1 WHERE id = $2 AND version = $3`;
-  `RowsAffected() == 0` bo'lsa, qayta o'qib qayta urinish. Qulf yo'q, lekin takrorlash kerak; to'qnashuv kam bo'lsa mos.
+  `RowsAffected() == 0` bo'lsa, qayta o'qib qayta urinish. Uzoq qulf yo'q (UPDATE qatorni faqat bir lahza qulflaydi), lekin takrorlash kerak; to'qnashuv kam bo'lsa mos.
   Umumiy nom: optimistic offline lock (https://martinfowler.com/eaaCatalog/optimisticOfflineLock.html). Kursda keyinroq (GB-9) ko'riladi.
 - **Bir nechta qatorni qulflash** (savatda ikki mahsulot): har doim bir xil tartibda (masalan `ORDER BY id`) qulflang, aks holda
   ikki transaction bir-birini kutib qotadi (deadlock; Postgres bittasini xato bilan to'xtatadi). Manba: [Deadlocks](https://www.postgresql.org/docs/18/explicit-locking.html#LOCKING-DEADLOCKS).
