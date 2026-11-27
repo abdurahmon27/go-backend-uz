@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "name": "olma",
+    "price": 1200000,
+    "stock": 40
+  },
+  {
+    "id": 2,
+    "name": "non",
+    "price": 400000,
+    "stock": 3
+  },
+  {
+    "id": 3,
+    "name": "choy",
+    "price": 2500000,
+    "stock": 8
+  },
+  {
+    "id": 4,
+    "name": "oʻrik",
+    "price": 3500000,
+    "stock": 2
+  }
+]
