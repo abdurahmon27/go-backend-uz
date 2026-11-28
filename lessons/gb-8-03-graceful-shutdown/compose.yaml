@@ -1,0 +1,26 @@
+# GB-8.03 laboratoriyasi: bitta Postgres. Ishga tushirish: docker compose up -d --wait
+# Toʻxtatish va maʼlumotni oʻchirish: docker compose down -v
+name: gb803
+
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: bozor
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bozor-lab} # faqat shu laboratoriya uchun
+      POSTGRES_DB: bozor
+      PGUSER: bozor # psql shu foydalanuvchi va bazaga ulanadi: -U va -d yozish shart emas
+      PGDATABASE: bozor
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - .:/lab:ro # seed.sql konteynerda /lab/ ostida koʻrinadi
+    ports:
+      - "127.0.0.1:5583:5432" # faqat shu kompyuterdan ulanish mumkin (tashqi tarmoqdan emas)
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "bozor", "-d", "bozor"]
+      start_period: 30s
+      start_interval: 1s
+      interval: 10s
+
+volumes:
+  pgdata:

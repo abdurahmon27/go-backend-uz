@@ -1,0 +1,98 @@
+== go version
+go version go1.27.4 linux/amd64
+
+== Postgres, migratsiyalar, seed
+ Container gb803-db-1 Healthy 
+2026/11/28 18:29:58 goose: successfully migrated database to version: 7
+
+== 0. eski (GB-8.02 kodi): SIGTERM
+$ curl -sS 'localhost:8783/health?sekin=3s'
+$ pkill -e -x api
+api killed (pid 1397638)
+cTerminated                 python3 -c 'import os,signal,sys; signal.signal(signal.SIGINT, signal.SIG_DFL); os.execv(sys.argv[1], sys.argv[1:])' ./api -port 8783 > api.log 2>&1
+url: (52) Empty reply from server
+--- 1-terminal: ./api -port 8783 ; echo "kod: $?"
+{"time":"2026-11-28T18:29:59.372042402+05:00","level":"INFO","msg":"config","config":{"addr":":8783","db":"localhost:5583/bozor"}}
+{"time":"2026-11-28T18:29:59.376962863+05:00","level":"INFO","msg":"bozor API ishga tushdi","addr":":8783"}
+kod: 143
+
+== 1a. yangi: sekin soʻrov tugaydi, yangisi rad etiladi
+$ curl -sS 'localhost:8783/health?sekin=3s'
+$ pkill -e -x api
+api killed (pid 1397783)
+$ curl -sS localhost:8783/health
+curl: (7) Failed to connect to localhost:8783 after 0 ms: Could not connect to server
+ok
+--- 1-terminal: ./api -port 8783 ; echo "kod: $?"
+{"time":"2026-11-28T18:30:01.301186383+05:00","level":"INFO","msg":"config","config":{"addr":":8783","db":"localhost:5583/bozor"}}
+{"time":"2026-11-28T18:30:01.306751535+05:00","level":"INFO","msg":"bozor API ishga tushdi","addr":":8783"}
+{"time":"2026-11-28T18:30:02.380808689+05:00","level":"INFO","msg":"toʻxtash boshlandi"}
+{"time":"2026-11-28T18:30:04.36756681+05:00","level":"INFO","msg":"soʻrov","request_id":"U5M3XFQ2QWWOTRHBLFYZIU46OD","method":"GET","path":"/health","status":200,"dur":3000796556}
+{"time":"2026-11-28T18:30:04.471692993+05:00","level":"INFO","msg":"toʻxtadi"}
+kod: 0
+
+== 1b. yangi: muddat tugaydi (sekin=15s, shutdownTimeout 8 s)
+$ curl -sS 'localhost:8783/health?sekin=15s'
+$ pkill -e -x api
+api killed (pid 1397983)
+curl: (52) Empty reply from server
+--- 1-terminal: ./api -port 8783 ; echo "kod: $?"
+{"time":"2026-11-28T18:30:04.818188392+05:00","level":"INFO","msg":"config","config":{"addr":":8783","db":"localhost:5583/bozor"}}
+{"time":"2026-11-28T18:30:04.824388979+05:00","level":"INFO","msg":"bozor API ishga tushdi","addr":":8783"}
+{"time":"2026-11-28T18:30:05.892244902+05:00","level":"INFO","msg":"toʻxtash boshlandi"}
+xato: shutdown: context deadline exceeded
+kod: 1
+(10 s)
+
+== 1c. yangi: ikkinchi Ctrl+C (SIGINT ikki marta)
+$ curl -sS 'localhost:8783/health?sekin=15s'
+curl: (52) Empty reply from server
+--- 1-terminal: ./api -port 8783 ; echo "kod: $?"
+{"time":"2026-11-28T18:30:14.816266255+05:00","level":"INFO","msg":"config","config":{"addr":":8783","db":"localhost:5583/bozor"}}
+{"time":"2026-11-28T18:30:14.824643952+05:00","level":"INFO","msg":"bozor API ishga tushdi","addr":":8783"}
+{"time":"2026-11-28T18:30:15.873981436+05:00","level":"INFO","msg":"toʻxtash boshlandi"}
+kod: 130
+
+== 2a. chek: go sendReceipt (egasiz)
+$ ./buyurtma.sh 8783 && pkill -x api
+POST /orders → 201
+--- 1-terminal: ./api -port 8783 ; echo "kod: $?"
+{"time":"2026-11-28T18:30:18.090579147+05:00","level":"INFO","msg":"config","config":{"addr":":8783","db":"localhost:5583/bozor"}}
+{"time":"2026-11-28T18:30:18.09697522+05:00","level":"INFO","msg":"bozor API ishga tushdi","addr":":8783"}
+{"time":"2026-11-28T18:30:18.330660711+05:00","level":"INFO","msg":"login","request_id":"4A3EG6XNUYZBJ35VVCCUY3EO2R","user":{"id":2,"role":"xaridor"}}
+{"time":"2026-11-28T18:30:18.330781999+05:00","level":"INFO","msg":"soʻrov","request_id":"4A3EG6XNUYZBJ35VVCCUY3EO2R","method":"POST","path":"/login","status":200,"dur":144836629}
+{"time":"2026-11-28T18:30:18.368140178+05:00","level":"INFO","msg":"soʻrov","request_id":"SGYISE7B4YO3ROXLW5B2UGMVWV","method":"POST","path":"/orders","status":201,"dur":10830136}
+{"time":"2026-11-28T18:30:18.402800177+05:00","level":"INFO","msg":"toʻxtash boshlandi"}
+{"time":"2026-11-28T18:30:18.402892307+05:00","level":"INFO","msg":"toʻxtadi"}
+kod: 0
+
+== 2b. chek: a.bg.Go (egasi server)
+$ ./buyurtma.sh 8783 && pkill -x api
+POST /orders → 201
+--- 1-terminal: ./api -port 8783 ; echo "kod: $?"
+{"time":"2026-11-28T18:30:20.081409204+05:00","level":"INFO","msg":"config","config":{"addr":":8783","db":"localhost:5583/bozor"}}
+{"time":"2026-11-28T18:30:20.08758917+05:00","level":"INFO","msg":"bozor API ishga tushdi","addr":":8783"}
+{"time":"2026-11-28T18:30:20.235682575+05:00","level":"INFO","msg":"login","request_id":"UVHX2QW4HTGA3XBSRPLXEVNRDF","user":{"id":2,"role":"xaridor"}}
+{"time":"2026-11-28T18:30:20.235758003+05:00","level":"INFO","msg":"soʻrov","request_id":"UVHX2QW4HTGA3XBSRPLXEVNRDF","method":"POST","path":"/login","status":200,"dur":61528416}
+{"time":"2026-11-28T18:30:20.247836515+05:00","level":"INFO","msg":"soʻrov","request_id":"UD7AASSN52I4CH3GKVBCHZDAF3","method":"POST","path":"/orders","status":201,"dur":5937012}
+{"time":"2026-11-28T18:30:20.275419358+05:00","level":"INFO","msg":"toʻxtash boshlandi"}
+{"time":"2026-11-28T18:30:22.248243758+05:00","level":"INFO","msg":"chek yuborildi","request_id":"UD7AASSN52I4CH3GKVBCHZDAF3","order_id":44}
+{"time":"2026-11-28T18:30:22.248291604+05:00","level":"INFO","msg":"toʻxtadi"}
+kod: 0
+
+== 3. ReadHeaderTimeout
+$ time printf 'GET /health HTTP/1.1\r\n' | nc localhost 8783
+
+real	0m5.032s
+user	0m0.000s
+sys	0m0.003s
+
+== 4. vazifa
+$ go test ./cmd/api -run WaitBG
+--- FAIL: TestWaitBGDeadline (2.00s)
+    toxtash_test.go:57: waitBG muddat (100 ms) tugagach 2 s oʻtdi, hali ham chekni kutyapti: ctx.Done() yopilganda kutishni toʻxtatib, ctx.Err() qaytarishi kerak (TASK.md)
+FAIL
+FAIL	github.com/abdurahmon27/bozor/cmd/api	2.106s
+FAIL
+$ go test ./cmd/api -run WaitBG
+ok  	github.com/abdurahmon27/bozor/cmd/api	0.200s
