@@ -31,7 +31,7 @@ yoki baza soʻrovi boʻladi va ctx'ni oʻzi qabul qiladi (masalan, pgx, GB-5.05)
 |---|---|
 | `supplier.go` | `stocks`, `supplierDelay`, `supplier`: videodagi yetkazib beruvchi (buffer 1) |
 | `main.go` | videoning oxiridagi kod (`checkStock`, `r.Context()` bilan `stockHandler`) + vazifa: `sumStock` (boʻsh) va `reportHandler` (`context.Background()` bilan, muddatsiz), `newMux`, `main` |
-| `tekshiruv_test.go` | vazifani tekshiradi (`go test .`); oʻzgartirmang. Yetkazib beruvchini 50 ms'ga qisqartiradi |
+| `tekshiruv_test.go` | vazifani tekshiradi (`go test .`); oʻzgartirmang. Yetkazib beruvchini 100 ms'ga qisqartiradi |
 | `TASK.md` | vazifa |
 | `solution/` | javob: `main.go`, `supplier.go` (+ xuddi shu test fayli) |
 | `_video/NN-…/` | videodagi har bir qadam; `_` bilan boshlangan papkani `go test ./...` va `go vet ./...` chetlab oʻtadi |
