@@ -237,7 +237,7 @@ curl -s -H "Authorization: Bearer $T" localhost:8765/me    # vazifadan keyin: 40
 - OWASP JSON Web Token Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_Cheat_Sheet.html
 - OWASP Session Management Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
 - golang-jwt/jwt/v5: https://pkg.go.dev/github.com/golang-jwt/jwt/v5 · Go `crypto/hmac`: https://pkg.go.dev/crypto/hmac ·
-  `encoding/base64`: https://pkg.go.dev/encoding/base64 · `strings.CutPrefix`: https://pkg.go.dev/strings#CutPrefix
+  `encoding/base64`: https://pkg.go.dev/encoding/base64 · `strings.Cut`: https://pkg.go.dev/strings#Cut
 
 Hammasi shu kompyuterda tekshirilgan: go1.27.4 linux/amd64, `CGO_ENABLED=0`, curl 8.22.0, coreutils 9.11 (`basenc`),
 jq 1.8.2; `bash _video/chiqishlar.sh > _video/chiqishlar.txt` (server :8765'da, oxirida toʻxtatiladi).
