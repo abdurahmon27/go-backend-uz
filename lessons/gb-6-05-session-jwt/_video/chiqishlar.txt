@@ -1,0 +1,133 @@
+
+### 0. versiyalar
+$ go version
+go version go1.27.4 linux/amd64
+$ curl --version | head -1
+curl 8.22.0 (x86_64-pc-linux-gnu) libcurl/8.22.0 GnuTLS/3.8.13 zlib/1.3.2 brotli/1.2.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.5 libssh2/1.11.1 nghttp2/1.69.0 ngtcp2/1.22.1 nghttp3/1.15.0 mit-krb5/1.22.2
+
+### 1. qoʻlda yasalgan JWT
+$ go run ./cmd/qolda
+header:  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+payload: eyJzdWIiOiIxIiwiaXNzIjoiYm96b3IiLCJhdWQiOiJib3pvci1hcGkiLCJleHAiOjE3OTU4NDU4NzR9
+imzo:    AFAK3EyOT_DNZkP4w6F9xJVhKLHx7x5pM8z4zKLX0q0
+$ echo eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9 | basenc --base64url -d; echo
+{"alg":"HS256","typ":"JWT"}
+$ echo eyJzdWIiOiIxIiwiaXNzIjoiYm96b3IiLCJhdWQiOiJib3pvci1hcGkiLCJleHAiOjE3OTU4NDU4NzR9 | basenc --base64url -d; echo
+{"sub":"1","iss":"bozor","aud":"bozor-api","exp":1795845874}
+$ echo eyJzdWIiOiIxIiwiaXNzIjoiYm96b3IiLCJhdWQiOiJib3pvci1hcGkiLCJleHAiOjE3OTU4NDU4NzR9 | wc -c
+81
+
+### 2. go get (yangi modulda, toza kesh bilan emas: faqat chiqish matni)
+$ go get github.com/golang-jwt/jwt/v5@v5.3.1
+go: added github.com/golang-jwt/jwt/v5 v5.3.1
+$ grep jwt go.mod
+	github.com/golang-jwt/jwt/v5 v5.3.1
+
+### 3. kutubxona bilan tekshiruv
+$ go run ./cmd/tekshir
+qoʻlda yasalgan:         ok, sub=1
+sub 1 → 2, imzo eski:    token signature is invalid: signature is invalid
+alg none, imzo yoʻq:     token signature is invalid: signing method none is invalid
+exp yoʻq:                token has invalid claims: token is missing required claim: exp claim is required
+aud boshqa xizmat:       token has invalid claims: token has invalid audience
+muddati oʻtgan:          token has invalid claims: token is expired
+alg HS512, imzo toʻgʻri: token signature is invalid: signing method HS512 is invalid
+
+### 4. klassik xato: qoidasiz Parse (_video/stages/token-qoidasiz.go)
+$ go run ./cmd/tekshir
+qoʻlda yasalgan:         ok, sub=1
+sub 1 → 2, imzo eski:    token signature is invalid: signature is invalid
+alg none, imzo yoʻq:     token signature is invalid: token is unverifiable: 'none' signature type is not allowed
+exp yoʻq:                ok, sub=1
+aud boshqa xizmat:       ok, sub=1
+muddati oʻtgan:          token has invalid claims: token is expired
+alg HS512, imzo toʻgʻri: ok, sub=1
+
+### 5. server, login: session ham, JWT ham
+$ go run ./cmd/api
+bozor API: http://localhost:8765
+$ curl -s -c jar.txt localhost:8765/login -H "Content-Type: application/json" -d '{"email":"dilnoza@bozor.test","password":"tarvuz-osmon-qalam-ariq-27"}' | tee login.json
+{"id":1,"email":"dilnoza@bozor.test","token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJib3pvciIsInN1YiI6IjEiLCJhdWQiOlsiYm96b3ItYXBpIl0sImV4cCI6MTc5NTg0NTkzOCwiaWF0IjoxNzk1ODQ1MDM4LCJqdGkiOiJFWVJHRUtBVlJWNTNPTFpKNjdIRlhERFVMNyJ9.OqQHHtCfT4RLruLOKaOxvmjdeiDhkfY7bgnjFyo9HR8"}
+$ T=$(jq -r .token login.json)
+$ grep session jar.txt | cut -f7
+ipWTM_MGEAMymuhal46a5nCFdAQxwX7MHYFUILe4AvM
+$ echo "$T" | cut -d. -f2 | basenc --base64url -d; echo
+{"iss":"bozor","sub":"1","aud":["bozor-api"],"exp":1795845938,"iat":1795845038,"jti":"EYRGEKAVRV53OLZJ67HFXDDUL7"}
+
+### 6. /me ikki yoʻl bilan
+$ curl -s -b jar.txt localhost:8765/me
+{"id":1,"email":"dilnoza@bozor.test"}
+$ curl -s -H "Authorization: Bearer $T" localhost:8765/me
+{"id":1}
+
+### 7. logout (cookie ham, JWT ham bilan), keyin eski nusxalar
+$ cp jar.txt eski.txt
+$ curl -s -i -X POST -b jar.txt -c jar.txt -H "Authorization: Bearer $T" localhost:8765/logout
+HTTP/1.1 204 No Content
+Set-Cookie: session=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax
+X-Request-Id: FHUAD4GLUH4PSPC4VZ7O5IJPX4
+Date: Sat, 28 Nov 2026 05:50:38 GMT
+
+$ curl -s -b eski.txt localhost:8765/me
+{"type":"about:blank","title":"Unauthorized","status":401,"detail":"avval login qiling","request_id":"KHFAAFYMS4NOX4E55FWQISJKFC"}
+$ curl -s -H "Authorization: Bearer $T" localhost:8765/me
+{"id":1}
+
+### 8. har soʻrovdagi oʻlcham: cookie va Authorization sarlavhasi
+$ grep session eski.txt | cut -f7 | tr -d '\n' | wc -c
+43
+$ printf %s "$T" | wc -c
+233
+$ printf %s "Cookie: session=$(grep session eski.txt | cut -f7)" | wc -c
+59
+$ printf %s "Authorization: Bearer $T" | wc -c
+255
+
+### 9. yaroqsiz JWT bilan /me (-i)
+$ curl -s -i -H "Authorization: Bearer salom" localhost:8765/me
+HTTP/1.1 401 Unauthorized
+Content-Type: application/problem+json
+Www-Authenticate: Bearer error="invalid_token"
+X-Request-Id: VDUJGPVZP37VXZT7NMNUVILL7X
+Date: Sat, 28 Nov 2026 05:50:38 GMT
+Content-Length: 131
+
+{"type":"about:blank","title":"Unauthorized","status":401,"detail":"avval login qiling","request_id":"VDUJGPVZP37VXZT7NMNUVILL7X"}
+
+### 10. server log'i
+bozor API: http://localhost:8765
+2026/11/28 10:50:38 UKHM2L7SKIYS6WEUIB5ZYFYKFF GET "/health" 200 7.917µs
+2026/11/28 10:50:38 A6BBS35XTB6KIDNWDLXYYFGOZL POST "/login" 200 69.831514ms
+2026/11/28 10:50:38 MSD36P3EXCYAL5POYEE26FPLWX GET "/me" 200 92.622µs
+2026/11/28 10:50:38 X6MYW7W5UUKYUVPNGTXFBAHCR6 GET "/me" 200 192.904µs
+2026/11/28 10:50:38 FHUAD4GLUH4PSPC4VZ7O5IJPX4 POST "/logout" 204 36.415µs
+2026/11/28 10:50:38 KHFAAFYMS4NOX4E55FWQISJKFC xato 401: "session yoʻq yoki muddati oʻtgan"
+2026/11/28 10:50:38 KHFAAFYMS4NOX4E55FWQISJKFC GET "/me" 401 146.41µs
+2026/11/28 10:50:38 CHYJBUXXYTT3CORHP3MICC5XGT GET "/me" 200 79.342µs
+2026/11/28 10:50:38 VDUJGPVZP37VXZT7NMNUVILL7X xato 401: "JWT yaroqsiz: token is malformed: token contains an invalid number of segments"
+2026/11/28 10:50:38 VDUJGPVZP37VXZT7NMNUVILL7X GET "/me" 401 86.48µs
+
+### 11. testlar (vazifadan oldin)
+$ go test ./... 2>&1 | grep -v 'no test files'
+--- FAIL: TestLogoutJWTniBekorQiladi (0.05s)
+    tekshiruv_test.go:19: logout'dan keyin oʻsha JWT bilan /me: status 200, kutilgan 401 — jti denylist'ga tushmadi yoki authenticate uni tekshirmayapti (TASK.md, 2–3-qadam)
+FAIL
+FAIL	github.com/abdurahmon27/bozor/cmd/api	0.622s
+ok  	github.com/abdurahmon27/bozor/internal/password	0.426s
+--- FAIL: TestRevokeToken (0.00s)
+    tekshiruv_test.go:15: RevokeToken: vazifa: RevokeToken hali yozilmagan (TASK.md) — TASK.md, 1-qadam: s.revoked'ga yozing va nil qaytaring
+FAIL
+FAIL	github.com/abdurahmon27/bozor/internal/store	0.006s
+ok  	github.com/abdurahmon27/bozor/internal/token	0.007s
+FAIL
+
+### 12. yechim bilan: logout'dan keyin JWT
+$ curl -s -c jar.txt localhost:8765/login -H "Content-Type: application/json" -d '{"email":"dilnoza@bozor.test","password":"tarvuz-osmon-qalam-ariq-27"}' > login.json
+$ curl -s -o /dev/null -w '%{http_code}\n' -X POST -H "Authorization: Bearer $T" localhost:8765/logout
+204
+$ curl -s -H "Authorization: Bearer $T" localhost:8765/me
+{"type":"about:blank","title":"Unauthorized","status":401,"detail":"avval login qiling","request_id":"JJB5G3AESW5OOD2H7VWCTSAQ7Q"}
+2026/11/28 10:50:40 CRGONAKNU46FIHUO5JZ3ZLWW6Q POST "/logout" 204 112.802µs
+2026/11/28 10:50:40 JJB5G3AESW5OOD2H7VWCTSAQ7Q xato 401: "JWT yaroqsiz: jti RXSGSXAMWVCJ57YM4TLYXSPB34 bekor qilingan"
+2026/11/28 10:50:40 JJB5G3AESW5OOD2H7VWCTSAQ7Q GET "/me" 401 233.045µs
+(8765 boʻsh)
