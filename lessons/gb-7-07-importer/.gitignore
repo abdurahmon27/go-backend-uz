@@ -1,0 +1,3 @@
+# videodagi buyruqlar yasaydigan fayllar (4 MB): go run ./cmd/katalog 200000 > katta.txt
+katta.txt
+buzuq.txt

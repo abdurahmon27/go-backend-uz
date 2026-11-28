@@ -1,0 +1,173 @@
+
+### 1. baza va migratsiyalar
+$ docker compose up -d --wait
+ Network gb707_default Creating 
+ Network gb707_default Creating 
+ Volume gb707_pgdata Creating 
+ Volume gb707_pgdata Creating 
+ Volume gb707_pgdata Created 
+ Volume gb707_pgdata Created 
+ Network gb707_default Created 
+ Network gb707_default Created 
+ Container gb707-db-1 Creating 
+ Container gb707-db-1 Created 
+ Container gb707-db-1 Starting 
+ Container gb707-db-1 Started 
+ Container gb707-db-1 Waiting 
+ Container gb707-db-1 Healthy 
+$ goose up
+OK   00001_products.sql (6.54ms)
+OK   00002_orders.sql (9.86ms)
+OK   00003_orders_status.sql (2.74ms)
+goose: successfully migrated database to version: 3
+
+### 2. katta katalog
+$ go run ./cmd/katalog 200000 > katta.txt
+$ head -4 katta.txt
+olma;12000;40
+non;4000;120
+oʻrik;35000;5
+choy;25000;8
+$ wc -l katta.txt
+200000 katta.txt
+
+### 3. import va Ctrl+C (2.5 s)
+$ go run ./cmd/import katta.txt
+^Cyozildi: 48000 qator (96 partiya) · rollback: 2000 qator (4 partiya) · vaqt: 2.182s
+import: toʻxtatildi (Ctrl+C)
+exit status 1
+(chiqish kodi: 1)
+$ docker compose exec -T db psql -c "SELECT count(*) FROM products"
+ count 
+-------
+ 48000
+(1 row)
+
+
+### 4. qayta, oxirigacha
+$ go run ./cmd/import katta.txt
+yozildi: 200000 qator (400 partiya) · rollback: 0 qator (0 partiya) · vaqt: 8.896s
+$ docker compose exec -T db psql -c "SELECT count(*) FROM products"
+ count  
+--------
+ 200000
+(1 row)
+
+
+### 5. buzuq qator (120000-qator: narx -5)
+$ sed -n 120000p buzuq.txt
+sut-120000;-5;199
+$ go run ./cmd/import buzuq.txt
+yozildi: 117500 qator (235 partiya) · rollback: 2000 qator (4 partiya) · vaqt: 5.364s
+import: 120000-qator: narx: narx musbat boʻlishi kerak, keldi -5
+exit status 1
+(chiqish kodi: 1)
+
+### 6. testlar
+$ go test -v -run 'TestCancel|TestBadLine|TestPostgres' ./internal/importer
+=== RUN   TestCancel
+--- PASS: TestCancel (0.00s)
+=== RUN   TestBadLine
+--- PASS: TestBadLine (0.00s)
+=== RUN   TestPostgresImport
+--- PASS: TestPostgresImport (0.21s)
+=== RUN   TestPostgresCancel
+    pg_test.go:68: yozildi: 2000 qator (4 partiya) · rollback: 1000 qator (2 partiya) · bazada: 2000 qator
+--- PASS: TestPostgresCancel (0.14s)
+PASS
+ok  	github.com/abdurahmon27/bozor/internal/importer	0.368s
+$ go test ./...
+?   	github.com/abdurahmon27/bozor	[no test files]
+?   	github.com/abdurahmon27/bozor/cmd/import	[no test files]
+?   	github.com/abdurahmon27/bozor/cmd/katalog	[no test files]
+--- FAIL: TestTaskBatchTimeout (0.00s)
+    tekshiruv_test.go:48: 3-partiya osilib qoldi va Run 1 daqiqada ham qaytmadi: BatchTimeout (5s) ishlatilmayapti (TASK.md, 1-qadam)
+FAIL
+FAIL	github.com/abdurahmon27/bozor/internal/importer	0.360s
+?   	github.com/abdurahmon27/bozor/internal/pgtest	[no test files]
+FAIL
+
+### 7. xato: read select'siz yuboradi (stages/importer-xato.go)
+$ go test -run 'TestCancel$' ./internal/importer
+--- FAIL: TestCancel (0.00s)
+panic: deadlock: all goroutines in bubble are blocked [recovered, repanicked]
+
+goroutine 17 [running]:
+testing.tRunner.func1.2({0xe4dc60, 0x38cad4ba2078})
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/testing/testing.go:2125 +0x232
+testing.tRunner.func1()
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/testing/testing.go:2128 +0x329
+panic({0xe4dc60?, 0x38cad4ba2078?})
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/runtime/panic.go:859 +0x125
+internal/synctest.Run(0x38cad4cb8020)
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/runtime/synctest.go:247 +0x2dd
+testing/synctest.Test(0x38cad4ca4248, 0xe97018)
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/testing/synctest/synctest.go:291 +0x99
+github.com/abdurahmon27/bozor/internal/importer.TestCancel(0x38cad4ca4248?)
+	/tmp/tmp.VjDFW19g1E/bozor/internal/importer/importer_test.go:54 +0x1a
+testing.tRunner(0x38cad4ca4248, 0xe96f20)
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/testing/testing.go:2195 +0xea
+created by testing.(*T).Run in goroutine 1
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/testing/testing.go:2260 +0x4d4
+
+goroutine 18 [chan receive (durable), synctest bubble 1]:
+testing/synctest.testingSynctestTest(0x38cad4ca4248, 0xe97018)
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/testing/testing.go:2310 +0x293
+testing/synctest.Test.func1()
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/testing/synctest/synctest.go:292 +0x25
+created by testing/synctest.Test in goroutine 17
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/testing/synctest/synctest.go:291 +0x99
+
+goroutine 19 [sync.WaitGroup.Wait (durable), synctest bubble 1]:
+sync.runtime_SemacquireWaitGroup(0x5d4da5?, 0x58?)
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/runtime/sema.go:114 +0x2e
+sync.(*WaitGroup).Wait(0x38cad4c860c8)
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/sync/waitgroup.go:206 +0x85
+golang.org/x/sync/errgroup.(*Group).Wait(0x38cad4c860c0)
+	/home/haywan/go/pkg/mod/golang.org/x/sync@v0.25.0/errgroup/errgroup.go:56 +0x1e
+github.com/abdurahmon27/bozor/internal/importer.Run({0xe94540, 0x38cad4c8e190}, {0xe8df58, 0x38cad4cb8060}, {0xe8ded8, 0x91b588}, {0x5292c0?, 0xbfa478?})
+	/tmp/tmp.VjDFW19g1E/bozor/internal/importer/importer.go:86 +0x27a
+github.com/abdurahmon27/bozor/internal/importer.TestCancel.func1(0x38cad4ca4488)
+	/tmp/tmp.VjDFW19g1E/bozor/internal/importer/importer_test.go:60 +0xc5
+testing.tRunner(0x38cad4ca4488, 0xe97018)
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/testing/testing.go:2195 +0xea
+created by testing/synctest.testingSynctestTest in goroutine 18
+	/home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/src/testing/testing.go:2309 +0x278
+
+goroutine 21 [chan send (durable), synctest bubble 1]:
+github.com/abdurahmon27/bozor/internal/importer.read({0xe94540, 0x38cad4c8e1e0}, {0xe8df58?, 0x38cad4cb8060?}, 0x38cad4ca01c0)
+	/tmp/tmp.VjDFW19g1E/bozor/internal/importer/importer.go:107 +0x25f
+github.com/abdurahmon27/bozor/internal/importer.Run.func1()
+	/tmp/tmp.VjDFW19g1E/bozor/internal/importer/importer.go:79 +0x5d
+golang.org/x/sync/errgroup.(*Group).Go.func1()
+	/home/haywan/go/pkg/mod/golang.org/x/sync@v0.25.0/errgroup/errgroup.go:93 +0x50
+created by golang.org/x/sync/errgroup.(*Group).Go in goroutine 19
+	/home/haywan/go/pkg/mod/golang.org/x/sync@v0.25.0/errgroup/errgroup.go:78 +0xa5
+FAIL	github.com/abdurahmon27/bozor/internal/importer	0.007s
+FAIL
+--- xuddi shu kod CLI'da: Ctrl+C dan keyin 8 s kutamiz
+^C_video/chiqishlar.sh: line 62: 1009103 Killed                     timeout -s KILL 8 python3 "$lab/_video/ctrlc.py" 2.5 ./import-xato katta.txt 2>&1
+(chiqish kodi: 137 — 137 = 8 s dan keyin KILL bilan oʻldirildi, hisobot chiqmadi)
+$ go test -run 'TestCancel$' ./internal/importer
+ok  	github.com/abdurahmon27/bozor/internal/importer	0.010s
+
+### 8. worker soni va vaqt (Chuqurroq; har safar boʻsh jadval)
+$ ./imp -workers 1 katta.txt
+yozildi: 200000 qator (400 partiya) · rollback: 0 qator (0 partiya) · vaqt: 22.33s
+$ ./imp -workers 4 katta.txt
+yozildi: 200000 qator (400 partiya) · rollback: 0 qator (0 partiya) · vaqt: 8.108s
+$ ./imp -workers 8 katta.txt
+yozildi: 200000 qator (400 partiya) · rollback: 0 qator (0 partiya) · vaqt: 5.538s
+$ ./imp -workers 12 katta.txt
+yozildi: 200000 qator (400 partiya) · rollback: 0 qator (0 partiya) · vaqt: 5.583s
+
+### 9. tozalash
+$ docker compose down -v
+ Container gb707-db-1 Stopping 
+ Container gb707-db-1 Stopped 
+ Container gb707-db-1 Removing 
+ Container gb707-db-1 Removed 
+ Volume gb707_pgdata Removing 
+ Network gb707_default Removing 
+ Volume gb707_pgdata Removed 
+ Network gb707_default Removed 

@@ -1,0 +1,28 @@
+$ go test -race -v -run 'TestCancel|TestBadLine|TestPostgres' ./internal/importer   (final, Docker: race.sh)
+=== RUN   TestCancel
+--- PASS: TestCancel (0.04s)
+=== RUN   TestBadLine
+--- PASS: TestBadLine (0.04s)
+=== RUN   TestPostgresImport
+--- PASS: TestPostgresImport (0.31s)
+=== RUN   TestPostgresCancel
+    pg_test.go:68: yozildi: 1500 qator (3 partiya) · rollback: 1500 qator (3 partiya) · bazada: 1500 qator
+--- PASS: TestPostgresCancel (0.25s)
+PASS
+ok  	github.com/abdurahmon27/bozor/internal/importer	1.653s
+(chiqish kodi: 0)
+
+$ go test -race ./...   (solution)
+?   	github.com/abdurahmon27/bozor	[no test files]
+?   	github.com/abdurahmon27/bozor/cmd/import	[no test files]
+?   	github.com/abdurahmon27/bozor/cmd/katalog	[no test files]
+ok  	github.com/abdurahmon27/bozor/internal/importer	2.100s
+?   	github.com/abdurahmon27/bozor/internal/pgtest	[no test files]
+(chiqish kodi: 0)
+
+$ go build -race ./cmd/import; Ctrl+C 3 s da; keyin -workers 8 toʻliq (final, Docker: race.sh)
+yozildi: 60000 qator (120 partiya) · rollback: 2000 qator (4 partiya) · vaqt: 2.995s
+import: toʻxtatildi (Ctrl+C)
+exit 1
+yozildi: 200000 qator (400 partiya) · rollback: 0 qator (0 partiya) · vaqt: 6.665s
+(chiqish kodi: 0)
