@@ -10,8 +10,9 @@ import (
 	"time"
 )
 
-// supplier.go: yetkazib beruvchining API'si, bu laboratoriyada soxta (tarmoqsiz), shuning uchun soʻrovlar soni har
-// mashinada bir xil. GB-7.03'dagi yetkazib beruvchining tezroq va katta nusxasi: olma (1), non (2) va oʻrik (3) qoldigʻi
+// supplier.go: yetkazib beruvchining API'si, bu laboratoriyada soxta (tarmoqsiz). Bekor qilishdagi soʻrovlar soni
+// va cheklovsiz parallel ishlar rejalashtirishga bogʻliq. GB-7.03'dagi yetkazib beruvchining tezroq va katta nusxasi:
+// olma (1), non (2) va oʻrik (3) qoldigʻi
 // oʻsha, qolgan ID'lar uchun qoldiq = ID % 50. Har soʻrov supplierDelay davom etadi. Bir vaqtda supplierLimit'dan koʻp soʻrov kelsa, ortigʻi
 // rad etiladi (ErrTooMany, HTTP'dagi 429 Too Many Requests kabi: GB-6.07). Yetkazib beruvchi faqat
 // 1..supplierProducts ID'larni biladi. stats hamma raqamni yozib boradi: nechta soʻrov keldi, eng koʻpi bilan

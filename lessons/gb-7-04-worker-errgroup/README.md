@@ -24,7 +24,7 @@ context'ini `Wait`dan keyin ishlatish xatosini (`context canceled`) taniysiz.
 Bu papka mustaqil (Modul 7 laboratoriyasi): oʻz `go.mod`'i (`github.com/abdurahmon27/bozor`, `go 1.27`), oʻz `package main`'i,
 bitta tashqi modul: `golang.org/x/sync v0.25.0` (`go.sum` bilan). Yetkazib beruvchi **soxta** (`supplier.go`, tarmoqsiz):
 GB-7.03'dagi yetkazib beruvchining tezroq va katta nusxasi (olma 1, non 2, oʻrik 3 qoldigʻi oʻsha: 40, 120, 5; qolgan ID'lar uchun
-`ID % 50`), shuning uchun soʻrovlar soni har mashinada bir xil: har soʻrov 20 ms, bir vaqtda 10 tadan koʻpi rad etiladi
+`ID % 50`). Bekor qilishdagi soʻrovlar soni va cheklovsiz parallel ishlar rejalashtirishga bogʻliq. Har soʻrov 20 ms, bir vaqtda 10 tadan koʻpi rad etiladi
 (`ErrTooMany`, "429 too many requests"), faqat 1…1000 ID'lar mavjud (`ErrNotFound`). `saveStocks` ham soxta: faqat
 context'ni tekshiradi; haqiqiy Postgres'ga yozish GB-7.07 nazorat nuqtasida (bekor qilinadigan importer).
 
@@ -49,7 +49,7 @@ xotira (`runtime.MemStats.Sys`).
 
 ## Videodagi buyruqlar va natijalari (go1.27.4 linux/amd64, 12 yadro)
 
-Har qadam `./_video/run.sh <qadam> go run .` bilan. Vaqt va xotira sizda biroz boshqacha boʻladi; soʻrovlar soni bir xil.
+Har qadam `./_video/run.sh <qadam> go run .` bilan. Vaqt, xotira, cheklovsiz parallel ishlar va bekor qilishdagi soʻrovlar soni sizda boshqacha boʻlishi mumkin.
 
 ```
 $ ./_video/run.sh 01-ketma go run .          # ketma-ket, sumStock kabi
@@ -108,7 +108,7 @@ qoldiqlar: 1000
 
 - **Worker pool'da goroutine 11** (10 worker + `main`), errgroup'da **11 yoki 12**: errgroup goroutine'i oʻrnini (limit
   "slot"ini) `defer` bilan, funksiyasi tugashi bilanoq boʻshatadi; yangisi boshlanganda eskisi hali chiqib ulgurmagan boʻlishi mumkin.
-- **509, 500 emas** (504–509, har safar biroz boshqacha): xatogacha 500 soʻrov va oʻsha paytda ishlayotganlari. Sikl qolgan ~490 ta `g.Go`ni baribir chaqiradi
+- **Bu safar 509 soʻrov** (kuzatilgan: 504–509; kafolatlangan oraliq emas): aniq son rejalashtirishga bogʻliq. Sikl qolgan ~490 ta `g.Go`ni baribir chaqiradi
   (errgroup siklni toʻxtatmaydi), lekin `checkStock` context bekor ekanini koʻrib, soʻrov yubormasdan qaytadi. Bekor qilish faqat
   context'ni hurmat qiladigan funksiyada ishlaydi (GB-7.03). `Wait` faqat **birinchi** xatoni qaytaradi; bekor qilinganlarning
   `context canceled` xatolari tashlanadi.
