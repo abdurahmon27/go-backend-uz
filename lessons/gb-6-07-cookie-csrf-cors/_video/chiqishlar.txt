@@ -1,0 +1,190 @@
+# GB-6.07 chiqishlari — 2026-11-28 · go version go1.27.4 linux/amd64 · curl 8.22.0 · Google Chrome 155.0.8059.39 
+# bash _video/chiqishlar.sh bilan yozilgan; har bosqich yangi jarayon (xotira — Seed'dan).
+
+## 1. hook: darsgacha (SameSite=Lax, CSRF tekshiruvisiz) — begona sahifa http://localhost:9090
+$ /tmp/tmp.1CZ6jxQOWw/brauzer csrf http://localhost:9090
+login: 200 {"id":1,"email":"dilnoza@bozor.test"}
+sahifa: http://localhost:9090 → «Sovgʻani olish» bosildi
+javob: {"id":41,"user_id":1,"status":"bekor qilindi","note":"Chilonzor 9-kvartal, 12-uy"}
+GET /orders/41: {"id":41,"user_id":1,"status":"bekor qilindi","note":"Chilonzor 9-kvartal, 12-uy"}
+--- bozor log'i:
+bozor API: http://localhost:8765
+2026/11/28 10:42:43 UYHM36Y4EXZZ4WAVOL6A6TIBK7 POST "/orders/41/cancel" 200 53.587µs site="same-site" cookie=true
+2026/11/28 10:42:44 F4UYGHGRLJT53IA6TWWJ333YIR GET "/orders/41" 200 27.51µs site="none" cookie=true
+
+## 2. Set-Cookie (yakuniy): __Host-session, Max-Age
+$ curl -s -i -c jar.txt localhost:8765/login -H "Content-Type: application/json" -d '{"email":"dilnoza@bozor.test","password":"tarvuz-osmon-qalam-ariq-27"}'
+HTTP/1.1 200 OK
+Cache-Control: no-store
+Content-Type: application/json
+Set-Cookie: __Host-session=3Z8H3_sk7LTAV-SjJe_sZ-zxDUVndwMK7eq22LJxCF4; Path=/; Max-Age=86400; HttpOnly; Secure; SameSite=Lax
+Vary: Origin
+X-Request-Id: V25I6UOQ2JAJV7SJGOGTMVVQ4E
+Date: Sat, 28 Nov 2026 05:42:44 GMT
+Content-Length: 38
+
+{"id":1,"email":"dilnoza@bozor.test"}
+$ cat jar.txt | tail -1
+#HttpOnly_localhost	FALSE	/	TRUE	1795930964	__Host-session	3Z8H3_sk7LTAV-SjJe_sZ-zxDUVndwMK7eq22LJxCF4
+$ curl -s -b jar.txt localhost:8765/me
+{"id":1,"email":"dilnoza@bozor.test"}
+
+## 3. HttpOnly: bozor sahifasida document.cookie (haqiqiy Chrome)
+$ /tmp/tmp.1CZ6jxQOWw/brauzer httponly
+login: 200 {"id":1,"email":"dilnoza@bozor.test"}
+document.cookie: ""
+fetch /me: 200 {"id":1,"email":"dilnoza@bozor.test"}
+
+## 4. darsgacha: begona sahifa boshqa SITE'da (127.0.0.1:9090), cookie SameSite=Lax
+$ /tmp/tmp.1CZ6jxQOWw/brauzer csrf http://127.0.0.1:9090
+login: 200 {"id":1,"email":"dilnoza@bozor.test"}
+sahifa: http://127.0.0.1:9090 → «Sovgʻani olish» bosildi
+javob: {"type":"about:blank","title":"Unauthorized","status":401,"detail":"avval login qiling","request_id":"S3Q6XZUWGBMEKYQHMNZC7SVVIG"}
+GET /orders/41: {"id":41,"user_id":1,"status":"yangi","note":"Chilonzor 9-kvartal, 12-uy"}
+--- bozor log'i:
+bozor API: http://localhost:8765
+2026/11/28 10:42:55 S3Q6XZUWGBMEKYQHMNZC7SVVIG xato 401: "http: named cookie not present"
+2026/11/28 10:42:55 S3Q6XZUWGBMEKYQHMNZC7SVVIG POST "/orders/41/cancel" 401 164.447µs site="cross-site" cookie=false
+2026/11/28 10:42:56 PDH4NUM5QIKZ2YB2U3KSWXV2SC GET "/orders/41" 200 122.866µs site="none" cookie=true
+
+## 5. SameSite=None (CSRF tekshiruvisiz): 127.0.0.1:9090
+$ curl -s -i localhost:8765/login -H "Content-Type: application/json" -d '{"email":"dilnoza@bozor.test","password":"tarvuz-osmon-qalam-ariq-27"}' | grep Set-Cookie
+Set-Cookie: __Host-session=_cFrQAv0c51vmOjSAc9bb9bdzNVbKaRobMKwjqcGrWM; Path=/; Max-Age=86400; HttpOnly; Secure; SameSite=None
+$ /tmp/tmp.1CZ6jxQOWw/brauzer csrf http://127.0.0.1:9090
+login: 200 {"id":1,"email":"dilnoza@bozor.test"}
+sahifa: http://127.0.0.1:9090 → «Sovgʻani olish» bosildi
+javob: {"id":41,"user_id":1,"status":"bekor qilindi","note":"Chilonzor 9-kvartal, 12-uy"}
+GET /orders/41: {"id":41,"user_id":1,"status":"bekor qilindi","note":"Chilonzor 9-kvartal, 12-uy"}
+--- bozor log'i:
+bozor API: http://localhost:8765
+2026/11/28 10:42:57 HVMHY2DUR5YY2MZTBF7HABQIHB POST "/orders/41/cancel" 200 101.959µs site="cross-site" cookie=true
+2026/11/28 10:42:57 ORQEJDKFSR6QJSAWZ7RB2AYXK3 GET "/orders/41" 200 27.357µs site="none" cookie=true
+
+## 6. yakuniy (protectCSRF): ikkala begona sahifa
+$ /tmp/tmp.1CZ6jxQOWw/brauzer csrf http://localhost:9090
+login: 200 {"id":1,"email":"dilnoza@bozor.test"}
+sahifa: http://localhost:9090 → «Sovgʻani olish» bosildi
+javob: {"type":"about:blank","title":"Forbidden","status":403,"detail":"boshqa saytdan kelgan soʻrov","request_id":"CMFJKVOFHSJMJ2PCUFRXVPZ7XQ"}
+GET /orders/41: {"id":41,"user_id":1,"status":"yangi","note":"Chilonzor 9-kvartal, 12-uy"}
+$ /tmp/tmp.1CZ6jxQOWw/brauzer csrf http://127.0.0.1:9090
+login: 200 {"id":1,"email":"dilnoza@bozor.test"}
+sahifa: http://127.0.0.1:9090 → «Sovgʻani olish» bosildi
+javob: {"type":"about:blank","title":"Forbidden","status":403,"detail":"boshqa saytdan kelgan soʻrov","request_id":"WRCLJEC4JIA6L6EOVIAGORF5HQ"}
+GET /orders/41: {"id":41,"user_id":1,"status":"yangi","note":"Chilonzor 9-kvartal, 12-uy"}
+--- bozor log'i:
+bozor API: http://localhost:8765
+2026/11/28 10:42:58 CMFJKVOFHSJMJ2PCUFRXVPZ7XQ xato 403: "boshqa saytdan kelgan soʻrov: cross-origin request detected from Sec-Fetch-Site header"
+2026/11/28 10:42:58 CMFJKVOFHSJMJ2PCUFRXVPZ7XQ POST "/orders/41/cancel" 403 57.999µs site="same-site" cookie=true
+2026/11/28 10:42:59 MXXE6YOGZBI3XMWO3ZPGVL43IU GET "/orders/41" 200 44.865µs site="none" cookie=true
+2026/11/28 10:42:59 WRCLJEC4JIA6L6EOVIAGORF5HQ xato 403: "boshqa saytdan kelgan soʻrov: cross-origin request detected from Sec-Fetch-Site header"
+2026/11/28 10:42:59 WRCLJEC4JIA6L6EOVIAGORF5HQ POST "/orders/41/cancel" 403 51.34µs site="cross-site" cookie=false
+2026/11/28 10:43:00 PAJGTRVUPFTBNU7XQQHMQTZW2Y GET "/orders/41" 200 29.952µs site="none" cookie=true
+
+## 7. yakuniy: terminaldan curl (brauzer emas) va brauzer sarlavhalari bilan curl
+$ curl -s -c jar.txt -o /dev/null localhost:8765/login -H "Content-Type: application/json" -d '{"email":"dilnoza@bozor.test","password":"tarvuz-osmon-qalam-ariq-27"}'
+$ curl -s -X POST -b jar.txt -H 'Sec-Fetch-Site: same-site' -H 'Origin: http://localhost:9090' localhost:8765/orders/41/cancel
+{"type":"about:blank","title":"Forbidden","status":403,"detail":"boshqa saytdan kelgan soʻrov","request_id":"SBVIZH4M2QAEQ2KPAN2YR7AMUL"}
+$ curl -s -X POST -b jar.txt localhost:8765/orders/41/cancel
+{"id":41,"user_id":1,"status":"bekor qilindi","note":"Chilonzor 9-kvartal, 12-uy"}
+--- bozor log'i:
+2026/11/28 10:43:00 SBVIZH4M2QAEQ2KPAN2YR7AMUL xato 403: "boshqa saytdan kelgan soʻrov: cross-origin request detected from Sec-Fetch-Site header"
+2026/11/28 10:43:00 SBVIZH4M2QAEQ2KPAN2YR7AMUL POST "/orders/41/cancel" 403 48.338µs site="same-site" cookie=true
+2026/11/28 10:43:00 AB5WC5LVASJ7V3DDDD2DDFN7VL POST "/orders/41/cancel" 200 44.004µs site="" cookie=true
+
+## 8. CORS: yakuniy — begona sahifa (localhost:9090) GET /me'ni oʻqishga urinadi
+$ /tmp/tmp.1CZ6jxQOWw/brauzer cors http://localhost:9090
+login: 200 {"id":1,"email":"dilnoza@bozor.test"}
+sahifa: http://localhost:9090/oqish
+oʻqib boʻlmadi: TypeError: Failed to fetch
+--- bozor log'i:
+bozor API: http://localhost:8765
+2026/11/28 10:43:00 CJ3ZWK7JNYUASOQBSA2MFXUPA4 GET "/me" 200 32.95µs site="same-site" cookie=true
+
+## 9. CORS xatosi (aks): Origin tekshirilmay qaytariladi
+$ /tmp/tmp.1CZ6jxQOWw/brauzer cors http://localhost:9090
+login: 200 {"id":1,"email":"dilnoza@bozor.test"}
+sahifa: http://localhost:9090/oqish
+oʻqildi: {"id":1,"email":"dilnoza@bozor.test"}
+$ curl -s -c jar.txt -o /dev/null localhost:8765/login -H "Content-Type: application/json" -d '{"email":"dilnoza@bozor.test","password":"tarvuz-osmon-qalam-ariq-27"}'
+$ curl -s -i -b jar.txt -H 'Origin: https://istalgan-sayt.example' localhost:8765/me
+HTTP/1.1 200 OK
+Access-Control-Allow-Credentials: true
+Access-Control-Allow-Origin: https://istalgan-sayt.example
+Cache-Control: no-store
+Content-Type: application/json
+X-Request-Id: 7PWKOWZ3M55DQCIOB45345OF7V
+Date: Sat, 28 Nov 2026 05:43:06 GMT
+Content-Length: 38
+
+{"id":1,"email":"dilnoza@bozor.test"}
+
+## 10. CORS allow-list (yakuniy): ruxsatli va begona Origin, preflight
+$ curl -s -c jar.txt -o /dev/null localhost:8765/login -H "Content-Type: application/json" -d '{"email":"dilnoza@bozor.test","password":"tarvuz-osmon-qalam-ariq-27"}'
+$ curl -s -i -b jar.txt -H 'Origin: http://localhost:3000' localhost:8765/me
+HTTP/1.1 200 OK
+Access-Control-Allow-Credentials: true
+Access-Control-Allow-Origin: http://localhost:3000
+Cache-Control: no-store
+Content-Type: application/json
+Vary: Origin
+X-Request-Id: AAXV5BAIYHSCYBVDGOP5MDJX4J
+Date: Sat, 28 Nov 2026 05:43:06 GMT
+Content-Length: 38
+
+{"id":1,"email":"dilnoza@bozor.test"}
+$ curl -s -i -b jar.txt -H 'Origin: http://localhost:9090' localhost:8765/me
+HTTP/1.1 200 OK
+Cache-Control: no-store
+Content-Type: application/json
+Vary: Origin
+X-Request-Id: 7MZQKAMUN2HUGB762U65KQWLQI
+Date: Sat, 28 Nov 2026 05:43:06 GMT
+Content-Length: 38
+
+{"id":1,"email":"dilnoza@bozor.test"}
+$ curl -s -i -X OPTIONS -H 'Origin: http://localhost:3000' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: content-type' localhost:8765/login
+HTTP/1.1 204 No Content
+Access-Control-Allow-Credentials: true
+Access-Control-Allow-Headers: Content-Type
+Access-Control-Allow-Methods: POST, PATCH, DELETE
+Access-Control-Allow-Origin: http://localhost:3000
+Access-Control-Max-Age: 600
+Vary: Origin
+X-Request-Id: BE4LRLFMGVXXCFU4GDQVXL2F7A
+Date: Sat, 28 Nov 2026 05:43:06 GMT
+
+$ curl -s -i -X OPTIONS -H 'Origin: http://localhost:9090' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: content-type' localhost:8765/login
+HTTP/1.1 405 Method Not Allowed
+Allow: POST
+Content-Type: application/problem+json
+Vary: Origin
+X-Content-Type-Options: nosniff
+X-Request-Id: CMRTENLLEM5H4T242FLART3XDD
+Date: Sat, 28 Nov 2026 05:43:06 GMT
+Content-Length: 152
+
+{"type":"about:blank","title":"Method Not Allowed","status":405,"detail":"bu yoʻl uchun bunday metod yoʻq","request_id":"CMRTENLLEM5H4T242FLART3XDD"}
+$ /tmp/tmp.1CZ6jxQOWw/brauzer cors http://localhost:9090
+login: 200 {"id":1,"email":"dilnoza@bozor.test"}
+sahifa: http://localhost:9090/oqish
+oʻqib boʻlmadi: TypeError: Failed to fetch
+
+## 11. rate limit: POST /login, notoʻgʻri parol, 8 marta ketma-ket (yakuniy)
+$ for i in $(seq 8); do curl -s -o /dev/null -w "%{http_code} " localhost:8765/login -H "Content-Type: application/json" -d '{"email":"dilnoza@bozor.test","password":"taxmin-1"}'; done; echo
+401 401 401 401 401 429 429 429 
+$ curl -s -i localhost:8765/login -H "Content-Type: application/json" -d '{"email":"dilnoza@bozor.test","password":"taxmin-1"}'
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/problem+json
+Retry-After: 12
+Vary: Origin
+X-Request-Id: QPF2GAPEGME7UHASEJIC2Q3Y3Z
+Date: Sat, 28 Nov 2026 05:43:07 GMT
+Content-Length: 166
+
+{"type":"about:blank","title":"Too Many Requests","status":429,"detail":"urinishlar koʻp: keyinroq qayta urinib koʻring","request_id":"QPF2GAPEGME7UHASEJIC2Q3Y3Z"}
+$ curl -s -o /dev/null -w '%{http_code}\n' localhost:8765/login -H "Content-Type: application/json" -d '{"email":"dilnoza@bozor.test","password":"taxmin-1"}'
+401
+
+## 12. darsgacha (himoyasiz): rate limit yoʻq — 8 marta
+$ for i in $(seq 8); do curl -s -o /dev/null -w "%{http_code} " localhost:8765/login -H "Content-Type: application/json" -d '{"email":"dilnoza@bozor.test","password":"taxmin-1"}'; done; echo
+401 401 401 401 401 401 401 401 
