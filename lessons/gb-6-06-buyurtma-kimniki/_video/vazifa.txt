@@ -1,0 +1,21 @@
+
+### .
+$ curl -s -i -X PATCH -b jasur.txt localhost:8765/orders/41 -H "Content-Type: application/json" -d '{"note":"Jasurning manzili"}' | head -1
+HTTP/1.1 204 No Content
+$ docker compose exec -T db psql -c "SELECT id, user_id, note FROM orders WHERE id = 41"
+ id | user_id |       note        
+----+---------+-------------------
+ 41 |       1 | Jasurning manzili
+(1 row)
+
+
+### solution
+$ curl -s -i -X PATCH -b jasur.txt localhost:8765/orders/41 -H "Content-Type: application/json" -d '{"note":"Jasurning manzili"}' | head -1
+HTTP/1.1 404 Not Found
+$ docker compose exec -T db psql -c "SELECT id, user_id, note FROM orders WHERE id = 41"
+ id | user_id |            note            
+----+---------+----------------------------
+ 41 |       1 | Chilonzor 9-kvartal, 12-uy
+(1 row)
+
+docker compose down -v: ok

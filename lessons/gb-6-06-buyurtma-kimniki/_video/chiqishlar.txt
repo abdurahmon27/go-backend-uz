@@ -1,0 +1,150 @@
+
+### 1. baza, migratsiyalar, seed
+$ goose up
+OK   00001_products.sql (8.8ms)
+OK   00002_orders.sql (9.35ms)
+OK   00003_orders_status.sql (2.48ms)
+OK   00004_users.sql (4.78ms)
+OK   00005_sessions.sql (4.24ms)
+OK   00006_orders_owner.sql (3.87ms)
+OK   00007_users_role.sql (1.88ms)
+goose: successfully migrated database to version: 7
+$ docker compose exec -T db psql -f /lab/seed.sql
+TRUNCATE TABLE
+INSERT 0 3
+INSERT 0 4
+ALTER TABLE
+INSERT 0 2
+INSERT 0 4
+$ docker compose exec -T db psql -c "SELECT id, user_id, note FROM orders"
+ id | user_id |                note                 
+----+---------+-------------------------------------
+ 41 |       1 | Chilonzor 9-kvartal, 12-uy
+ 42 |       2 | Yunusobod 4-kvartal, 17-uy, ertalab
+(2 rows)
+
+$ docker compose exec -T db psql -c "SELECT id, email, role FROM users"
+ id |       email        |  role   
+----+--------------------+---------
+  1 | dilnoza@bozor.test | xaridor
+  2 | jasur@bozor.test   | xaridor
+  3 | admin@bozor.test   | admin
+(3 rows)
+
+
+### 2. XATO versiya (v0-bola): Dilnoza login, oʻz buyurtmasi 41, keyin 42
+$ go run ./cmd/api
+bozor API: http://localhost:8765
+$ curl -s -c jar.txt localhost:8765/login -H "Content-Type: application/json" -d '{"email":"dilnoza@bozor.test","password":"tarvuz-osmon-qalam-ariq-27"}'
+{"id":1,"email":"dilnoza@bozor.test","role":"xaridor"}
+$ curl -s -b jar.txt localhost:8765/orders/41
+{"id":41,"user_id":1,"status":"yangi","note":"Chilonzor 9-kvartal, 12-uy","items":[{"product_id":1,"quantity":2,"unit_price":1200000},{"product_id":2,"quantity":3,"unit_price":400000}],"total":3600000}
+$ curl -s -b jar.txt localhost:8765/orders/42
+{"id":42,"user_id":2,"status":"yangi","note":"Yunusobod 4-kvartal, 17-uy, ertalab","items":[{"product_id":4,"quantity":1,"unit_price":3500000},{"product_id":3,"quantity":1,"unit_price":2500000}],"total":6000000}
+$ curl -s -b jar.txt localhost:8765/orders/43
+{"type":"about:blank","title":"Not Found","status":404,"detail":"bunday buyurtma yoʻq","request_id":"VB6D4Q7YQ3MTPBX4EIHQVRW6FZ"}
+
+### 2b. XATO versiyada test
+$ go test -run TestOrderOwner ./cmd/api
+--- FAIL: TestOrderOwner (0.19s)
+    api_test.go:294: Dilnoza GET /orders/42: 200, kutilgan 404
+FAIL
+FAIL	github.com/abdurahmon27/bozor/cmd/api	0.278s
+FAIL
+
+### 3. tuzatilgan versiya: 42 va 999
+$ curl -s -i -b jar.txt localhost:8765/orders/42
+HTTP/1.1 404 Not Found
+Cache-Control: no-store
+Content-Type: application/problem+json
+X-Request-Id: QIMZBTSJEJQDPN5YALXRKZR62B
+Date: Fri, 27 Nov 2026 17:51:15 GMT
+Content-Length: 131
+
+{"type":"about:blank","title":"Not Found","status":404,"detail":"bunday buyurtma yoʻq","request_id":"QIMZBTSJEJQDPN5YALXRKZR62B"}
+
+$ curl -s -i -b jar.txt localhost:8765/orders/999
+HTTP/1.1 404 Not Found
+Cache-Control: no-store
+Content-Type: application/problem+json
+X-Request-Id: TXIAA7JQBFNMNVSEOY5EO4YI5W
+Date: Fri, 27 Nov 2026 17:51:15 GMT
+Content-Length: 131
+
+{"type":"about:blank","title":"Not Found","status":404,"detail":"bunday buyurtma yoʻq","request_id":"TXIAA7JQBFNMNVSEOY5EO4YI5W"}
+
+--- server log (xato qatorlari):
+2026/11/27 22:51:15 6SEFKJGCJIQXFTYGHCAKDP7J5O GET "/health" 200 18.045µs
+2026/11/27 22:51:15 QIMZBTSJEJQDPN5YALXRKZR62B xato 404: "buyurtma 42, foydalanuvchi 1: buyurtma topilmadi"
+2026/11/27 22:51:15 QIMZBTSJEJQDPN5YALXRKZR62B GET "/orders/42" 404 4.386995ms
+2026/11/27 22:51:15 TXIAA7JQBFNMNVSEOY5EO4YI5W xato 404: "buyurtma 999, foydalanuvchi 1: buyurtma topilmadi"
+2026/11/27 22:51:15 TXIAA7JQBFNMNVSEOY5EO4YI5W GET "/orders/999" 404 594.948µs
+$ curl -s -b jar.txt localhost:8765/orders/41
+{"id":41,"user_id":1,"status":"yangi","note":"Chilonzor 9-kvartal, 12-uy","items":[{"product_id":1,"quantity":2,"unit_price":1200000},{"product_id":2,"quantity":3,"unit_price":400000}],"total":3600000}
+
+### 3b. tuzatilgan versiyada test
+$ go test -run TestOrderOwner ./cmd/api
+ok  	github.com/abdurahmon27/bozor/cmd/api	0.283s
+$ go test -run TestOrderOwner -v ./cmd/api
+=== RUN   TestOrderOwner
+--- PASS: TestOrderOwner (0.21s)
+PASS
+ok  	github.com/abdurahmon27/bozor/cmd/api	0.305s
+
+### 4. XATO versiya (v1-admin-yoq): Dilnoza /admin/users
+$ curl -s -b jar.txt localhost:8765/admin/users
+[{"id":1,"email":"dilnoza@bozor.test","role":"xaridor"},{"id":2,"email":"jasur@bozor.test","role":"xaridor"},{"id":3,"email":"admin@bozor.test","role":"admin"}]
+
+### 5. tuzatilgan: Dilnoza 403, admin 200
+$ curl -s -i -b jar.txt localhost:8765/admin/users
+HTTP/1.1 403 Forbidden
+Cache-Control: no-store
+Content-Type: application/problem+json
+X-Request-Id: YBEBT2MGWFPHII7RRHDGDW3J7R
+Date: Fri, 27 Nov 2026 17:51:18 GMT
+Content-Length: 136
+
+{"type":"about:blank","title":"Forbidden","status":403,"detail":"bu amal uchun ruxsat yoʻq","request_id":"YBEBT2MGWFPHII7RRHDGDW3J7R"}
+
+$ curl -s -c admin.txt localhost:8765/login -H "Content-Type: application/json" -d '{"email":"admin@bozor.test","password":"qovun-anjir-tut-uzum-31"}'
+{"id":3,"email":"admin@bozor.test","role":"admin"}
+$ curl -s -b admin.txt localhost:8765/admin/users
+[{"id":1,"email":"dilnoza@bozor.test","role":"xaridor"},{"id":2,"email":"jasur@bozor.test","role":"xaridor"},{"id":3,"email":"admin@bozor.test","role":"admin"}]
+
+### 6. XATO versiya (v2-teskari): admin /admin/users
+$ curl -s -i -b admin.txt localhost:8765/admin/users
+HTTP/1.1 500 Internal Server Error
+Content-Type: application/problem+json
+X-Request-Id: RYJYTEBZ4BXUQRJYUGIY6GMPSQ
+Date: Fri, 27 Nov 2026 17:51:19 GMT
+Content-Length: 110
+
+{"type":"about:blank","title":"Internal Server Error","status":500,"request_id":"RYJYTEBZ4BXUQRJYUGIY6GMPSQ"}
+
+--- server log (panic qatori):
+2026/11/27 22:51:19 4RHDSIDO67Q7NXZZH3MDXF3C2C GET "/health" 200 17.543µs
+2026/11/27 22:51:19 RYJYTEBZ4BXUQRJYUGIY6GMPSQ panic: currentUser: route requireUser bilan oʻralmagan
+panic({0xdc82c8?, 0x8f58a0?})
+
+### 7. Chuqurroq: body'da user_id
+$ curl -s -b jar.txt localhost:8765/orders -H "Content-Type: application/json" -d '{"user_id":2,"items":[{"product_id":3,"quantity":1}]}'
+{"type":"about:blank","title":"Bad Request","status":400,"detail":"body bitta JSON obyekt boʻlsin, faqat maʼlum kalitlar bilan","request_id":"GQDARX2HECWBVJ75FLSHAIUQJD"}
+$ curl -s -b jar.txt localhost:8765/orders -H "Content-Type: application/json" -d '{"items":[{"product_id":3,"quantity":1}]}'
+{"id":43,"user_id":1,"status":"yangi","items":[{"product_id":3,"quantity":1,"unit_price":2500000}],"total":2500000}
+
+### 8. vazifa: starter'da go test ./...
+$ go test ./...
+?   	github.com/abdurahmon27/bozor	[no test files]
+--- FAIL: TestUpdateNoteOwner (0.20s)
+    tekshiruv_test.go:28: Jasur PATCH /orders/41 (Dilnozaniki): status 204, kutilgan 404 — begona buyurtma yoʻq buyurtma kabi (TASK.md, 1–2-qadam)
+    tekshiruv_test.go:31: Jasur Dilnozaning 41-buyurtmasini oʻzgartirdi: izoh «Jasurning manzili», kutilgan «Chilonzor 9-kvartal, 12-uy» — UPDATE'da egasi tekshirilmayapti (TASK.md, 1-qadam: WHERE id = $1 AND user_id = $2)
+FAIL
+FAIL	github.com/abdurahmon27/bozor/cmd/api
+ok  	github.com/abdurahmon27/bozor/internal/password
+?   	github.com/abdurahmon27/bozor/internal/pgtest	[no test files]
+ok  	github.com/abdurahmon27/bozor/internal/store
+FAIL
+
+### tozalash
+docker compose down -v: ok
+8765 boʻsh
