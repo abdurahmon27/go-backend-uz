@@ -1,0 +1,119 @@
+== go version
+go version go1.27.4 linux/amd64
+== 1. build, sozlamasiz
+
+$ go build ./cmd/api && ./api ; echo "kod: $?"
+xato: DATABASE_URL qoʻyilmagan: .env.example'ga qarang
+kod: 1
+
+$ PORT=80a ./api ; echo "kod: $?"
+xato: port "80a": 1–65535 oraligʻidagi butun son kerak
+DATABASE_URL qoʻyilmagan: .env.example'ga qarang
+kod: 1
+
+$ DATABASE_URL=x ./api -port 70000 ; echo "kod: $?"
+xato: port "70000": 1–65535 oraligʻidagi butun son kerak
+kod: 1
+
+$ PORT= DATABASE_URL=x ./api ; echo "kod: $?"
+xato: port "": 1–65535 oraligʻidagi butun son kerak
+kod: 1
+
+$ ./api -h ; echo "kod: $?"
+Usage of api:
+  -port string
+    	HTTP port (muhitda: PORT) (default "8765")
+kod: 0
+
+$ PORT=9090 ./api -h
+Usage of api:
+  -port string
+    	HTTP port (muhitda: PORT) (default "9090")
+
+$ ./api -h 2> /dev/null ; echo "kod: $?"
+kod: 0
+
+$ PORT= ./api ; echo "kod: $?"
+xato: port "": 1–65535 oraligʻidagi butun son kerak
+DATABASE_URL qoʻyilmagan: .env.example'ga qarang
+kod: 1
+
+== 2. .env va git
+
+$ cp .env.example .env
+
+$ cat .env
+# Nusxa oling: cp .env.example .env — haqiqiy qiymatlar faqat .env'da (u gitga tushmaydi).
+PORT=8765
+DATABASE_URL='postgres://bozor:bozor-lab@localhost:5581/bozor'
+
+$ cat .gitignore
+.env
+/api
+
+$ set -a; . ./.env; set +a; echo $PORT
+8765
+
+$ git check-ignore -v .env
+.gitignore:1:.env	.env
+
+$ git check-ignore -v .env.example ; echo "kod: $?"
+kod: 1
+
+$ git status --short
+
+== 3. Postgres
+$ docker compose up -d --wait
+ Container gb801-db-1 Waiting 
+ Container gb801-db-1 Healthy 
+
+== 3a. String() yoʻq: sizish
+$ set -a; . ./.env; set +a
+$ ./api -port 8781
+config: {port:8781 databaseURL:postgres://bozor:bozor-lab@localhost:5581/bozor}
+bozor API: http://localhost:8781
+
+$ ps -o args= -C api
+./api -port 8781
+
+$ pgrep -x api  (shu kompyuterdagi api jarayonlari)
+989934
+
+$ stat -c "%A %n" /proc/$pid/cmdline /proc/$pid/environ
+-r--r--r-- /proc/989934/cmdline
+-r-------- /proc/989934/environ
+
+$ curl -s localhost:8781/health
+ok
+
+(to'xtatildi: SIGTERM, videoda Ctrl+C) kod: 143
+
+== 3b. String() bilan
+$ set -a; . ./.env; set +a
+$ go build ./cmd/api && ./api -port 8781
+config: port=8781 db=localhost:5581/bozor
+bozor API: http://localhost:8781
+
+$ ps -o args= -C api
+./api -port 8781
+
+$ pgrep -x api  (shu kompyuterdagi api jarayonlari)
+990337
+
+$ stat -c "%A %n" /proc/$pid/cmdline /proc/$pid/environ
+-r--r--r-- /proc/990337/cmdline
+-r-------- /proc/990337/environ
+
+$ curl -s localhost:8781/health
+ok
+
+(to'xtatildi: SIGTERM, videoda Ctrl+C) kod: 143
+
+== 4. %#v (String chaqirilmaydi)
+%v  port=8781 db=localhost:5581/bozor
+%+v port=8781 db=localhost:5581/bozor
+%s  port=8781 db=localhost:5581/bozor
+%#v main.config{port:8781, databaseURL:"postgres://bozor:bozor-lab@localhost:5581/bozor"}
+
+== 5. Postgres to'xtatiladi
+ Network gb801_default Removed 
