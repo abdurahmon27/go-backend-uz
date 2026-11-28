@@ -1,0 +1,87 @@
+== go version
+go version go1.27.4 linux/amd64
+
+== Postgres, migratsiyalar, seed
+ Container gb802-db-1 Healthy 
+2026/11/28 18:18:32 goose: successfully migrated database to version: 7
+
+== 0. eski (GB-8.01): log.Printf
+
+$ curl -s -o /dev/null -w '%{http_code} %header{x-request-id}\n' localhost:8782/login -H 'Content-Type: application/json' -d '{"email":"nodira@bozor.test","password":"x"}'
+401 D3QGB6DSPPCGJKDRQY5EPR2TRS
+
+$ curl -s -o /dev/null -w '%{http_code} %header{x-request-id}\n' localhost:8782/login -H 'Content-Type: application/json' -d '{"email":"jasur@bozor.test","password":"Samarqand\ulugbek1394"}'
+400 MTUOSLB5TGTBGISF65BF2RYVLA
+
+$ cat api.log
+config: addr=:8782 db=localhost:5582/bozor
+bozor API tinglaydi: :8782
+2026/11/28 18:18:33 D3QGB6DSPPCGJKDRQY5EPR2TRS xato 401: "email yoki parol notoʻgʻri: email \"nodira@bozor.test\": foydalanuvchi topilmadi"
+2026/11/28 18:18:33 D3QGB6DSPPCGJKDRQY5EPR2TRS POST "/login" 401 64.057561ms
+2026/11/28 18:18:33 MTUOSLB5TGTBGISF65BF2RYVLA xato 400: "body JSON sifatida oʻqilmadi: invalid escape sequence `\\ulugb` in string"
+2026/11/28 18:18:33 MTUOSLB5TGTBGISF65BF2RYVLA POST "/login" 400 90.85µs
+
+== 1. a: slog, LogValue yoʻq
+$ go build ./cmd/api && ./api -port 8782 > api.log
+
+$ cat api.log
+{"time":"2026-11-28T18:18:34.317527911+05:00","level":"INFO","msg":"config","config":{}}
+{"time":"2026-11-28T18:18:34.324389331+05:00","level":"INFO","msg":"bozor API ishga tushdi","addr":":8782"}
+
+== 2. b: request_id bor, writeError err'ni toʻliq yozadi
+$ go build ./cmd/api && ./api -port 8782 > api.log
+
+$ cat api.log
+{"time":"2026-11-28T18:18:35.897996796+05:00","level":"INFO","msg":"config","config":{"addr":":8782","db":"localhost:5582/bozor"}}
+{"time":"2026-11-28T18:18:35.913012925+05:00","level":"INFO","msg":"bozor API ishga tushdi","addr":":8782"}
+
+$ curl -s -o /dev/null -w '%{http_code} %header{x-request-id}\n' localhost:8782/login -H 'Content-Type: application/json' -d '{"email":"nodira@bozor.test","password":"x"}'
+401 F4JJID26UEPWPAKXR5OPRW7GUG
+
+$ grep F4JJID26UEPWPAKXR5OPRW7GUG api.log
+{"time":"2026-11-28T18:18:36.227025924+05:00","level":"WARN","msg":"xato","request_id":"F4JJID26UEPWPAKXR5OPRW7GUG","status":401,"err":"email yoki parol notoʻgʻri: email \"nodira@bozor.test\": foydalanuvchi topilmadi"}
+{"time":"2026-11-28T18:18:36.227139101+05:00","level":"INFO","msg":"soʻrov","request_id":"F4JJID26UEPWPAKXR5OPRW7GUG","method":"POST","path":"/login","status":401,"dur":121904087}
+
+$ curl -s -o /dev/null -w '%{http_code} %header{x-request-id}\n' localhost:8782/login -H 'Content-Type: application/json' -d '{"email":"jasur@bozor.test","password":"Samarqand\ulugbek1394"}'
+400 HN7DXON3WSCNY24BLHN2XIWXPI
+
+$ grep HN7DXON3WSCNY24BLHN2XIWXPI api.log
+{"time":"2026-11-28T18:18:36.268698714+05:00","level":"WARN","msg":"xato","request_id":"HN7DXON3WSCNY24BLHN2XIWXPI","status":400,"err":"body JSON sifatida oʻqilmadi: invalid escape sequence `\\ulugb` in string"}
+{"time":"2026-11-28T18:18:36.268755332+05:00","level":"INFO","msg":"soʻrov","request_id":"HN7DXON3WSCNY24BLHN2XIWXPI","method":"POST","path":"/login","status":400,"dur":153598}
+
+== 3. final: 4xx — faqat detail
+$ go build ./cmd/api && ./api -port 8782 > api.log
+
+$ curl -s -o /dev/null -w '%{http_code} %header{x-request-id}\n' localhost:8782/login -H 'Content-Type: application/json' -d '{"email":"nodira@bozor.test","password":"x"}'
+401 RMUPAMUF2G73U4YRJG35JKD7QB
+
+$ curl -s -o /dev/null -w '%{http_code} %header{x-request-id}\n' localhost:8782/login -H 'Content-Type: application/json' -d '{"email":"jasur@bozor.test","password":"Samarqand\ulugbek1394"}'
+400 A7JNEIR7YAJ4ZLJ75W3GMOFDEQ
+
+$ cat api.log
+{"time":"2026-11-28T18:18:38.046967848+05:00","level":"INFO","msg":"config","config":{"addr":":8782","db":"localhost:5582/bozor"}}
+{"time":"2026-11-28T18:18:38.061861063+05:00","level":"INFO","msg":"bozor API ishga tushdi","addr":":8782"}
+{"time":"2026-11-28T18:18:38.371450518+05:00","level":"WARN","msg":"mijoz xatosi","request_id":"RMUPAMUF2G73U4YRJG35JKD7QB","status":401,"detail":"email yoki parol notoʻgʻri"}
+{"time":"2026-11-28T18:18:38.371578894+05:00","level":"INFO","msg":"soʻrov","request_id":"RMUPAMUF2G73U4YRJG35JKD7QB","method":"POST","path":"/login","status":401,"dur":169590636}
+{"time":"2026-11-28T18:18:38.391081946+05:00","level":"WARN","msg":"mijoz xatosi","request_id":"A7JNEIR7YAJ4ZLJ75W3GMOFDEQ","status":400,"detail":"body bitta JSON obyekt boʻlsin, faqat maʼlum kalitlar bilan"}
+{"time":"2026-11-28T18:18:38.391135758+05:00","level":"INFO","msg":"soʻrov","request_id":"A7JNEIR7YAJ4ZLJ75W3GMOFDEQ","method":"POST","path":"/login","status":400,"dur":132370}
+
+$ grep WARN api.log
+{"time":"2026-11-28T18:18:38.371450518+05:00","level":"WARN","msg":"mijoz xatosi","request_id":"RMUPAMUF2G73U4YRJG35JKD7QB","status":401,"detail":"email yoki parol notoʻgʻri"}
+{"time":"2026-11-28T18:18:38.391081946+05:00","level":"WARN","msg":"mijoz xatosi","request_id":"A7JNEIR7YAJ4ZLJ75W3GMOFDEQ","status":400,"detail":"body bitta JSON obyekt boʻlsin, faqat maʼlum kalitlar bilan"}
+
+$ grep -c -e nodira -e ulugb api.log
+0
+
+$ jq -c 'select(.level == "WARN") | {msg, status, detail}' api.log
+{"msg":"mijoz xatosi","status":401,"detail":"email yoki parol notoʻgʻri"}
+{"msg":"mijoz xatosi","status":400,"detail":"body bitta JSON obyekt boʻlsin, faqat maʼlum kalitlar bilan"}
+
+$ grep -n Info cmd/api/vet_demo.go
+6:	logger.Info("soʻrov", "status")
+
+$ go vet ./cmd/api
+cmd/api/vet_demo.go:6:2: call to slog.Logger.Info missing a final value
+
+== tozalash
+ Network gb802_default Removed 
