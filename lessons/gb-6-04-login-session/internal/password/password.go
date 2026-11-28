@@ -68,6 +68,12 @@ func NeedsRehash(encoded string) (bool, error) {
 	return p.memory != memory || p.passes != passes || p.threads != threads || len(p.key) != keyLen, nil
 }
 
+// Satrdan oʻqiladigan parametrlarning yuqori chegarasi (OWASP jadvalining eng katta qatoridan ancha yuqori).
+const (
+	maxMemory = 256 * 1024 // KiB: 256 MiB
+	maxPasses = 16
+)
+
 // params — satrdan oʻqilgan qismlar.
 type params struct {
 	memory, passes uint32
@@ -94,6 +100,12 @@ func decode(encoded string) (params, error) {
 	}
 	if len(p.key) < 16 { // boʻsh kalit har qanday parolga «mos» kelardi
 		return p, fmt.Errorf("%w: kalit %d bayt", ErrBadHash, len(p.key))
+	}
+	// Parametrlar qatorida ortiqcha belgi yoʻq ("p=1abc") va qiymatlar chegarada: buzilgan satrdagi
+	// m=4294967295 jarayonni «out of memory» bilan oʻldirardi (buni recover ham ushlay olmaydi).
+	if fmt.Sprintf("m=%d,t=%d,p=%d", p.memory, p.passes, p.threads) != parts[3] ||
+		p.memory > maxMemory || p.passes > maxPasses {
+		return p, fmt.Errorf("%w: parametrlar %q", ErrBadHash, parts[3])
 	}
 	return p, nil
 }

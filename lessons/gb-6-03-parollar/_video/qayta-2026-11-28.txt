@@ -1,0 +1,138 @@
+### go version
+$ go version
+go version go1.27.4 linux/amd64
+(exit 0)
+
+$ curl --version | head -1
+curl 8.22.0 (x86_64-pc-linux-gnu) libcurl/8.22.0 GnuTLS/3.8.13 zlib/1.3.2 brotli/1.2.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.5 libssh2/1.11.1 nghttp2/1.69.0 ngtcp2/1.22.1 nghttp3/1.15.0 mit-krb5/1.22.2
+(exit 0)
+
+$ lscpu | grep 'Model name'
+Model name:                              12th Gen Intel(R) Core(TM) i5-12450H
+(exit 0)
+
+### go get (GB-6.02 solution nusxasi, boʻsh modul keshi: yuklash qatorlari koʻrinsin)
+$ cd /tmp/tmp.n2vHG7eJhF/bozor && GOTOOLCHAIN=local GOMODCACHE=/tmp/tmp.vRk11U7BhO GOFLAGS=-modcacherw /home/haywan/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.4.linux-amd64/bin/go get golang.org/x/crypto/argon2
+go: downloading golang.org/x/crypto v0.59.0
+go: downloading golang.org/x/sys v0.50.0
+go: added golang.org/x/crypto v0.59.0
+go: added golang.org/x/sys v0.50.0
+(exit 0)
+
+### sizib chiqqan jadvallar
+$ cd /tmp/tmp.ER7ET8nC1i/bozor && cat sizdi/ochiq.txt
+dilnoza@bozor.test choy2024
+jasur@bozor.test choy2024
+malika@bozor.test tarvuz-osmon-qalam-ariq-27
+(exit 0)
+
+$ cd /tmp/tmp.ER7ET8nC1i/bozor && cat sizdi/sha256.txt
+dilnoza@bozor.test 385426486641a520e865c4e6b24d379c8f8afa1eb5de2f932ba90f0622f06289
+jasur@bozor.test 385426486641a520e865c4e6b24d379c8f8afa1eb5de2f932ba90f0622f06289
+malika@bozor.test f8fe182b2bef6749451694c3042b04e5cd5f5aa6aeecbfb0c2744dfbac6549a5
+(exit 0)
+
+$ cd /tmp/tmp.ER7ET8nC1i/bozor && cat sizdi/argon2id.txt
+dilnoza@bozor.test $argon2id$v=19$m=19456,t=2,p=1$fd+QrkyR3ap9uAJkzw4Ocw$1tRXqM9ibZAPh1bCRLKEoQtHxfvyHk/HuicsoJA/CsQ
+jasur@bozor.test $argon2id$v=19$m=19456,t=2,p=1$rUPhzHtvN8st9ZvrLtD39A$QDmgSweLTZ3B4crIK4E1dj13e/GF9VEcFyNE49sErHY
+malika@bozor.test $argon2id$v=19$m=19456,t=2,p=1$GX6RH2ZGTsRb4K5+L5A5Ew$nsERR+E5HtqLtBfmTmTOsYGRpK9blc8HIdMX/k2/SRY
+(exit 0)
+
+### taxmin
+$ cd /tmp/tmp.sDGfBdzxnv/bozor && go run ./cmd/taxmin sizdi/sha256.txt
+sizdi/sha256.txt: 3 qator · nomzodlar.txt: 1000 parol
+dilnoza@bozor.test  topildi: choy2024 (71-nomzod) · 12µs
+jasur@bozor.test    topildi: choy2024 (71-nomzod) · 9µs
+malika@bozor.test   topilmadi · 120µs
+1142 taxmin · 161µs · sekundiga 7 101 283 · har taxmin 0 B xotira
+(exit 0)
+
+$ cd /tmp/tmp.sDGfBdzxnv/bozor && go run ./cmd/taxmin sizdi/argon2id.txt
+sizdi/argon2id.txt: 3 qator · nomzodlar.txt: 1000 parol
+dilnoza@bozor.test  topildi: choy2024 (71-nomzod) · 2.6s
+jasur@bozor.test    topildi: choy2024 (71-nomzod) · 2.7s
+malika@bozor.test   topilmadi · 36.3s
+1142 taxmin · 41.5s · sekundiga 27 · har taxmin 19.0 MiB xotira
+(exit 0)
+
+### server: POST /users
+$ curl -s -i localhost:8765/users -H "Content-Type: application/json" -d '{"email":"dilnoza@bozor.test","password":"tarvuz-osmon-qalam-ariq-27"}'
+HTTP/1.1 201 Created
+Content-Type: application/json
+X-Request-Id: 7YDQ7IW2BDYHHQI5QE3E6QU7LK
+Date: Sat, 28 Nov 2026 05:24:22 GMT
+Content-Length: 38
+
+{"id":1,"email":"dilnoza@bozor.test"}
+(exit 0)
+
+$ curl -s localhost:8765/users -H "Content-Type: application/json" -d '{"email":"Dilnoza@bozor.test","password":"boshqa-uzun-ibora-2025"}'
+{"type":"about:blank","title":"Conflict","status":409,"detail":"bu email bilan foydalanuvchi bor","request_id":"AH22KTSIFVGGKC5OBWPMUFQ5NW"}
+(exit 0)
+
+$ curl -s localhost:8765/users -H "Content-Type: application/json" -d '{"email":"jasur@bozor.test","password":"choy2024"}'
+{"type":"/problems/validation","title":"Qiymatlar notoʻgʻri","status":422,"errors":{"password":"15–64 belgi boʻlsin"},"request_id":"AYNT63HU2MDXX4UKXU6XIQG4AD"}
+(exit 0)
+
+--- 1-terminal (server log):
+bozor API: http://localhost:8765
+2026/11/28 10:24:21 TVNLZIDGDTO7AVRYXKTKFX3NBI GET "/health" 200 14.112µs
+2026/11/28 10:24:22 7YDQ7IW2BDYHHQI5QE3E6QU7LK POST "/users" 201 44.973717ms
+2026/11/28 10:24:22 AH22KTSIFVGGKC5OBWPMUFQ5NW xato 409: "bu email bilan foydalanuvchi bor"
+2026/11/28 10:24:22 AH22KTSIFVGGKC5OBWPMUFQ5NW POST "/users" 409 43.302961ms
+2026/11/28 10:24:22 AYNT63HU2MDXX4UKXU6XIQG4AD xato 422: "validatsiya: 1 ta maydon notoʻgʻri"
+2026/11/28 10:24:22 AYNT63HU2MDXX4UKXU6XIQG4AD POST "/users" 422 89.8µs
+
+(:8765 boʻsh)
+
+### xato: decode'da base64.StdEncoding
+$ cd /tmp/tmp.h4iu34eg2H/bozor && go test ./internal/password
+--- FAIL: TestHashFormat (0.05s)
+    password_test.go:17: decode(Hash(…)): hash satri notoʻgʻri: salt: illegal base64 data at input byte 20
+--- FAIL: TestVerify (0.04s)
+    password_test.go:39: toʻgʻri parol: Verify = false, hash satri notoʻgʻri: salt: illegal base64 data at input byte 20; kutilgan true, nil
+    password_test.go:42: notoʻgʻri parol: Verify = false, hash satri notoʻgʻri: salt: illegal base64 data at input byte 20; kutilgan false, nil
+--- FAIL: TestVazifaParams (0.04s)
+    tekshiruv_test.go:20: decode(Hash(…)): hash satri notoʻgʻri: salt: illegal base64 data at input byte 20
+--- FAIL: TestVazifaOldStillVerifies (0.00s)
+    tekshiruv_test.go:31: eski satr (m=19456,t=2) bilan Verify = false, hash satri notoʻgʻri: salt: illegal base64 data at input byte 20; kutilgan true, nil. Verify parametrlarni konstantalardan emas, satrdan olishi kerak
+--- FAIL: TestVazifaNeedsRehash (0.03s)
+    tekshiruv_test.go:38: NeedsRehash(eski satr m=19456,t=2) = false, <nil>; kutilgan true, nil. decode bilan oʻqing va parametrlarni konstantalar bilan solishtiring (TASK.md, 2-qadam)
+    tekshiruv_test.go:45: NeedsRehash(sha256 hex) xatosi <nil>; kutilgan ErrBadHash: buzuq satrda decode'ning xatosini qaytaring
+FAIL
+FAIL	github.com/abdurahmon27/bozor/internal/password	0.303s
+FAIL
+(exit 1)
+
+### testlar
+$ cd /tmp/tmp.l798tX2JgM/bozor && go test ./... 2>&1 | grep -v '^    '
+ok  	github.com/abdurahmon27/bozor/cmd/api	0.171s
+ok  	github.com/abdurahmon27/bozor/cmd/bozor	0.062s
+?   	github.com/abdurahmon27/bozor/cmd/taxmin	[no test files]
+--- FAIL: TestVazifaParams (0.04s)
+--- FAIL: TestVazifaNeedsRehash (0.04s)
+FAIL
+FAIL	github.com/abdurahmon27/bozor/internal/password	0.428s
+ok  	github.com/abdurahmon27/bozor/internal/store	0.230s
+FAIL
+(exit 1)
+
+$ cd /tmp/tmp.l798tX2JgM/bozor && go test ./internal/password
+--- FAIL: TestVazifaParams (0.04s)
+    tekshiruv_test.go:23: Hash hozir m=19456,t=2,p=1 bilan yasayapti, kutilgan m=47104,t=1,p=1 (OWASP'ning birinchi qatori, 46 MiB). password.go'dagi memory va passes konstantalarini oʻzgartiring (TASK.md, 1-qadam)
+--- FAIL: TestVazifaNeedsRehash (0.03s)
+    tekshiruv_test.go:38: NeedsRehash(eski satr m=19456,t=2) = false, <nil>; kutilgan true, nil. decode bilan oʻqing va parametrlarni konstantalar bilan solishtiring (TASK.md, 2-qadam)
+    tekshiruv_test.go:45: NeedsRehash(sha256 hex) xatosi <nil>; kutilgan ErrBadHash: buzuq satrda decode'ning xatosini qaytaring
+FAIL
+FAIL	github.com/abdurahmon27/bozor/internal/password	0.435s
+FAIL
+(exit 1)
+
+$ cd /home/haywan/Developer/go-backend-uz/lessons/gb-6-03-parollar/solution && go test -count=1 ./...
+ok  	github.com/abdurahmon27/bozor/cmd/api	0.301s
+ok  	github.com/abdurahmon27/bozor/cmd/bozor	0.059s
+?   	github.com/abdurahmon27/bozor/cmd/taxmin	[no test files]
+ok  	github.com/abdurahmon27/bozor/internal/password	0.593s
+ok  	github.com/abdurahmon27/bozor/internal/store	0.224s
+(exit 0)
+

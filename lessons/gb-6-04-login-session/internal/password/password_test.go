@@ -56,6 +56,9 @@ func TestVerifyBadHash(t *testing.T) {
 		"boʻsh kalit":      "$argon2id$v=19$m=19456,t=2,p=1$" + parts[4] + "$",
 		"padding bilan":    good + "=",
 		"base64 emas salt": "$argon2id$v=19$m=19456,t=2,p=1$!!!$" + parts[5],
+		"m juda katta":     "$argon2id$v=19$m=4294967295,t=2,p=1$" + parts[4] + "$" + parts[5],
+		"t juda katta":     "$argon2id$v=19$m=19456,t=4294967295,p=1$" + parts[4] + "$" + parts[5],
+		"ortiqcha belgi":   "$argon2id$v=19$m=19456,t=2,p=1abc$" + parts[4] + "$" + parts[5],
 	}
 	for name, h := range bad {
 		ok, err := Verify("x", h)
